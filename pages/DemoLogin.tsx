@@ -74,7 +74,7 @@ const DemoLogin: React.FC = () => {
 
            <div className="space-y-4">
               {[
-                "Sem necessidade de cartão de crédito",
+                "Simulação realista da coleta", // Alterado aqui
                 "Acesso imediato ao dashboard simulado",
                 "Relatório modelo PDF incluso"
               ].map((item, i) => (

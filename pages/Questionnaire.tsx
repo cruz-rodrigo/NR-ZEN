@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, CheckCircle2, ChevronRight, AlertCircle, Home } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, ChevronRight, AlertCircle, Home, Printer, ArrowRight, Zap } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
 import Card from '../components/Card';
@@ -9,18 +9,29 @@ import { Logo } from '../components/Layout';
 
 type Screen = 'consent' | 'questions' | 'result';
 
+// DEMO OPTIMIZATION:
+// Create a subset of data (2 questions per domain instead of 5)
+// This keeps the structure (6 domains) for the report but reduces time to fill.
+const DEMO_DATA = QUESTIONNAIRE_DATA.map(domain => ({
+  ...domain,
+  questions: domain.questions.slice(0, 2) // Take first 2 questions (usually 1 pos, 1 neg)
+}));
+
 const Questionnaire: React.FC = () => {
   const navigate = useNavigate();
   const [screen, setScreen] = useState<Screen>('consent');
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [result, setResult] = useState<ScoreResult | null>(null);
 
+  // Use the reduced dataset for this component
+  const ACTIVE_DATA = DEMO_DATA;
+
   // Helper to calculate score (Risk Index)
   // 0 = No Risk (Perfect environment)
   // 100 = Max Risk (Toxic environment)
   const calculateResults = () => {
     let globalSum = 0;
-    const domainScores = QUESTIONNAIRE_DATA.map(domain => {
+    const domainScores = ACTIVE_DATA.map(domain => {
       let domainSum = 0;
       let count = 0;
       
@@ -31,13 +42,13 @@ const Questionnaire: React.FC = () => {
           
           if (q.type === 'positive') {
              // Positive Question (e.g., "I have autonomy")
-             // 5 (Strongly Agree) = Good = 0 Risk
-             // 1 (Strongly Disagree) = Bad = 100 Risk
+             // 5 (Sempre) = Good = 0 Risk
+             // 1 (Nunca) = Bad = 100 Risk
              score = ((5 - val) / 4) * 100;
           } else {
              // Negative Question (e.g., "I have excessive workload")
-             // 5 (Strongly Agree) = Bad = 100 Risk
-             // 1 (Strongly Disagree) = Good = 0 Risk
+             // 5 (Sempre) = Bad = 100 Risk
+             // 1 (Nunca) = Good = 0 Risk
              score = ((val - 1) / 4) * 100;
           }
           
@@ -52,7 +63,7 @@ const Questionnaire: React.FC = () => {
       return { id: domain.id, title: domain.title, score: avg };
     });
 
-    const globalAvg = Math.round(globalSum / QUESTIONNAIRE_DATA.length);
+    const globalAvg = Math.round(globalSum / ACTIVE_DATA.length);
     
     // Risk Classification based on Technical Report Logic
     // Adjusted Thresholds for Demo Sensitivity:
@@ -85,7 +96,7 @@ const Questionnaire: React.FC = () => {
   };
 
   const handleSubmit = () => {
-    const allQuestions = QUESTIONNAIRE_DATA.flatMap(d => d.questions);
+    const allQuestions = ACTIVE_DATA.flatMap(d => d.questions);
     const unanswered = allQuestions.find(q => !answers[q.id]);
     
     if (unanswered) {
@@ -103,6 +114,11 @@ const Questionnaire: React.FC = () => {
     setResult(null);
     setScreen('consent');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCtaClick = () => {
+    // Navigate to landing page pricing section or contact form
+    window.location.href = '/#pricing';
   };
 
   // --- RENDERERS ---
@@ -176,59 +192,131 @@ const Questionnaire: React.FC = () => {
   }
 
   if (screen === 'result' && result) {
-    return (
-      <div className="min-h-screen bg-slate-50 py-12 px-4 flex items-center justify-center font-sans">
-        <Card className="max-w-xl w-full text-center shadow-2xl border-t-4" style={{borderTopColor: result.riskColor}}>
-          
-          <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-lg -mt-16 relative z-10">
-            <div className={`w-full h-full rounded-full flex items-center justify-center animate-in fade-in zoom-in duration-500 ${
-              result.riskLevel === 'Baixo' ? 'text-emerald-500 bg-emerald-50' : 
-              result.riskLevel === 'Alto' ? 'text-red-500 bg-red-50' : 'text-amber-500 bg-amber-50'
-            }`}>
-              <CheckCircle2 size={48} />
-            </div>
-          </div>
-          
-          <h2 className="text-2xl font-bold mb-2 text-slate-800">Obrigado!</h2>
-          <p className="text-slate-500 mb-8 max-w-sm mx-auto">Suas respostas foram enviadas e criptografadas com sucesso.</p>
+    // Cálculo SVG Chart
+    const radius = 60;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (result.globalScore / 100) * circumference;
 
-          {/* Demo Feedback Area */}
-          <div className="bg-slate-50 rounded-xl p-6 mb-8 text-left border border-slate-200 relative overflow-hidden">
-            <div className="absolute top-0 right-0 bg-slate-200 text-slate-600 text-[10px] font-bold px-2 py-1 rounded-bl-lg">
-              DEMO VIEW
-            </div>
-            
-            <h3 className="font-bold text-xs text-slate-400 uppercase mb-6 tracking-wider text-center">Resultado Preliminar (Simulação)</h3>
-            
-            <div className="flex flex-col items-center justify-center mb-6">
-               <div className="text-6xl font-extrabold tracking-tighter" style={{ color: result.riskColor }}>
-                 {result.globalScore}
-               </div>
-               <div className="text-sm font-bold uppercase mt-2 px-3 py-1 rounded-full bg-white border shadow-sm" style={{ color: result.riskColor, borderColor: result.riskColor }}>
-                 Risco {result.riskLevel}
-               </div>
-            </div>
-            
-            <div className="text-center space-y-2">
-              <p className="text-xs text-slate-500">
-                Quanto maior o score, <strong>maior o risco</strong> psicossocial identificado.
-              </p>
-              <p className="text-[10px] text-slate-400 leading-relaxed max-w-xs mx-auto italic">
-                * Nota: Na versão real, o colaborador não visualiza este score, apenas a confirmação de envio para evitar viés.
-              </p>
-            </div>
+    return (
+      <div className="min-h-screen bg-slate-50 py-12 px-4 flex flex-col items-center justify-center font-sans">
+        
+        {/* Header de Sucesso */}
+        <div className="text-center mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 print:hidden">
+          <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-lg">
+             <CheckCircle2 size={40} />
           </div>
+          <h2 className="text-2xl font-bold text-slate-900">Respostas Enviadas!</h2>
+          <p className="text-slate-500">Obrigado pela sua participação.</p>
+        </div>
+
+        {/* Dashboard de Relatório Simulado */}
+        <div className="w-full max-w-2xl bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden relative print:shadow-none print:border print:w-full print:max-w-none">
           
-          <div className="space-y-3">
-            <Button variant="secondary" onClick={handleRestart} fullWidth>
-              Reiniciar Demonstração
-            </Button>
-            <Button variant="ghost" onClick={() => navigate('/')} fullWidth className="text-slate-500">
-              <Home size={16} className="mr-2" />
-              Voltar para Home
-            </Button>
+          {/* Marca D'água */}
+          <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none z-0">
+             <div className="transform -rotate-45 text-slate-200/50 text-[60px] md:text-[80px] font-black uppercase whitespace-nowrap select-none">
+               Simulação • Sem Validade
+             </div>
           </div>
-        </Card>
+
+          {/* Premium Dark Header */}
+          <header className="bg-slate-900 text-white p-8 relative z-10 flex justify-between items-start">
+             <div>
+                <div className="flex items-center gap-2 mb-2">
+                   <ShieldCheck size={20} className="text-blue-400" />
+                   <h3 className="font-heading font-bold text-xl uppercase tracking-wider">Relatório Preliminar</h3>
+                </div>
+                <p className="text-xs text-slate-400">Análise Automática de Riscos Psicossociais</p>
+             </div>
+             <div className="text-right">
+                <div className="text-[10px] font-bold bg-blue-600/20 text-blue-200 px-2 py-1 rounded border border-blue-500/30 inline-block mb-1 backdrop-blur-sm">
+                  AMBIENTE DEMO
+                </div>
+                <p className="text-xs text-slate-500">{new Date().toLocaleDateString()}</p>
+             </div>
+          </header>
+
+          <div className="relative z-10 p-8 pt-6">
+            <div className="flex flex-col md:flex-row gap-8 items-center mb-10">
+              
+              {/* Gauge */}
+              <div className="flex flex-col items-center justify-center text-center">
+                 <div className="relative w-40 h-40 flex items-center justify-center">
+                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 160 160">
+                      <circle cx="80" cy="80" r={radius} stroke="#F1F5F9" strokeWidth="12" fill="none" />
+                      <circle 
+                        cx="80" cy="80" r={radius} 
+                        stroke={result.riskColor} strokeWidth="12" fill="none" 
+                        strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
+                        className="transition-all duration-1000 ease-out"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-4xl font-bold text-slate-800">{result.globalScore}</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase mt-1">Índice de Risco</span>
+                    </div>
+                 </div>
+                 <div className="mt-2 text-sm font-bold px-3 py-1 rounded-full border" style={{ color: result.riskColor, borderColor: result.riskColor, backgroundColor: result.riskColor + '10' }}>
+                    {result.riskLevel.toUpperCase()}
+                 </div>
+              </div>
+
+              {/* Bars */}
+              <div className="flex-1 w-full space-y-4">
+                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">Detalhamento por Fator</h4>
+                 {result.domainScores.map(d => (
+                   <div key={d.id}>
+                      <div className="flex justify-between text-xs mb-1">
+                         <span className="font-medium text-slate-600 truncate pr-2">{d.title}</span>
+                         <span className="font-bold text-slate-800">{d.score}</span>
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-2">
+                        <div 
+                          className="h-full rounded-full transition-all duration-1000" 
+                          style={{ 
+                            width: `${d.score}%`,
+                            backgroundColor: d.score < 45 ? '#10B981' : d.score > 60 ? '#EF4444' : '#F59E0B'
+                          }}
+                        ></div>
+                      </div>
+                   </div>
+                 ))}
+              </div>
+            </div>
+
+            {/* Disclaimer */}
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center mb-6">
+               <p className="text-xs text-slate-500 leading-relaxed italic">
+                 "Este relatório é gerado automaticamente pelo algoritmo NR ZEN para fins de demonstração. Em um ambiente real, este painel é visível apenas para a consultoria de SST e o RH."
+               </p>
+            </div>
+
+            {/* CTA Block - New */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl p-6 text-white text-center print:hidden shadow-lg shadow-blue-900/20">
+              <h4 className="font-bold text-lg mb-2">Gostou da experiência?</h4>
+              <p className="text-blue-100 text-sm mb-4">Leve essa tecnologia para sua consultoria e profissionalize seu PGR.</p>
+              <Button variant="white" onClick={handleCtaClick} className="text-blue-700 font-bold border-none shadow-md hover:bg-blue-50">
+                Ver Planos e Preços <ArrowRight size={16} className="ml-2" />
+              </Button>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="max-w-2xl w-full mt-6 flex flex-col sm:flex-row gap-3 print:hidden">
+            <Button variant="secondary" onClick={() => window.print()} fullWidth className="text-slate-600">
+              <Printer size={18} className="mr-2 text-slate-400" />
+              Imprimir
+            </Button>
+            <Button variant="secondary" onClick={handleRestart} fullWidth className="text-slate-600">
+              Reiniciar Demo
+            </Button>
+            <Button variant="ghost" onClick={() => navigate('/')} fullWidth className="text-slate-500 hover:text-red-500 hover:bg-red-50">
+              <Home size={18} className="mr-2" />
+              Sair
+            </Button>
+        </div>
       </div>
     );
   }
@@ -236,7 +324,7 @@ const Questionnaire: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans">
       {/* Sticky Header */}
-      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
+      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm print:hidden">
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="hover:opacity-80 transition-opacity">
             <Logo size="sm" />
@@ -253,7 +341,22 @@ const Questionnaire: React.FC = () => {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-8 pb-24">
+      <main className="max-w-3xl mx-auto px-4 py-8 pb-24 print:hidden">
+        
+        {/* Demo Warning Banner - NEW */}
+        <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4 mb-6 flex gap-3 items-start shadow-sm">
+          <div className="bg-indigo-100 p-1.5 rounded-full shrink-0 mt-0.5">
+            <Zap size={16} className="text-indigo-600" />
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-indigo-900">Modo Demonstração (Pocket)</h4>
+            <p className="text-xs text-indigo-700 mt-1 leading-relaxed">
+              Para otimizar seu teste, reduzimos este questionário para <strong>12 questões</strong> (2 por fator). 
+              A versão completa da plataforma utiliza a metodologia integral com 30 questões.
+            </p>
+          </div>
+        </div>
+
         {/* Progress Warning */}
         <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-8 flex gap-3 items-start">
           <AlertCircle size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
@@ -263,7 +366,7 @@ const Questionnaire: React.FC = () => {
         </div>
 
         <div className="space-y-8">
-          {QUESTIONNAIRE_DATA.map((domain, index) => (
+          {ACTIVE_DATA.map((domain, index) => (
             <div key={domain.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
               <div className="bg-slate-50/50 px-6 py-4 border-b border-slate-100 flex items-center gap-3">
                  <span className="bg-white border border-slate-200 text-slate-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-sm">{index + 1}</span>
@@ -278,11 +381,11 @@ const Questionnaire: React.FC = () => {
                     {/* Scale Logic */}
                     <div className="grid grid-cols-5 gap-1 sm:gap-3">
                       {[1, 2, 3, 4, 5].map((val) => {
-                        const labels = ["Discordo Totalmente", "Discordo", "Neutro", "Concordo", "Concordo Totalmente"];
+                        // Frequency Labels Updated
+                        const labels = ["Nunca", "Raramente", "Às Vezes", "Frequentemente", "Sempre"];
                         const isSelected = answers[q.id] === val;
                         // Color logic for selection
                         const activeColorClass = val < 3 ? 'bg-red-500 border-red-500' : val > 3 ? 'bg-emerald-500 border-emerald-500' : 'bg-slate-500 border-slate-500';
-                        const textClass = val < 3 ? 'text-red-600' : val > 3 ? 'text-emerald-600' : 'text-slate-600';
 
                         return (
                           <button
@@ -297,15 +400,15 @@ const Questionnaire: React.FC = () => {
                           >
                             <span className={`text-xl sm:text-2xl font-bold mb-1 ${!isSelected && 'group-hover/btn:text-blue-600'}`}>{val}</span>
                             <span className={`hidden sm:block text-[9px] font-medium leading-tight uppercase tracking-wide opacity-90 ${isSelected ? 'text-white' : 'text-slate-400'}`}>
-                               {labels[val-1].split(" ")[0]}
+                               {labels[val-1]}
                             </span>
                           </button>
                         );
                       })}
                     </div>
                     <div className="flex justify-between mt-2 px-1 sm:hidden">
-                       <span className="text-[10px] text-slate-400 font-bold uppercase">Discordo</span>
-                       <span className="text-[10px] text-slate-400 font-bold uppercase">Concordo</span>
+                       <span className="text-[10px] text-slate-400 font-bold uppercase">Nunca</span>
+                       <span className="text-[10px] text-slate-400 font-bold uppercase">Sempre</span>
                     </div>
                   </div>
                 ))}
@@ -316,10 +419,10 @@ const Questionnaire: React.FC = () => {
       </main>
 
       {/* Floating Footer Action */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] print:hidden">
         <div className="max-w-3xl mx-auto flex justify-between items-center gap-4">
            <div className="hidden sm:block text-sm text-slate-500">
-              {Object.keys(answers).length} de {QUESTIONNAIRE_DATA.flatMap(d => d.questions).length} respondidas
+              {Object.keys(answers).length} de {ACTIVE_DATA.flatMap(d => d.questions).length} respondidas
            </div>
            <Button size="lg" onClick={handleSubmit} className="w-full sm:w-auto shadow-lg shadow-blue-600/20 px-8">
              Finalizar e Enviar
