@@ -1,24 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Card from '../components/Card';
 import Button from '../components/Button';
-import { ChevronRight, Copy, Plus, FileText, Calendar, Users, History } from 'lucide-react';
+import { ChevronRight, Copy, Plus, FileText, Calendar, Users, History, CheckCircle2 } from 'lucide-react';
 import { ActionPlanItem } from '../types';
 import { APP_URL } from '../constants';
 
 const SectorDetail: React.FC = () => {
   const navigate = useNavigate();
+  const [copied, setCopied] = useState(false);
 
   const handleCopyLink = () => {
     const link = `${window.location.origin}/#/questionario`;
     navigator.clipboard.writeText(link).then(() => {
-      alert("Link copiado para a área de transferência!");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     });
   };
 
   const openReport = () => {
-    // Navegação direta para a rota do relatório
     navigate('/relatorio');
   };
 
@@ -55,7 +56,6 @@ const SectorDetail: React.FC = () => {
           </div>
         </div>
         <div className="flex gap-3">
-          {/* Botão corrigido para usar a função openReport */}
           <Button variant="secondary" onClick={openReport}>
             <FileText size={18} className="mr-2" />
             Visualizar Relatório
@@ -167,11 +167,23 @@ const SectorDetail: React.FC = () => {
             </div>
             <div className="flex gap-2">
               <input readOnly value={`${APP_URL}/#/questionario/beta-log`} className="flex-1 text-sm bg-white border border-slate-300 rounded px-3 py-2 text-slate-600" />
-              <Button onClick={handleCopyLink} size="sm" variant="secondary" className="px-3">
-                <Copy size={16} />
+              <Button 
+                onClick={handleCopyLink} 
+                size="sm" 
+                variant={copied ? "secondary" : "secondary"}
+                className={`px-3 ${copied ? "text-emerald-600 bg-emerald-50 border-emerald-200" : ""}`}
+              >
+                {copied ? <CheckCircle2 size={16} /> : <Copy size={16} />}
               </Button>
             </div>
-            <p className="text-xs text-slate-400 mt-2">Criado em 01/10/2025. Vence em 30 dias.</p>
+            <div className="mt-2 flex justify-between items-center h-4">
+              <p className="text-xs text-slate-400">Criado em 01/10/2025. Vence em 30 dias.</p>
+              {copied && (
+                <p className="text-xs text-emerald-600 font-bold flex items-center animate-fade-in-down">
+                  <CheckCircle2 size={12} className="mr-1"/> Link copiado!
+                </p>
+              )}
+            </div>
           </div>
         </Card>
 

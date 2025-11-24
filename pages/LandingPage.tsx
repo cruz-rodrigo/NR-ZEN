@@ -55,9 +55,9 @@ const LandingPage: React.FC = () => {
       {/* Navigation */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100">
         <div className="container mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <Logo />
-          </div>
+          </Link>
           
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-10 text-sm font-medium text-slate-600">
@@ -381,9 +381,9 @@ const LandingPage: React.FC = () => {
       <footer className="bg-white border-t border-slate-100 py-12">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-             <div className="flex items-center gap-3 grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all">
+             <Link to="/" className="flex items-center gap-3 grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all">
                <Logo />
-             </div>
+             </Link>
              <div className="flex gap-8 text-sm font-medium text-slate-500">
                <a href="#" className="hover:text-blue-600 transition-colors">Termos</a>
                <a href="#" className="hover:text-blue-600 transition-colors">Privacidade</a>

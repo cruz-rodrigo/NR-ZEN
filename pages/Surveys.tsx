@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '../components/Layout';
 import Card from '../components/Card';
 import Button from '../components/Button';
-import { ClipboardList, QrCode, Copy, ExternalLink, RefreshCw } from 'lucide-react';
+import { ClipboardList, QrCode, Copy, ExternalLink, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { APP_URL } from '../constants';
 
 const Surveys: React.FC = () => {
+  const [copiedId, setCopiedId] = useState<number | null>(null);
+
   // Mock Active Links
   const activeLinks = [
     { id: 1, company: "Indústrias Metalúrgicas Beta", sector: "Operação Logística – Turno 1", code: "beta-log-01", expires: "20/11/2025", responses: 32 },
@@ -13,9 +15,10 @@ const Surveys: React.FC = () => {
     { id: 3, company: "Transportadora Veloz", sector: "Motoristas Frota Pesada", code: "veloz-mot-05", expires: "15/11/2025", responses: 8 },
   ];
 
-  const handleCopy = (code: string) => {
+  const handleCopy = (id: number, code: string) => {
     navigator.clipboard.writeText(`${APP_URL}/#/questionario/${code}`);
-    alert('Link copiado!');
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   return (
@@ -46,20 +49,32 @@ const Surveys: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-end sm:items-center">
                <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded border border-slate-200 text-slate-500 text-xs font-mono truncate max-w-[200px]">
                  {APP_URL}/#/questionario/{link.code}
                </div>
-               <div className="flex gap-2">
-                 <Button variant="secondary" size="sm" onClick={() => handleCopy(link.code)} title="Copiar Link">
-                   <Copy size={16} />
-                 </Button>
-                 <Button variant="secondary" size="sm" title="Gerar QR Code">
-                   <QrCode size={16} />
-                 </Button>
-                 <Button variant="secondary" size="sm" title="Testar Link">
-                   <ExternalLink size={16} />
-                 </Button>
+               
+               <div className="flex items-center gap-2">
+                 {copiedId === link.id && (
+                    <span className="text-xs font-bold text-emerald-600 animate-fade-in-down">Copiado!</span>
+                 )}
+                 <div className="flex gap-2">
+                   <Button 
+                      variant={copiedId === link.id ? "secondary" : "secondary"} 
+                      size="sm" 
+                      onClick={() => handleCopy(link.id, link.code)} 
+                      title="Copiar Link"
+                      className={copiedId === link.id ? "text-emerald-600 border-emerald-200 bg-emerald-50" : ""}
+                   >
+                     {copiedId === link.id ? <CheckCircle2 size={16} /> : <Copy size={16} />}
+                   </Button>
+                   <Button variant="secondary" size="sm" title="Gerar QR Code">
+                     <QrCode size={16} />
+                   </Button>
+                   <Button variant="secondary" size="sm" title="Testar Link">
+                     <ExternalLink size={16} />
+                   </Button>
+                 </div>
                </div>
             </div>
           </Card>

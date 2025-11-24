@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ShieldCheck, CheckCircle2, ChevronRight, AlertCircle } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, ChevronRight, AlertCircle, Home } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import { QUESTIONNAIRE_DATA } from '../constants';
@@ -9,11 +10,14 @@ import { Logo } from '../components/Layout';
 type Screen = 'consent' | 'questions' | 'result';
 
 const Questionnaire: React.FC = () => {
+  const navigate = useNavigate();
   const [screen, setScreen] = useState<Screen>('consent');
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [result, setResult] = useState<ScoreResult | null>(null);
 
-  // Helper to calculate score
+  // Helper to calculate score (Risk Index)
+  // 0 = No Risk (Perfect environment)
+  // 100 = Max Risk (Toxic environment)
   const calculateResults = () => {
     let globalSum = 0;
     const domainScores = QUESTIONNAIRE_DATA.map(domain => {
@@ -23,13 +27,20 @@ const Questionnaire: React.FC = () => {
       domain.questions.forEach(q => {
         const val = answers[q.id];
         if (val) {
-          // 1-5 Scale logic
           let score = 0;
+          
           if (q.type === 'positive') {
-            score = ((val - 1) / 4) * 100;
+             // Positive Question (e.g., "I have autonomy")
+             // 5 (Strongly Agree) = Good = 0 Risk
+             // 1 (Strongly Disagree) = Bad = 100 Risk
+             score = ((5 - val) / 4) * 100;
           } else {
-            score = (((6 - val) - 1) / 4) * 100;
+             // Negative Question (e.g., "I have excessive workload")
+             // 5 (Strongly Agree) = Bad = 100 Risk
+             // 1 (Strongly Disagree) = Good = 0 Risk
+             score = ((val - 1) / 4) * 100;
           }
+          
           domainSum += score;
           count++;
         }
@@ -42,15 +53,21 @@ const Questionnaire: React.FC = () => {
     });
 
     const globalAvg = Math.round(globalSum / QUESTIONNAIRE_DATA.length);
+    
+    // Risk Classification based on Technical Report Logic
+    // Adjusted Thresholds for Demo Sensitivity:
+    // 0-45: Low (Allows "All 5s" = 40 to be Green)
+    // 46-59: Moderate
+    // 60-100: High (Allows "All 1s" = 60 to be Red)
     let riskLevel: ScoreResult['riskLevel'] = 'Moderado';
     let riskColor = '#F59E0B'; // Amber
 
-    if (globalAvg <= 39) {
+    if (globalAvg <= 45) {
+      riskLevel = 'Baixo';
+      riskColor = '#10B981'; // Emerald/Green
+    } else if (globalAvg >= 60) {
       riskLevel = 'Alto';
       riskColor = '#EF4444'; // Red
-    } else if (globalAvg >= 70) {
-      riskLevel = 'Baixo';
-      riskColor = '#06B6D4'; // Cyan (Low Risk)
     }
 
     setResult({
@@ -80,6 +97,14 @@ const Questionnaire: React.FC = () => {
     calculateResults();
   };
 
+  const handleRestart = () => {
+    // Completely reset state
+    setAnswers({});
+    setResult(null);
+    setScreen('consent');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // --- RENDERERS ---
 
   if (screen === 'consent') {
@@ -88,9 +113,9 @@ const Questionnaire: React.FC = () => {
         <div className="max-w-2xl w-full">
           {/* Header decorativo simples */}
           <div className="text-center mb-8 animate-fade-in-down">
-            <div className="inline-flex justify-center mb-4">
+            <Link to="/" className="inline-flex justify-center mb-4 hover:opacity-80 transition-opacity">
                <Logo size="lg" />
-            </div>
+            </Link>
             <h1 className="text-2xl md:text-3xl font-heading font-bold text-slate-900">
               Pesquisa de Clima & Riscos
             </h1>
@@ -135,7 +160,7 @@ const Questionnaire: React.FC = () => {
                 <Button size="lg" fullWidth onClick={() => setScreen('questions')} className="shadow-lg shadow-blue-600/20">
                   Li e concordo em participar
                 </Button>
-                <Button variant="ghost" fullWidth onClick={() => alert("Janela pode ser fechada.")}>
+                <Button variant="ghost" fullWidth onClick={() => navigate('/')}>
                   Não desejo participar
                 </Button>
               </div>
@@ -184,14 +209,25 @@ const Questionnaire: React.FC = () => {
                </div>
             </div>
             
-            <p className="text-center text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
-              * Nota: Na versão real, o colaborador não visualiza este score, apenas a confirmação de envio para evitar viés.
-            </p>
+            <div className="text-center space-y-2">
+              <p className="text-xs text-slate-500">
+                Quanto maior o score, <strong>maior o risco</strong> psicossocial identificado.
+              </p>
+              <p className="text-[10px] text-slate-400 leading-relaxed max-w-xs mx-auto italic">
+                * Nota: Na versão real, o colaborador não visualiza este score, apenas a confirmação de envio para evitar viés.
+              </p>
+            </div>
           </div>
           
-          <Button variant="secondary" onClick={() => window.location.reload()} fullWidth>
-            Reiniciar Demonstração
-          </Button>
+          <div className="space-y-3">
+            <Button variant="secondary" onClick={handleRestart} fullWidth>
+              Reiniciar Demonstração
+            </Button>
+            <Button variant="ghost" onClick={() => navigate('/')} fullWidth className="text-slate-500">
+              <Home size={16} className="mr-2" />
+              Voltar para Home
+            </Button>
+          </div>
         </Card>
       </div>
     );
@@ -202,7 +238,9 @@ const Questionnaire: React.FC = () => {
       {/* Sticky Header */}
       <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Logo size="sm" />
+          <Link to="/" className="hover:opacity-80 transition-opacity">
+            <Logo size="sm" />
+          </Link>
           <div className="flex items-center gap-3">
              <div className="hidden sm:block text-right">
                <p className="text-xs font-bold text-slate-900">Logística</p>

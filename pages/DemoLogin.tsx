@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Lock, CheckCircle2 } from 'lucide-react';
 import Button from '../components/Button';
 import Card from '../components/Card';
@@ -48,9 +48,9 @@ const DemoLogin: React.FC = () => {
       
       {/* Navbar simplificada */}
       <nav className="p-6 flex justify-between items-center max-w-7xl mx-auto w-full">
-         <div onClick={() => navigate('/')} className="cursor-pointer hover:opacity-80 transition-opacity">
+         <Link to="/" className="cursor-pointer hover:opacity-80 transition-opacity">
            <Logo size="md" />
-         </div>
+         </Link>
          <a href="#" className="text-sm font-medium text-slate-500 hover:text-blue-600 transition-colors hidden sm:block">
            Precisa de ajuda?
          </a>

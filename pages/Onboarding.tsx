@@ -5,9 +5,11 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import { Building2, Users, ArrowRight, CheckCircle2, ChevronLeft, AlertCircle, Copy, HelpCircle, Briefcase } from 'lucide-react';
 import { APP_URL } from '../constants';
+import { useMockData } from '../context/MockContext';
 
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
+  const { addCompany } = useMockData();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -86,13 +88,25 @@ const Onboarding: React.FC = () => {
 
   const handleNext = () => {
     if (validateStep(step)) {
+      if (step === 2) {
+        // Ao completar o passo 2, salvamos a empresa no Contexto (Mock Backend)
+        // Definimos um status aleatório para simular a criação e dar feedback visual
+        addCompany({
+          name: formData.name,
+          cnpj: formData.cnpj,
+          sectorsCount: 1, // Começa com 1 setor criado
+          sectorsActive: 1,
+          lastCollection: "Iniciada hoje",
+          status: 'low' // Começa como baixo risco (sem dados ainda)
+        });
+      }
       setStep(step + 1);
     }
   };
 
   const handleFinish = () => {
     setLoading(true);
-    // Simulate API
+    // Simulate API delay
     setTimeout(() => {
       setLoading(false);
       navigate('/app');
@@ -100,7 +114,7 @@ const Onboarding: React.FC = () => {
   };
 
   const handleCopyLink = () => {
-    const link = `${APP_URL}/#/questionario/ref-${formData.cnpj.slice(0,3)}`;
+    const link = `${APP_URL}/#/questionario/ref-${formData.cnpj.slice(0,3)}-${formData.sectorName.slice(0,3).toLowerCase()}`;
     navigator.clipboard.writeText(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

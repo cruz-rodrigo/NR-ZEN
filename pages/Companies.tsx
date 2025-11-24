@@ -2,22 +2,13 @@ import React from 'react';
 import Layout from '../components/Layout';
 import Button from '../components/Button';
 import Card from '../components/Card';
-import { Company } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { Plus, MoreVertical, Building2 } from 'lucide-react';
+import { useMockData } from '../context/MockContext';
 
 const Companies: React.FC = () => {
   const navigate = useNavigate();
-
-  // Mock Data (Expanded)
-  const companies: Company[] = [
-    { id: 1, name: "Indústrias Metalúrgicas Beta", cnpj: "12.345.678/0001-99", sectorsCount: 8, sectorsActive: 8, lastCollection: "10/10/2025", status: "high" },
-    { id: 2, name: "Transportadora Veloz", cnpj: "98.765.432/0001-11", sectorsCount: 4, sectorsActive: 2, lastCollection: "05/10/2025", status: "moderate" },
-    { id: 3, name: "Call Center Solutions", cnpj: "11.222.333/0001-00", sectorsCount: 12, sectorsActive: 12, lastCollection: "12/10/2025", status: "high" },
-    { id: 4, name: "Tech Softwares", cnpj: "44.555.666/0001-22", sectorsCount: 3, sectorsActive: 0, lastCollection: "20/09/2025", status: "low" },
-    { id: 5, name: "Rede Varejo Express", cnpj: "33.444.555/0001-66", sectorsCount: 20, sectorsActive: 18, lastCollection: "Hoje", status: "low" },
-    { id: 6, name: "Hospital São Lucas", cnpj: "55.666.777/0001-88", sectorsCount: 15, sectorsActive: 10, lastCollection: "15/09/2025", status: "moderate" },
-  ];
+  const { companies } = useMockData();
 
   return (
     <Layout>
