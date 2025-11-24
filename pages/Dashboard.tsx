@@ -18,6 +18,32 @@ const Dashboard: React.FC = () => {
     { id: 5, name: "Rede Varejo Express", cnpj: "33.444.555/0001-66", sectorsCount: 20, sectorsActive: 18, lastCollection: "Hoje", status: "low" },
   ];
 
+  const getStatusStyles = (status: Company['status']) => {
+    const base = {
+      low: {
+        wrapper: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        dot: 'bg-emerald-500',
+        label: 'Baixo',
+      },
+      moderate: {
+        wrapper: 'bg-amber-50 text-amber-700 border-amber-200',
+        dot: 'bg-amber-500',
+        label: 'Moderado',
+      },
+      high: {
+        wrapper: 'bg-red-50 text-red-700 border-red-200',
+        dot: 'bg-red-500',
+        label: 'Alto',
+      },
+    };
+
+    return base[status];
+  };
+
+  const handleRowClick = (companyId: number) => {
+    navigate(`/app/setor/${companyId}`);
+  };
+
   return (
     <Layout>
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -26,10 +52,10 @@ const Dashboard: React.FC = () => {
           <p className="text-slate-500 mt-1">Bem-vindo de volta, João.</p>
         </div>
         <div className="flex items-center gap-4">
-           <Button variant="secondary" size="sm">Filtrar</Button>
-           <Button size="sm" onClick={() => navigate('/app/onboarding')}><Plus size={16} className="mr-1"/> Nova Empresa</Button>
-           <div className="h-8 w-[1px] bg-slate-300 mx-1"></div>
-           <div className="flex items-center gap-3 cursor-pointer hover:bg-white p-1 rounded-full transition-colors" onClick={() => navigate('/app/settings')}>
+          <Button variant="secondary" size="sm">Filtrar</Button>
+          <Button size="sm" onClick={() => navigate('/app/onboarding')}><Plus size={16} className="mr-1"/> Nova Empresa</Button>
+          <div className="h-8 w-[1px] bg-slate-300 mx-1"></div>
+          <div className="flex items-center gap-3 cursor-pointer hover:bg-white p-1 rounded-full transition-colors" onClick={() => navigate('/app/settings')}>
             <div className="bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md border-2 border-white">JS</div>
             <div className="hidden md:block">
               <p className="text-sm font-bold text-slate-700">João Silva</p>
@@ -91,46 +117,54 @@ const Dashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {companies.map((company) => (
-                <tr key={company.id} className="hover:bg-slate-50 transition-colors group cursor-pointer" onClick={() => navigate('/app/setor/1')}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
-                        {company.name.substring(0,2).toUpperCase()}
+              {companies.map((company) => {
+                const statusStyles = getStatusStyles(company.status);
+
+                return (
+                  <tr
+                    key={company.id}
+                    className="hover:bg-slate-50 transition-colors group cursor-pointer"
+                    onClick={() => handleRowClick(company.id)}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
+                          {company.name.substring(0,2).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="font-bold text-slate-800 text-sm">{company.name}</div>
+                          <div className="text-xs text-slate-500">{company.cnpj}</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="font-bold text-slate-800 text-sm">{company.name}</div>
-                        <div className="text-xs text-slate-500">{company.cnpj}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                    <span className="font-semibold">{company.sectorsActive}</span> <span className="text-slate-400">/ {company.sectorsCount} ativos</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                    {company.lastCollection}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${
-                      company.status === 'low' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                      company.status === 'moderate' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                      'bg-red-50 text-red-700 border-red-200'
-                    }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                        company.status === 'low' ? 'bg-emerald-500' :
-                        company.status === 'moderate' ? 'bg-amber-500' :
-                        'bg-red-500'
-                      }`}></span>
-                      {company.status === 'low' ? 'Baixo' : company.status === 'moderate' ? 'Moderado' : 'Alto'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <Button variant="ghost" size="sm" className="text-slate-400 hover:text-blue-600">
-                      Gerenciar
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                      <span className="font-semibold">{company.sectorsActive}</span> <span className="text-slate-400">/ {company.sectorsCount} ativos</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                      {company.lastCollection}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${statusStyles.wrapper}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${statusStyles.dot}`}></span>
+                        {statusStyles.label}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-slate-400 hover:text-blue-600"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleRowClick(company.id);
+                        }}
+                      >
+                        Gerenciar
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
