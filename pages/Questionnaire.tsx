@@ -9,12 +9,9 @@ import { Logo } from '../components/Layout';
 
 type Screen = 'consent' | 'questions' | 'result';
 
-// DEMO OPTIMIZATION:
-// Create a subset of data (2 questions per domain instead of 5)
-// This keeps the structure (6 domains) for the report but reduces time to fill.
 const DEMO_DATA = QUESTIONNAIRE_DATA.map(domain => ({
   ...domain,
-  questions: domain.questions.slice(0, 2) // Take first 2 questions (usually 1 pos, 1 neg)
+  questions: domain.questions.slice(0, 2)
 }));
 
 const Questionnaire: React.FC = () => {
@@ -23,12 +20,8 @@ const Questionnaire: React.FC = () => {
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [result, setResult] = useState<ScoreResult | null>(null);
 
-  // Use the reduced dataset for this component
   const ACTIVE_DATA = DEMO_DATA;
 
-  // Helper to calculate score (Risk Index)
-  // 0 = No Risk (Perfect environment)
-  // 100 = Max Risk (Toxic environment)
   const calculateResults = () => {
     let globalSum = 0;
     const domainScores = ACTIVE_DATA.map(domain => {
@@ -39,19 +32,11 @@ const Questionnaire: React.FC = () => {
         const val = answers[q.id];
         if (val) {
           let score = 0;
-          
           if (q.type === 'positive') {
-             // Positive Question (e.g., "I have autonomy")
-             // 5 (Sempre) = Good = 0 Risk
-             // 1 (Nunca) = Bad = 100 Risk
              score = ((5 - val) / 4) * 100;
           } else {
-             // Negative Question (e.g., "I have excessive workload")
-             // 5 (Sempre) = Bad = 100 Risk
-             // 1 (Nunca) = Good = 0 Risk
              score = ((val - 1) / 4) * 100;
           }
-          
           domainSum += score;
           count++;
         }
@@ -65,17 +50,12 @@ const Questionnaire: React.FC = () => {
 
     const globalAvg = Math.round(globalSum / ACTIVE_DATA.length);
     
-    // Risk Classification based on Technical Report Logic
-    // Adjusted Thresholds for Demo Sensitivity:
-    // 0-45: Low (Allows "All 5s" = 40 to be Green)
-    // 46-59: Moderate
-    // 60-100: High (Allows "All 1s" = 60 to be Red)
     let riskLevel: ScoreResult['riskLevel'] = 'Moderado';
     let riskColor = '#F59E0B'; // Amber
 
     if (globalAvg <= 45) {
       riskLevel = 'Baixo';
-      riskColor = '#10B981'; // Emerald/Green
+      riskColor = '#10B981'; // Emerald
     } else if (globalAvg >= 60) {
       riskLevel = 'Alto';
       riskColor = '#EF4444'; // Red
@@ -109,7 +89,6 @@ const Questionnaire: React.FC = () => {
   };
 
   const handleRestart = () => {
-    // Completely reset state
     setAnswers({});
     setResult(null);
     setScreen('consent');
@@ -117,17 +96,13 @@ const Questionnaire: React.FC = () => {
   };
 
   const handleCtaClick = () => {
-    // Navigate to landing page pricing section or contact form
     window.location.href = '/#pricing';
   };
-
-  // --- RENDERERS ---
 
   if (screen === 'consent') {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
         <div className="max-w-2xl w-full">
-          {/* Header decorativo simples */}
           <div className="text-center mb-8 animate-fade-in-down">
             <Link to="/" className="inline-flex justify-center mb-4 hover:opacity-80 transition-opacity">
                <Logo size="lg" />
@@ -192,7 +167,6 @@ const Questionnaire: React.FC = () => {
   }
 
   if (screen === 'result' && result) {
-    // Cálculo SVG Chart
     const radius = 60;
     const circumference = 2 * Math.PI * radius;
     const offset = circumference - (result.globalScore / 100) * circumference;
@@ -200,7 +174,6 @@ const Questionnaire: React.FC = () => {
     return (
       <div className="min-h-screen bg-slate-50 py-12 px-4 flex flex-col items-center justify-center font-sans">
         
-        {/* Header de Sucesso */}
         <div className="text-center mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 print:hidden">
           <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-lg">
              <CheckCircle2 size={40} />
@@ -209,17 +182,14 @@ const Questionnaire: React.FC = () => {
           <p className="text-slate-500">Obrigado pela sua participação.</p>
         </div>
 
-        {/* Dashboard de Relatório Simulado */}
         <div className="w-full max-w-2xl bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden relative print:shadow-none print:border print:w-full print:max-w-none">
           
-          {/* Marca D'água */}
           <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none z-0">
              <div className="transform -rotate-45 text-slate-200/50 text-[60px] md:text-[80px] font-black uppercase whitespace-nowrap select-none">
                Simulação • Sem Validade
              </div>
           </div>
 
-          {/* Premium Dark Header */}
           <header className="bg-slate-900 text-white p-8 relative z-10 flex justify-between items-start">
              <div>
                 <div className="flex items-center gap-2 mb-2">
@@ -239,7 +209,6 @@ const Questionnaire: React.FC = () => {
           <div className="relative z-10 p-8 pt-6">
             <div className="flex flex-col md:flex-row gap-8 items-center mb-10">
               
-              {/* Gauge */}
               <div className="flex flex-col items-center justify-center text-center">
                  <div className="relative w-40 h-40 flex items-center justify-center">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 160 160">
@@ -261,7 +230,6 @@ const Questionnaire: React.FC = () => {
                  </div>
               </div>
 
-              {/* Bars */}
               <div className="flex-1 w-full space-y-4">
                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">Detalhamento por Fator</h4>
                  {result.domainScores.map(d => (
@@ -284,14 +252,12 @@ const Questionnaire: React.FC = () => {
               </div>
             </div>
 
-            {/* Disclaimer */}
             <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center mb-6">
                <p className="text-xs text-slate-500 leading-relaxed italic">
                  "Este relatório é gerado automaticamente pelo algoritmo NR ZEN para fins de demonstração. Em um ambiente real, este painel é visível apenas para a consultoria de SST e o RH."
                </p>
             </div>
 
-            {/* CTA Block - New */}
             <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl p-6 text-white text-center print:hidden shadow-lg shadow-blue-900/20">
               <h4 className="font-bold text-lg mb-2">Gostou da experiência?</h4>
               <p className="text-blue-100 text-sm mb-4">Leve essa tecnologia para sua consultoria e profissionalize seu PGR.</p>
@@ -303,7 +269,6 @@ const Questionnaire: React.FC = () => {
           </div>
         </div>
 
-        {/* Actions */}
         <div className="max-w-2xl w-full mt-6 flex flex-col sm:flex-row gap-3 print:hidden">
             <Button variant="secondary" onClick={() => window.print()} fullWidth className="text-slate-600">
               <Printer size={18} className="mr-2 text-slate-400" />
@@ -323,7 +288,6 @@ const Questionnaire: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans">
-      {/* Sticky Header */}
       <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm print:hidden">
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="hover:opacity-80 transition-opacity">
@@ -343,24 +307,23 @@ const Questionnaire: React.FC = () => {
 
       <main className="max-w-3xl mx-auto px-4 py-8 pb-24 print:hidden">
         
-        {/* Demo Warning Banner - NEW */}
-        <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4 mb-6 flex gap-3 items-start shadow-sm">
-          <div className="bg-indigo-100 p-1.5 rounded-full shrink-0 mt-0.5">
-            <Zap size={16} className="text-indigo-600" />
+        {/* Unified to Blue/Slate palette - Removing Indigo */}
+        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6 flex gap-3 items-start shadow-sm">
+          <div className="bg-blue-100 p-1.5 rounded-full shrink-0 mt-0.5">
+            <Zap size={16} className="text-blue-600" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-indigo-900">Modo Demonstração (Pocket)</h4>
-            <p className="text-xs text-indigo-700 mt-1 leading-relaxed">
+            <h4 className="text-sm font-bold text-blue-900">Modo Demonstração (Pocket)</h4>
+            <p className="text-xs text-blue-700 mt-1 leading-relaxed">
               Para otimizar seu teste, reduzimos este questionário para <strong>12 questões</strong> (2 por fator). 
               A versão completa da plataforma utiliza a metodologia integral com 30 questões.
             </p>
           </div>
         </div>
 
-        {/* Progress Warning */}
-        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-8 flex gap-3 items-start">
+        <div className="bg-slate-50 border border-slate-100 rounded-lg p-4 mb-8 flex gap-3 items-start">
           <AlertCircle size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-blue-900">
+          <div className="text-sm text-slate-700">
             <p>Responda com sinceridade pensando nos <strong>últimos 30 dias</strong> de trabalho. Não existem respostas certas ou erradas.</p>
           </div>
         </div>
@@ -378,13 +341,11 @@ const Questionnaire: React.FC = () => {
                   <div key={q.id} id={q.id} className="p-4 rounded-xl hover:bg-slate-50 transition-colors group">
                     <p className="font-medium text-slate-800 mb-5 text-base sm:text-lg leading-relaxed">{q.text}</p>
                     
-                    {/* Scale Logic */}
                     <div className="grid grid-cols-5 gap-1 sm:gap-3">
                       {[1, 2, 3, 4, 5].map((val) => {
-                        // Frequency Labels Updated
                         const labels = ["Nunca", "Raramente", "Às Vezes", "Frequentemente", "Sempre"];
                         const isSelected = answers[q.id] === val;
-                        // Color logic for selection
+                        // Color logic matches risk scale (Red for bad, Green for good, based on question type is handled in calc)
                         const activeColorClass = val < 3 ? 'bg-red-500 border-red-500' : val > 3 ? 'bg-emerald-500 border-emerald-500' : 'bg-slate-500 border-slate-500';
 
                         return (
@@ -418,7 +379,6 @@ const Questionnaire: React.FC = () => {
         </div>
       </main>
 
-      {/* Floating Footer Action */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] print:hidden">
         <div className="max-w-3xl mx-auto flex justify-between items-center gap-4">
            <div className="hidden sm:block text-sm text-slate-500">

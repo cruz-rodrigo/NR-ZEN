@@ -28,24 +28,21 @@ const SectorDetail: React.FC = () => {
     { domain: "Apoio", risk: "Falta de suporte líder", action: "Treinamento de feedback para líderes", responsible: "RH", deadline: "15/12/2025", status: "Pendente" },
   ];
 
-  // Cálculo do Gráfico de Rosca
   const score = 58;
   const radius = 70;
-  const circumference = 2 * Math.PI * radius; // ~440
+  const circumference = 2 * Math.PI * radius; 
   const offset = circumference - (score / 100) * circumference;
 
   return (
     <Layout>
-      {/* Breadcrumb */}
       <nav className="flex items-center text-sm text-slate-500 mb-6">
         <Link to="/app" className="hover:text-blue-600 transition-colors">Empresas</Link>
         <ChevronRight size={14} className="mx-2 text-slate-400" />
         <span className="hover:text-slate-800 cursor-pointer">Indústrias Metalúrgicas Beta</span>
         <ChevronRight size={14} className="mx-2 text-slate-400" />
-        <span className="text-slate-900 font-semibold bg-blue-50 px-2 py-0.5 rounded">Operação Logística – Turno 1</span>
+        <span className="text-blue-700 font-semibold bg-blue-50 px-2 py-0.5 rounded">Operação Logística – Turno 1</span>
       </nav>
 
-      {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-heading font-bold text-slate-800">Operação Logística – Turno 1</h1>
@@ -66,10 +63,8 @@ const SectorDetail: React.FC = () => {
         </div>
       </header>
 
-      {/* Overview Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         
-        {/* Score Card */}
         <Card className="flex flex-col justify-center items-center text-center relative overflow-hidden border-t-4 border-t-amber-500">
           <div className="absolute top-0 right-0 p-3 opacity-10">
             <History size={60} />
@@ -77,28 +72,12 @@ const SectorDetail: React.FC = () => {
           <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-6">Nível de Risco Global</h3>
           
           <div className="relative w-48 h-48 mb-4 flex items-center justify-center">
-            {/* SVG Gauge Chart */}
             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 180 180">
-              {/* Background Circle */}
+              <circle cx="90" cy="90" r={radius} stroke="#F1F5F9" strokeWidth="14" fill="none" />
               <circle 
-                cx="90" 
-                cy="90" 
-                r={radius} 
-                stroke="#F1F5F9" 
-                strokeWidth="14" 
-                fill="none" 
-              />
-              {/* Progress Circle */}
-              <circle 
-                cx="90" 
-                cy="90" 
-                r={radius} 
-                stroke="#F59E0B" 
-                strokeWidth="14" 
-                fill="none" 
-                strokeDasharray={circumference} 
-                strokeDashoffset={offset} 
-                strokeLinecap="round" 
+                cx="90" cy="90" r={radius} 
+                stroke="#F59E0B" strokeWidth="14" fill="none" 
+                strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" 
                 className="transition-all duration-1000 ease-out"
               />
             </svg>
@@ -123,7 +102,6 @@ const SectorDetail: React.FC = () => {
           </div>
         </Card>
 
-        {/* Breakdown Chart */}
         <Card className="lg:col-span-2 flex flex-col">
            <div className="flex justify-between items-center mb-6">
              <h3 className="font-bold text-slate-800 text-lg">Percepção por Domínio (Fatores)</h3>
@@ -154,7 +132,6 @@ const SectorDetail: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Collection Links */}
         <Card>
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-bold text-slate-800">Links de Coleta Ativos</h3>
@@ -163,7 +140,7 @@ const SectorDetail: React.FC = () => {
           <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs font-bold text-slate-400 uppercase">Link Público</span>
-              <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">Ativo</span>
+              <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-bold border border-emerald-100">Ativo</span>
             </div>
             <div className="flex gap-2">
               <input readOnly value={`${APP_URL}/#/questionario/beta-log`} className="flex-1 text-sm bg-white border border-slate-300 rounded px-3 py-2 text-slate-600" />
@@ -187,7 +164,6 @@ const SectorDetail: React.FC = () => {
           </div>
         </Card>
 
-        {/* History */}
         <Card>
            <h3 className="font-bold text-slate-800 mb-4">Histórico Evolutivo</h3>
            <div className="space-y-3">
@@ -214,7 +190,6 @@ const SectorDetail: React.FC = () => {
         </Card>
       </div>
 
-      {/* Action Plan */}
       <Card>
         <div className="flex justify-between items-center mb-6">
           <h3 className="font-bold text-slate-800 text-lg">Plano de Ação</h3>

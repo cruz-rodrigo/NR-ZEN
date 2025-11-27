@@ -3,13 +3,11 @@ import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Building2, FileText, Settings, LogOut, ClipboardList } from 'lucide-react';
 import { LOGO_IMAGE_URL } from '../constants';
 
-// Typographic Premium Logo or Image Logo
 export const Logo: React.FC<{ className?: string, light?: boolean, size?: 'sm' | 'md' | 'lg' }> = ({ 
   className = "", 
   light = false,
   size = 'md' 
 }) => {
-  // Se existir uma URL de imagem definida nas constantes, usa a imagem.
   if (LOGO_IMAGE_URL) {
     const imgHeight = size === 'sm' ? 'h-6' : size === 'lg' ? 'h-10' : 'h-8';
     return (
@@ -21,15 +19,44 @@ export const Logo: React.FC<{ className?: string, light?: boolean, size?: 'sm' |
     );
   }
 
-  // Caso contrário, renderiza o logo tipográfico
+  const iconSize = size === 'sm' ? 24 : size === 'lg' ? 40 : 32;
   const textSize = size === 'sm' ? 'text-lg' : size === 'lg' ? 'text-4xl' : 'text-2xl';
-  const nrColor = light ? "text-white" : "text-slate-900";
-  const zenColor = light ? "text-blue-200" : "text-[#2563EB]";
+  
+  // UNIFIED COLORS: Blue-600 (#2563EB)
+  const nrColor = light ? "text-white" : "text-slate-900"; 
+  const zenColor = light ? "text-blue-300" : "text-blue-600";
+  const iconColor = light ? "#93C5FD" : "#2563EB"; // Blue 300 / Blue 600
 
   return (
-    <div className={`font-heading tracking-tight leading-none select-none inline-flex items-center ${className} ${textSize}`}>
-      <span className={`font-extrabold ${nrColor}`}>NR</span>
-      <span className={`font-light ${zenColor}`}>ZEN</span>
+    <div className={`flex items-center gap-2.5 select-none ${className}`}>
+      <svg 
+        width={iconSize} 
+        height={iconSize} 
+        viewBox="0 0 32 32" 
+        fill="none" 
+        xmlns="http://www.w3.org/2000/svg"
+        className="flex-shrink-0"
+      >
+        <circle cx="16" cy="16" r="15" stroke={iconColor} strokeWidth="2.5" />
+        <path 
+          d="M9.5 16L13.5 20L23 10.5" 
+          stroke={iconColor} 
+          strokeWidth="3" 
+          strokeLinecap="round" 
+          strokeLinejoin="round"
+        />
+        <path 
+          d="M7 23C10 21 13 25 16 25C19 25 22 21 25 23" 
+          stroke={iconColor} 
+          strokeWidth="2" 
+          strokeLinecap="round"
+        />
+      </svg>
+
+      <div className={`font-heading tracking-tight leading-none ${textSize}`}>
+        <span className={`font-extrabold ${nrColor}`}>NR</span>
+        <span className={`font-light ml-1 ${zenColor}`}>ZEN</span>
+      </div>
     </div>
   );
 };
@@ -51,10 +78,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-row font-sans">
-      {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col fixed h-full z-10 hidden md:flex shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-        <div className="p-8 border-b border-slate-100 flex items-center gap-3">
-          <Link to="/" className="flex items-center gap-3 group hover:opacity-80 transition-opacity">
+        <div className="p-6 border-b border-slate-100 flex items-center justify-center">
+          <Link to="/" className="group hover:opacity-90 transition-opacity">
             <Logo />
           </Link>
         </div>
@@ -67,6 +93,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <Link
                 key={item.label}
                 to={item.path}
+                // UNIFIED ACTIVE STATE: Blue-50 background, Blue-700 text
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                   isActive 
                     ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100' 
@@ -88,7 +115,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 md:ml-64 p-6 md:p-10 min-h-screen bg-[#F8FAFC]">
         {children}
       </main>

@@ -5,22 +5,20 @@ export const DOMAIN_URL = "nrzen.com.br";
 export const APP_URL = "app.nrzen.com.br";
 
 // LOGO CONFIG:
-// Se você tiver uma imagem (PNG/SVG) no futuro, coloque o caminho ou URL aqui.
-// Exemplo: export const LOGO_IMAGE_URL = "/assets/logo.png";
-// Deixe como "" (string vazia) para usar o logo em Texto (Tipográfico).
 export const LOGO_IMAGE_URL = ""; 
 
-// Palette - NR ZEN Premium Blue
-// Uma paleta corporativa, tecnológica e serena.
+// Palette - NR ZEN Premium Blue (Unified)
+// Baseado no Tailwind Blue-600 (#2563EB) para consistência total.
 
 export const COLORS = {
-  primary: '#0F172A', // Slate 900 (Authority, Dark Blue-Grey)
+  primary: '#0F172A', // Slate 900 (Dark text)
   primaryLight: '#334155', // Slate 700
-  brand: '#2563EB', // Royal Blue (Action)
+  brand: '#2563EB', // Blue 600 (Royal Blue - Primary Action)
   brandLight: '#3B82F6', // Blue 500
-  accent: '#0EA5E9', // Sky Blue (Zen/Flow)
+  brandDark: '#1D4ED8', // Blue 700
+  accent: '#2563EB', // Unificado com a marca
   
-  // Risk Colors (Refined)
+  // Risk Colors
   green: '#10B981', // Emerald
   yellow: '#F59E0B', // Amber
   red: '#EF4444', // Red
@@ -29,7 +27,7 @@ export const COLORS = {
   textMain: '#0F172A', // Slate 900
   textSec: '#64748B', // Slate 500
   border: '#E2E8F0', // Slate 200
-  bgApp: '#F8FAFC', // Slate 50 (Ultra light)
+  bgApp: '#F8FAFC', // Slate 50
   bgCard: '#FFFFFF',
 };
 

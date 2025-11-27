@@ -31,12 +31,9 @@ const DemoLogin: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     
-    // Simulate API Capture / Backend Processing
     setTimeout(() => {
       setLoading(false);
       setSuccess(true);
-      
-      // Wait a moment to show success message before redirecting
       setTimeout(() => {
         navigate('/questionario');
       }, 2000);
@@ -46,7 +43,6 @@ const DemoLogin: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
       
-      {/* Navbar simplificada */}
       <nav className="p-6 flex justify-between items-center max-w-7xl mx-auto w-full">
          <Link to="/" className="cursor-pointer hover:opacity-80 transition-opacity">
            <Logo size="md" />
@@ -58,7 +54,6 @@ const DemoLogin: React.FC = () => {
 
       <div className="flex-1 flex flex-col md:flex-row items-center justify-center p-4 max-w-6xl mx-auto w-full gap-12 lg:gap-24">
         
-        {/* Lado Esquerdo - Contexto */}
         <div className="hidden md:block max-w-md space-y-8">
            <div>
              <span className="inline-block py-1 px-3 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wide mb-4">
@@ -74,7 +69,7 @@ const DemoLogin: React.FC = () => {
 
            <div className="space-y-4">
               {[
-                "Simulação realista da coleta", // Alterado aqui
+                "Simulação realista da coleta",
                 "Acesso imediato ao dashboard simulado",
                 "Relatório modelo PDF incluso"
               ].map((item, i) => (
@@ -88,7 +83,6 @@ const DemoLogin: React.FC = () => {
            </div>
         </div>
 
-        {/* Lado Direito - Formulário */}
         <div className="w-full max-w-md">
            <Card className={`shadow-2xl shadow-blue-900/10 border-t-4 p-8 transition-colors duration-500 ${success ? 'border-t-emerald-500' : 'border-t-blue-600'}`}>
              
@@ -125,7 +119,7 @@ const DemoLogin: React.FC = () => {
                      <input 
                         required 
                         type="text" 
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none" 
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all outline-none" 
                         placeholder="Ex: João Silva"
                      />
                    </div>
@@ -135,7 +129,7 @@ const DemoLogin: React.FC = () => {
                      <input 
                         required 
                         type="email" 
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none" 
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all outline-none" 
                         placeholder="voce@empresa.com.br"
                      />
                    </div>
@@ -147,7 +141,7 @@ const DemoLogin: React.FC = () => {
                         type="tel" 
                         value={phone}
                         onChange={handlePhoneChange}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none" 
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all outline-none" 
                         placeholder="(11) 99999-9999"
                      />
                    </div>

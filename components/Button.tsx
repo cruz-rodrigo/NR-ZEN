@@ -14,28 +14,25 @@ const Button: React.FC<ButtonProps> = ({
   className = '',
   ...props 
 }) => {
-  // Added whitespace-nowrap to prevent text wrapping
-  // Adjusted active:scale to 0.97 for better tactile feedback
   const baseStyles = "inline-flex items-center justify-center font-semibold whitespace-nowrap transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg active:scale-[0.97] select-none";
   
   const variants = {
-    // Primary: Royal Blue Gradient vibe (Solid color)
-    primary: "bg-[#2563EB] hover:bg-[#1D4ED8] text-white shadow-md hover:shadow-lg hover:shadow-blue-600/30 border border-transparent focus:ring-blue-600",
+    // Primary: Standard Brand Blue
+    primary: "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg hover:shadow-blue-600/30 border border-transparent focus:ring-blue-600",
     
-    // Secondary: White bg with Blue text/border. 
-    // INCREASED CONTRAST: border-slate-300 instead of 200 for better visibility on white backgrounds
-    secondary: "bg-white text-slate-700 border border-slate-300 hover:border-blue-600 hover:text-blue-700 hover:bg-blue-50/50 focus:ring-blue-200 shadow-sm",
+    // Secondary: Slate border with Blue hover
+    secondary: "bg-white text-slate-700 border border-slate-300 hover:border-blue-600 hover:text-blue-600 hover:bg-blue-50 focus:ring-blue-200 shadow-sm",
     
-    // White: Pure white, strong shadow (Good for dark backgrounds like Pricing or Hero)
-    white: "bg-white text-blue-700 hover:bg-slate-50 border border-transparent shadow-lg focus:ring-white/50",
+    // White: Blue text
+    white: "bg-white text-blue-600 hover:bg-slate-50 border border-transparent shadow-lg focus:ring-white/50",
     
-    // Ghost: Subtle, no border
-    ghost: "text-slate-600 hover:text-blue-700 hover:bg-slate-100 focus:ring-slate-200",
+    // Ghost
+    ghost: "text-slate-600 hover:text-blue-600 hover:bg-slate-100 focus:ring-slate-200",
     
     // Danger
     danger: "bg-red-600 text-white hover:bg-red-700 shadow-sm focus:ring-red-500",
     
-    // Glass: For the Hero section (Translucent). Improved text contrast.
+    // Glass
     glass: "bg-white/10 text-white border border-white/30 hover:bg-white/20 backdrop-blur-md shadow-lg focus:ring-white/50"
   };
 

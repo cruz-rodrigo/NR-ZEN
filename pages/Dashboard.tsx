@@ -32,7 +32,7 @@ const Dashboard: React.FC = () => {
         </div>
       </header>
 
-      {/* KPIs */}
+      {/* KPIs - UNIFIED BLUE FOR RESPONSE ACTIVITY */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card className="flex items-center justify-between shadow-sm hover:shadow-md transition-shadow border-l-4 border-l-blue-600">
           <div>
@@ -48,12 +48,13 @@ const Dashboard: React.FC = () => {
           </div>
           <div className="bg-emerald-50 p-3 rounded-xl text-emerald-600"><Users size={24} /></div>
         </Card>
-        <Card className="flex items-center justify-between shadow-sm hover:shadow-md transition-shadow border-l-4 border-l-indigo-500">
+        {/* Changed from Indigo to Blue for consistency */}
+        <Card className="flex items-center justify-between shadow-sm hover:shadow-md transition-shadow border-l-4 border-l-blue-400">
           <div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Respostas (mês)</p>
             <p className="text-3xl font-bold text-slate-800 mt-1">{stats.responses}</p>
           </div>
-          <div className="bg-indigo-50 p-3 rounded-xl text-indigo-600"><Activity size={24} /></div>
+          <div className="bg-blue-50 p-3 rounded-xl text-blue-500"><Activity size={24} /></div>
         </Card>
         <Card className="flex items-center justify-between shadow-sm hover:shadow-md transition-shadow border-l-4 border-l-red-500">
           <div>

@@ -8,7 +8,6 @@ const Report: React.FC = () => {
   const navigate = useNavigate();
 
   const handleClose = () => {
-    // Tenta voltar no histórico, se não houver, tenta fechar a janela
     if (window.history.length > 1) {
       navigate(-1);
     } else {
@@ -19,7 +18,6 @@ const Report: React.FC = () => {
   return (
     <div className="bg-slate-200 min-h-screen p-8 print:p-0 print:bg-white font-sans text-slate-900">
       
-      {/* Print Controls (Hidden on Print) */}
       <div className="max-w-[210mm] mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4 print:hidden">
         <div>
           <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
@@ -48,10 +46,8 @@ const Report: React.FC = () => {
         </div>
       </div>
 
-      {/* A4 Container */}
       <div className="max-w-[210mm] mx-auto bg-white min-h-[297mm] shadow-2xl print:shadow-none p-[20mm] print:p-0 relative overflow-hidden print:w-full">
         
-        {/* Header Oficial */}
         <header className="border-b-2 border-slate-800 pb-6 mb-8 flex justify-between items-end">
           <div>
              <div className="mb-4 scale-90 origin-left">
@@ -70,7 +66,6 @@ const Report: React.FC = () => {
           </div>
         </header>
 
-        {/* Title Section */}
         <div className="mb-10 text-center bg-slate-50 py-4 border border-slate-100 rounded-lg print:border-none print:bg-transparent">
            <h1 className="text-2xl font-heading font-bold text-slate-900 mb-1 uppercase">Relatório de Avaliação Psicossocial</h1>
            <h2 className="text-lg text-slate-600">Anexo ao Programa de Gerenciamento de Riscos (PGR)</h2>
@@ -79,7 +74,6 @@ const Report: React.FC = () => {
            </p>
         </div>
 
-        {/* 1. Metodologia (Obrigatório NR-01) */}
         <section className="mb-8">
           <h3 className="text-sm font-bold text-slate-900 uppercase border-b border-slate-300 mb-4 pb-1">
             1. Metodologia e Critérios de Avaliação (NR-01.5.4.4)
@@ -105,7 +99,6 @@ const Report: React.FC = () => {
           </div>
         </section>
 
-        {/* 2. Inventário de Riscos (Obrigatório NR-01) */}
         <section className="mb-8 print:break-inside-avoid">
           <h3 className="text-sm font-bold text-slate-900 uppercase border-b border-slate-300 mb-4 pb-1">
             2. Inventário de Riscos Ocupacionais (Identificação de Perigos)
@@ -150,7 +143,6 @@ const Report: React.FC = () => {
           <p className="text-[10px] text-slate-400 mt-1 italic">* Probabilidade e Severidade estimadas conforme matriz da organização.</p>
         </section>
 
-        {/* 3. Plano de Ação (NR-01.5.5.2) */}
         <section className="mb-10 print:break-inside-avoid">
            <h3 className="text-sm font-bold text-slate-900 uppercase border-b border-slate-300 mb-4 pb-1">
             3. Plano de Ação (Medidas de Prevenção)
@@ -181,7 +173,6 @@ const Report: React.FC = () => {
            </table>
         </section>
 
-        {/* 4. Assinaturas (Legal) */}
         <section className="mt-16 print:break-inside-avoid">
           <div className="grid grid-cols-2 gap-12">
             <div className="text-center">
