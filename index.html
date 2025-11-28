@@ -7,20 +7,59 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
     <style>
+      html {
+        scroll-behavior: smooth;
+      }
       body {
         font-family: 'Inter', sans-serif;
-        background-color: #F5F7FA;
-        color: #1F2933;
+        background-color: #F8FAFC;
+        color: #0F172A;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
       }
       h1, h2, h3, h4, h5, h6, .font-heading {
         font-family: 'Poppins', sans-serif;
       }
+      
+      /* Animações utilitárias */
+      @keyframes fade-in-down {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in-down {
+        animation: fade-in-down 0.5s ease-out forwards;
+      }
+
+      /* Regras de Impressão Profissional (A4 PDF) */
       @media print {
-        .no-print { display: none !important; }
-        body { background: white; }
-        .print-break-inside-avoid { break-inside: avoid; }
+        @page {
+          margin: 0;
+          size: A4;
+        }
+        body {
+          background: white;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        .no-print, header, footer, nav, button {
+          display: none !important;
+        }
+        .print-only {
+          display: block !important;
+        }
+        .print-break-inside-avoid {
+          break-inside: avoid;
+        }
+        .print-break-before {
+          break-before: page;
+        }
+        /* Força a impressão de backgrounds */
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
       }
     </style>
   <script type="importmap">

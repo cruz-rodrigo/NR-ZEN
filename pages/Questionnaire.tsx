@@ -32,9 +32,12 @@ const Questionnaire: React.FC = () => {
         const val = answers[q.id];
         if (val) {
           let score = 0;
+          // Logic: 100 = High Risk, 0 = Low Risk
           if (q.type === 'positive') {
+             // If question is positive ("I feel good"), then High Value (5) = Low Risk (0)
              score = ((5 - val) / 4) * 100;
           } else {
+             // If question is negative ("I feel bad"), then High Value (5) = High Risk (100)
              score = ((val - 1) / 4) * 100;
           }
           domainSum += score;
@@ -53,10 +56,10 @@ const Questionnaire: React.FC = () => {
     let riskLevel: ScoreResult['riskLevel'] = 'Moderado';
     let riskColor = '#F59E0B'; // Amber
 
-    if (globalAvg <= 45) {
+    if (globalAvg <= 39) {
       riskLevel = 'Baixo';
       riskColor = '#10B981'; // Emerald
-    } else if (globalAvg >= 60) {
+    } else if (globalAvg >= 70) {
       riskLevel = 'Alto';
       riskColor = '#EF4444'; // Red
     }
@@ -68,7 +71,7 @@ const Questionnaire: React.FC = () => {
       riskColor
     });
     setScreen('result');
-    window.scrollTo(0,0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleAnswer = (qId: string, val: number) => {
@@ -80,9 +83,13 @@ const Questionnaire: React.FC = () => {
     const unanswered = allQuestions.find(q => !answers[q.id]);
     
     if (unanswered) {
-      alert("Por favor, responda todas as perguntas antes de enviar.");
       const el = document.getElementById(unanswered.id);
-      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Highlight effect
+          el.classList.add('ring-2', 'ring-red-300');
+          setTimeout(() => el.classList.remove('ring-2', 'ring-red-300'), 2000);
+      }
       return;
     }
     calculateResults();
@@ -148,7 +155,7 @@ const Questionnaire: React.FC = () => {
               </div>
 
               <div className="pt-4 flex flex-col sm:flex-row gap-3">
-                <Button size="lg" fullWidth onClick={() => setScreen('questions')} className="shadow-lg shadow-blue-600/20">
+                <Button size="lg" fullWidth onClick={() => { setScreen('questions'); window.scrollTo(0,0); }} className="shadow-lg shadow-blue-600/20">
                   Li e concordo em participar
                 </Button>
                 <Button variant="ghost" fullWidth onClick={() => navigate('/')}>
@@ -243,7 +250,7 @@ const Questionnaire: React.FC = () => {
                           className="h-full rounded-full transition-all duration-1000" 
                           style={{ 
                             width: `${d.score}%`,
-                            backgroundColor: d.score < 45 ? '#10B981' : d.score > 60 ? '#EF4444' : '#F59E0B'
+                            backgroundColor: d.score <= 39 ? '#10B981' : d.score >= 70 ? '#EF4444' : '#F59E0B'
                           }}
                         ></div>
                       </div>
@@ -296,7 +303,7 @@ const Questionnaire: React.FC = () => {
           <div className="flex items-center gap-3">
              <div className="hidden sm:block text-right">
                <p className="text-xs font-bold text-slate-900">Logística</p>
-               <p className="text-[10px] text-slate-500">Turno 1</p>
+               <p className="text--[10px] text-slate-500">Turno 1</p>
              </div>
              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
                L1
@@ -307,7 +314,7 @@ const Questionnaire: React.FC = () => {
 
       <main className="max-w-3xl mx-auto px-4 py-8 pb-24 print:hidden">
         
-        {/* Unified to Blue/Slate palette - Removing Indigo */}
+        {/* Unified to Blue/Slate palette */}
         <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6 flex gap-3 items-start shadow-sm">
           <div className="bg-blue-100 p-1.5 rounded-full shrink-0 mt-0.5">
             <Zap size={16} className="text-blue-600" />
@@ -338,15 +345,16 @@ const Questionnaire: React.FC = () => {
               
               <div className="p-2 sm:p-6 space-y-1">
                 {domain.questions.map((q) => (
-                  <div key={q.id} id={q.id} className="p-4 rounded-xl hover:bg-slate-50 transition-colors group">
+                  <div key={q.id} id={q.id} className="p-4 rounded-xl hover:bg-slate-50 transition-colors group scroll-mt-24">
                     <p className="font-medium text-slate-800 mb-5 text-base sm:text-lg leading-relaxed">{q.text}</p>
                     
                     <div className="grid grid-cols-5 gap-1 sm:gap-3">
                       {[1, 2, 3, 4, 5].map((val) => {
                         const labels = ["Nunca", "Raramente", "Às Vezes", "Frequentemente", "Sempre"];
                         const isSelected = answers[q.id] === val;
-                        // Color logic matches risk scale (Red for bad, Green for good, based on question type is handled in calc)
-                        const activeColorClass = val < 3 ? 'bg-red-500 border-red-500' : val > 3 ? 'bg-emerald-500 border-emerald-500' : 'bg-slate-500 border-slate-500';
+                        // Color logic based on selection value
+                        // 1-2 (Low Freq) / 4-5 (High Freq) - Meaning depends on Question Type, but UI feedback should be consistent selection
+                        const activeColorClass = 'bg-blue-600 border-blue-600';
 
                         return (
                           <button

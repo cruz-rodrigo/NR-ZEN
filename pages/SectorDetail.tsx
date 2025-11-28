@@ -3,23 +3,31 @@ import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Card from '../components/Card';
 import Button from '../components/Button';
-import { ChevronRight, Copy, Plus, FileText, Calendar, Users, History, CheckCircle2 } from 'lucide-react';
+import { ChevronRight, Copy, Plus, FileText, Calendar, Users, History, CheckCircle2, Info } from 'lucide-react';
 import { ActionPlanItem } from '../types';
 import { APP_URL } from '../constants';
 
 const SectorDetail: React.FC = () => {
   const navigate = useNavigate();
-  const [copied, setCopied] = useState(false);
+  const [notification, setNotification] = useState<string | null>(null);
+
+  const showNotification = (msg: string) => {
+    setNotification(msg);
+    setTimeout(() => setNotification(null), 3000);
+  };
 
   const handleCopyLink = () => {
-    const link = `${window.location.origin}/#/questionario`;
+    // Usa a URL base atual para garantir que o link funcione em qualquer ambiente
+    const baseUrl = window.location.href.split('#')[0];
+    const link = `${baseUrl}#/questionario`;
+    
     navigator.clipboard.writeText(link).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      showNotification("Link copiado para a área de transferência!");
     });
   };
 
   const openReport = () => {
+    // Navegação interna direta (SPA) em vez de window.open
     navigate('/relatorio');
   };
 
@@ -35,6 +43,14 @@ const SectorDetail: React.FC = () => {
 
   return (
     <Layout>
+      {/* Toast Notification */}
+      {notification && (
+        <div className="fixed top-20 right-6 z-50 animate-fade-in-down bg-slate-800 text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-3">
+          <CheckCircle2 size={20} className="text-emerald-400" />
+          <span className="text-sm font-medium">{notification}</span>
+        </div>
+      )}
+
       <nav className="flex items-center text-sm text-slate-500 mb-6">
         <Link to="/app" className="hover:text-blue-600 transition-colors">Empresas</Link>
         <ChevronRight size={14} className="mx-2 text-slate-400" />
@@ -57,7 +73,7 @@ const SectorDetail: React.FC = () => {
             <FileText size={18} className="mr-2" />
             Visualizar Relatório
           </Button>
-          <Button onClick={() => alert("Simulação: Modal de agendamento aberto.")}>
+          <Button onClick={() => showNotification("Solicitação de agendamento enviada para o RH.")}>
             Agendar Coleta
           </Button>
         </div>
@@ -135,7 +151,7 @@ const SectorDetail: React.FC = () => {
         <Card>
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-bold text-slate-800">Links de Coleta Ativos</h3>
-            <Button size="sm" variant="ghost" onClick={() => alert("Gerado novo link.")}>+ Novo Link</Button>
+            <Button size="sm" variant="ghost" onClick={() => showNotification("Novo link gerado com sucesso.")}>+ Novo Link</Button>
           </div>
           <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
             <div className="flex justify-between items-center mb-2">
@@ -143,23 +159,18 @@ const SectorDetail: React.FC = () => {
               <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-bold border border-emerald-100">Ativo</span>
             </div>
             <div className="flex gap-2">
-              <input readOnly value={`${APP_URL}/#/questionario/beta-log`} className="flex-1 text-sm bg-white border border-slate-300 rounded px-3 py-2 text-slate-600" />
+              <input readOnly value={`${window.location.href.split('#')[0]}#/questionario/beta-log`} className="flex-1 text-sm bg-white border border-slate-300 rounded px-3 py-2 text-slate-600 outline-none" />
               <Button 
                 onClick={handleCopyLink} 
                 size="sm" 
-                variant={copied ? "secondary" : "secondary"}
-                className={`px-3 ${copied ? "text-emerald-600 bg-emerald-50 border-emerald-200" : ""}`}
+                variant="secondary"
+                className="px-3"
               >
-                {copied ? <CheckCircle2 size={16} /> : <Copy size={16} />}
+                <Copy size={16} />
               </Button>
             </div>
             <div className="mt-2 flex justify-between items-center h-4">
               <p className="text-xs text-slate-400">Criado em 01/10/2025. Vence em 30 dias.</p>
-              {copied && (
-                <p className="text-xs text-emerald-600 font-bold flex items-center animate-fade-in-down">
-                  <CheckCircle2 size={12} className="mr-1"/> Link copiado!
-                </p>
-              )}
             </div>
           </div>
         </Card>
@@ -193,7 +204,7 @@ const SectorDetail: React.FC = () => {
       <Card>
         <div className="flex justify-between items-center mb-6">
           <h3 className="font-bold text-slate-800 text-lg">Plano de Ação</h3>
-          <Button size="sm"><Plus size={16} className="mr-1"/> Nova Ação</Button>
+          <Button size="sm" onClick={() => showNotification("Modal de Plano de Ação aberto.")}><Plus size={16} className="mr-1"/> Nova Ação</Button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">

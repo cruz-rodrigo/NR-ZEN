@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CheckCircle2, ArrowRight, BarChart3, Lock, Users, FileCheck, Menu, X, Star, Gem } from 'lucide-react';
+import { CheckCircle2, ArrowRight, BarChart3, Lock, Users, FileCheck, Menu, X, Star, Gem, ShieldCheck, Zap, HeartHandshake, Unlock } from 'lucide-react';
 import Button from '../components/Button';
 import { Logo } from '../components/Layout';
 import { APP_URL } from '../constants';
@@ -12,11 +12,18 @@ const LandingPage: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profile, setProfile] = useState('Consultoria de SST');
   const [otherProfile, setOtherProfile] = useState('');
+  
+  // Pricing State
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFormSubmitted(true);
-    setTimeout(() => setFormSubmitted(false), 5000);
+    // Reset form simulation
+    setPhone('');
+    setOtherProfile('');
+    // Auto-hide success message after 8 seconds
+    setTimeout(() => setFormSubmitted(false), 8000);
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,9 +60,9 @@ const LandingPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
       {/* Navigation */}
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-100 shadow-sm transition-all duration-300">
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-100 shadow-sm transition-all duration-300 shadow-sm">
         <div className="container mx-auto px-6 h-24 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+          <Link to="/" onClick={() => window.scrollTo(0,0)} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <Logo size="lg" />
           </Link>
           
@@ -78,13 +85,13 @@ const LandingPage: React.FC = () => {
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-t border-slate-100 p-6 absolute w-full shadow-2xl animate-fade-in-down">
+          <div className="md:hidden bg-white border-t border-slate-100 p-6 absolute w-full shadow-2xl animate-fade-in-down z-50">
             <nav className="flex flex-col gap-6 text-xl">
               <button onClick={() => scrollToSection('features')} className="text-left font-medium text-slate-600">Funcionalidades</button>
               <button onClick={() => scrollToSection('pricing')} className="text-left font-medium text-slate-600">Planos</button>
-              <Link to="/demo" className="font-medium text-blue-600">Teste Grátis</Link>
+              <Link to="/demo" onClick={() => setMobileMenuOpen(false)} className="font-medium text-blue-600">Teste Grátis</Link>
               <hr className="border-slate-100"/>
-              <Link to="/app" className="font-medium text-slate-800">Login</Link>
+              <Link to="/app" onClick={() => setMobileMenuOpen(false)} className="font-medium text-slate-800">Login</Link>
               <Button fullWidth size="lg" onClick={() => scrollToSection('contact')}>Falar com Consultor</Button>
             </nav>
           </div>
@@ -229,7 +236,7 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Pricing */}
+      {/* Pricing - UPDATED: Toggle & Inspiration */}
       <section className="py-24 bg-slate-950 text-white scroll-mt-20 relative overflow-hidden" id="pricing">
         {/* Background Mesh */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl opacity-40 pointer-events-none">
@@ -238,76 +245,212 @@ const LandingPage: React.FC = () => {
         </div>
         
         <div className="container mx-auto px-6 relative z-10">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6 border-b border-slate-800 pb-8">
-            <div className="max-w-xl">
-              <h2 className="text-3xl lg:text-4xl font-heading font-bold mb-4 tracking-tight">
-                Planos escaláveis
-              </h2>
-              <p className="text-slate-400 text-lg font-light">Escolha a potência ideal para impulsionar sua consultoria.</p>
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl lg:text-4xl font-heading font-bold mb-4 tracking-tight">
+              Planos por volume de avaliações
+            </h2>
+            <p className="text-slate-400 text-lg font-light mb-8">
+              Pague apenas pelo número de avaliações mensais e cresça no seu ritmo.
+            </p>
+
+            {/* Toggle Switch */}
+            <div className="flex items-center justify-center gap-4">
+              <span className={`text-sm font-bold tracking-wide transition-colors ${billingCycle === 'monthly' ? 'text-white' : 'text-slate-500'}`}>Mensal</span>
+              
+              <button 
+                onClick={() => setBillingCycle(prev => prev === 'monthly' ? 'yearly' : 'monthly')}
+                className="w-16 h-8 bg-slate-800 rounded-full p-1 relative transition-colors border border-slate-700 hover:border-blue-500"
+              >
+                <div className={`w-6 h-6 bg-blue-500 rounded-full shadow-md transform transition-transform duration-300 ${billingCycle === 'yearly' ? 'translate-x-8' : 'translate-x-0'}`}></div>
+              </button>
+              
+              <span className={`text-sm font-bold tracking-wide transition-colors flex items-center gap-2 ${billingCycle === 'yearly' ? 'text-white' : 'text-slate-500'}`}>
+                Anual
+                <span className="bg-emerald-500/20 text-emerald-400 text-[10px] uppercase px-2 py-0.5 rounded-full border border-emerald-500/30">
+                  2 Meses Grátis
+                </span>
+              </span>
             </div>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8 items-center">
-            {/* Starter */}
-            <div className="bg-slate-900/80 backdrop-blur-sm rounded-3xl p-8 border border-slate-800 hover:border-slate-700 transition-all hover:shadow-xl hover:shadow-black/20 flex flex-col group h-min">
-              <h3 className="text-xl font-bold mb-2 text-white tracking-tight group-hover:text-blue-400 transition-colors">Consultor</h3>
-              <div className="text-4xl font-bold mb-4 text-white">R$ 199<span className="text-base font-normal text-slate-500">/mês</span></div>
-              <p className="text-sm text-slate-400 mb-8 h-10 leading-relaxed">Para profissionais independentes iniciando a digitalização.</p>
-              <ul className="space-y-4 mb-8 text-sm text-slate-300 flex-1">
-                <li className="flex gap-3"><CheckCircle2 size={18} className="text-blue-500 flex-shrink-0"/> Até 5 Empresas</li>
-                <li className="flex gap-3"><CheckCircle2 size={18} className="text-blue-500 flex-shrink-0"/> Relatório PDF Padrão</li>
-                <li className="flex gap-3"><CheckCircle2 size={18} className="text-blue-500 flex-shrink-0"/> Suporte por E-mail</li>
-              </ul>
-              <Button fullWidth variant="white" onClick={() => scrollToSection('contact')} className="bg-slate-800 text-white border-slate-700 hover:bg-slate-700 hover:border-slate-600">Começar</Button>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 items-stretch mb-12">
+            
+            {/* 1. Consultor */}
+            <div className="bg-slate-900/80 backdrop-blur-sm rounded-3xl p-6 border border-slate-800 hover:border-slate-700 transition-all hover:shadow-xl flex flex-col h-full">
+              <h3 className="text-lg font-bold mb-2 text-white tracking-tight">Consultor</h3>
+              
+              <div className="mb-2">
+                {billingCycle === 'yearly' && (
+                  <span className="text-sm text-slate-500 line-through decoration-red-500/50 block">R$ 199/mês</span>
+                )}
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-bold text-white">R$ {billingCycle === 'yearly' ? '165' : '199'}</span>
+                  <span className="text-sm font-normal text-slate-500">/mês</span>
+                </div>
+                {billingCycle === 'yearly' && <p className="text-[10px] text-emerald-400 font-medium">Cobrado R$ 1.990/ano</p>}
+              </div>
+
+              <div className="mb-6 min-h-[48px] flex items-start">
+                 <p className="text-xs text-slate-400 leading-relaxed">Até 300 avaliações por mês.</p>
+              </div>
+              <p className="text-sm text-slate-300 mb-6 italic min-h-[60px]">Ideal para quem está começando a digitalizar a gestão da NR-01 e quer testar o NR Zen na prática.</p>
+              
+              <Button fullWidth variant="white" onClick={() => scrollToSection('contact')} className="bg-slate-800 text-white border-slate-700 hover:bg-slate-700 mb-6">Começar agora</Button>
+              
+              <div className="border-t border-slate-800 pt-6 flex-1">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">O que está incluso</p>
+                <ul className="space-y-3 text-sm text-slate-400">
+                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-blue-500 flex-shrink-0"/> CNPJs Ilimitados</li>
+                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-blue-500 flex-shrink-0"/> Relatório PDF Padrão</li>
+                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-blue-500 flex-shrink-0"/> Histórico unificado</li>
+                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-blue-500 flex-shrink-0"/> Suporte por E-mail</li>
+                </ul>
+              </div>
             </div>
 
-            {/* Pro - ANIMATED */}
-            <div className="bg-gradient-to-b from-blue-600 to-blue-700 rounded-3xl p-1 relative transform md:-translate-y-4 shadow-2xl shadow-blue-900/50 flex flex-col hover:scale-105 transition-transform duration-300 z-20">
-              <div className="bg-blue-600 rounded-[22px] p-8 h-full flex flex-col relative overflow-hidden">
-                <div className="absolute top-0 right-0 bg-white/20 text-white text-[10px] px-3 py-1 rounded-bl-xl font-bold tracking-widest uppercase backdrop-blur-md animate-pulse">Mais Escolhido</div>
-                <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-blue-500/30 rounded-full blur-3xl"></div>
+            {/* 2. Business - FEATURED */}
+            <div className="bg-gradient-to-b from-blue-600 to-blue-700 rounded-3xl p-1 relative transform shadow-2xl shadow-blue-900/50 flex flex-col hover:scale-105 transition-transform duration-300 z-20">
+              <div className="bg-blue-600 rounded-[22px] p-6 h-full flex flex-col relative overflow-hidden">
+                <div className="absolute top-0 right-0 bg-white/20 text-white text-[9px] px-2 py-1 rounded-bl-lg font-bold tracking-widest uppercase backdrop-blur-md animate-pulse">Mais Escolhido</div>
                 
-                <h3 className="text-xl font-bold mb-2 text-white tracking-tight">Business</h3>
-                <div className="text-5xl font-bold mb-4 text-white tracking-tight">R$ 499<span className="text-base font-normal text-blue-200">/mês</span></div>
-                <p className="text-sm text-blue-100 mb-8 h-10 leading-relaxed font-medium">Para consultorias estabelecidas que buscam eficiência máxima.</p>
-                <ul className="space-y-4 mb-8 text-sm text-white flex-1 relative z-10">
-                  <li className="flex gap-3"><CheckCircle2 size={18} className="text-white flex-shrink-0"/> Até 30 Empresas</li>
-                  <li className="flex gap-3"><CheckCircle2 size={18} className="text-white flex-shrink-0"/> Relatório White-Label (Seu Logo)</li>
-                  <li className="flex gap-3"><CheckCircle2 size={18} className="text-white flex-shrink-0"/> Gestão de Acessos de Equipe</li>
-                  <li className="flex gap-3"><CheckCircle2 size={18} className="text-white flex-shrink-0"/> Suporte Prioritário</li>
-                </ul>
+                <h3 className="text-lg font-bold mb-2 text-white tracking-tight">Business</h3>
+                
+                <div className="mb-2">
+                  {billingCycle === 'yearly' && (
+                    <span className="text-sm text-blue-300 line-through decoration-white/30 block">R$ 597/mês</span>
+                  )}
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-bold text-white tracking-tight">R$ {billingCycle === 'yearly' ? '499' : '597'}</span>
+                    <span className="text-sm font-normal text-blue-200">/mês</span>
+                  </div>
+                  {billingCycle === 'yearly' && <p className="text-[10px] text-white font-medium bg-white/20 inline-block px-2 rounded-full mt-1">Economia de R$ 1.176/ano</p>}
+                </div>
+
+                <div className="mb-6 min-h-[48px]">
+                   <p className="text-xs text-blue-100 font-medium">Até 1.500 avaliações por mês.</p>
+                   <p className="text-[10px] text-blue-200 mt-1 opacity-90">Menos de R$ 0,40 por avaliação no limite da franquia.</p>
+                </div>
+                <p className="text-sm text-white mb-6 italic min-h-[60px]">Para consultorias que já têm carteira ativa e precisam de mais previsibilidade e eficiência na gestão da NR-01.</p>
+                
                 <Button 
                   fullWidth 
                   variant="white"
-                  className="text-blue-700 hover:text-blue-800 hover:bg-blue-50 font-bold shadow-lg py-4 border-none" 
+                  className="text-blue-700 hover:text-blue-800 hover:bg-blue-50 font-bold shadow-lg py-3 border-none mb-6" 
                   onClick={() => scrollToSection('contact')}
                 >
-                  Assinar Agora
+                  Assinar Business
                 </Button>
+
+                <div className="border-t border-white/20 pt-6 flex-1 relative z-10">
+                  <p className="text-xs font-bold text-blue-200 uppercase tracking-widest mb-4">O que está incluso</p>
+                  <ul className="space-y-3 text-sm text-white">
+                    <li className="flex gap-2"><CheckCircle2 size={16} className="text-white flex-shrink-0"/> Tudo do Consultor</li>
+                    <li className="flex gap-2"><CheckCircle2 size={16} className="text-white flex-shrink-0"/> Relatório White-Label</li>
+                    <li className="flex gap-2"><CheckCircle2 size={16} className="text-white flex-shrink-0"/> Painel eSocial/NR-01</li>
+                    <li className="flex gap-2"><CheckCircle2 size={16} className="text-white flex-shrink-0"/> Gestão de Acessos</li>
+                    <li className="flex gap-2"><CheckCircle2 size={16} className="text-white flex-shrink-0"/> Suporte Prioritário</li>
+                  </ul>
+                </div>
               </div>
             </div>
 
-            {/* Enterprise - CUSTOM COLOR (Deep Navy + Gold Accent) */}
-            <div className="bg-[#1e293b] rounded-3xl p-8 border border-slate-700/50 hover:border-amber-500/30 transition-all hover:shadow-xl hover:shadow-amber-900/10 flex flex-col group h-min relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-slate-700 via-amber-500/50 to-slate-700"></div>
+            {/* 3. Corporate */}
+            <div className="bg-slate-900/80 backdrop-blur-sm rounded-3xl p-6 border border-slate-800 hover:border-slate-700 transition-all hover:shadow-xl flex flex-col h-full">
+              <h3 className="text-lg font-bold mb-2 text-white tracking-tight">Corporate</h3>
+              
+              <div className="mb-2">
+                {billingCycle === 'yearly' && (
+                  <span className="text-sm text-slate-500 line-through decoration-red-500/50 block">R$ 899/mês</span>
+                )}
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-bold text-white">R$ {billingCycle === 'yearly' ? '749' : '899'}</span>
+                  <span className="text-sm font-normal text-slate-500">/mês</span>
+                </div>
+                {billingCycle === 'yearly' && <p className="text-[10px] text-emerald-400 font-medium">Economia de R$ 1.800/ano</p>}
+              </div>
+
+              <div className="mb-6 min-h-[48px]">
+                  <p className="text-xs text-slate-400">Até 5.000 avaliações por mês.</p>
+                  <p className="text-[10px] text-slate-500 mt-1">A partir de ~R$ 0,18 por avaliação no limite da franquia.</p>
+              </div>
+              <p className="text-sm text-slate-300 mb-6 italic min-h-[60px]">Para consultorias que atendem grandes contratos e precisam de apoio próximo na implantação do NR Zen.</p>
+              
+              <Button fullWidth variant="white" onClick={() => scrollToSection('contact')} className="bg-slate-800 text-white border-slate-700 hover:bg-slate-700 mb-6">Contratar Corporate</Button>
+
+              <div className="border-t border-slate-800 pt-6 flex-1">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">O que está incluso</p>
+                <ul className="space-y-3 text-sm text-slate-400">
+                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-blue-500 flex-shrink-0"/> Tudo do Business</li>
+                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-blue-500 flex-shrink-0"/> Onboarding Assistido</li>
+                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-blue-500 flex-shrink-0"/> Treinamento Inicial</li>
+                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-blue-500 flex-shrink-0"/> Canal de Sugestões</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* 4. Enterprise - CUSTOM COLOR (Deep Navy + Gold Accent) */}
+            <div className="bg-[#0B1120] rounded-3xl p-6 border border-[#1E293B] hover:border-amber-500/40 transition-all hover:shadow-2xl hover:shadow-amber-900/10 flex flex-col group h-full relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#0B1120] via-amber-500/60 to-[#0B1120]"></div>
               
               <div className="flex justify-between items-start mb-2">
-                 <h3 className="text-xl font-bold text-white tracking-tight group-hover:text-amber-400 transition-colors">Enterprise</h3>
-                 <Gem size={20} className="text-amber-500" />
+                 <h3 className="text-lg font-bold text-white tracking-tight group-hover:text-amber-400 transition-colors">Enterprise</h3>
+                 <Gem size={18} className="text-amber-500" />
               </div>
               
-              <div className="text-4xl font-bold mb-4 text-white">Custom</div>
-              <p className="text-sm text-slate-400 mb-8 h-10 leading-relaxed">Para grandes empresas, assessorias, franquias e SESMT corporativo.</p>
-              <ul className="space-y-4 mb-8 text-sm text-slate-300 flex-1">
-                <li className="flex gap-3"><CheckCircle2 size={18} className="text-amber-500 flex-shrink-0"/> Volume Personalizado (+50 CNPJs)</li>
-                <li className="flex gap-3"><CheckCircle2 size={18} className="text-amber-500 flex-shrink-0"/> Migração de Dados Assistida</li>
-                <li className="flex gap-3"><CheckCircle2 size={18} className="text-amber-500 flex-shrink-0"/> SLA Garantido (99.9%)</li>
-                <li className="flex gap-3"><CheckCircle2 size={18} className="text-amber-500 flex-shrink-0"/> Treinamento Dedicado</li>
-                <li className="flex gap-3"><CheckCircle2 size={18} className="text-amber-500 flex-shrink-0"/> Contrato Personalizado</li>
-              </ul>
-              <Button fullWidth variant="white" onClick={() => scrollToSection('contact')} className="bg-slate-800 text-white border-slate-700 hover:bg-slate-700 hover:border-amber-500/50 hover:text-amber-400">Falar com Vendas</Button>
+              <div className="mb-2">
+                 <div className="text-3xl font-bold text-white">Custom</div>
+                 <p className="text-[10px] text-amber-500/80 font-medium mt-1">Faturamento Personalizado</p>
+              </div>
+
+              <div className="mb-6 min-h-[48px] flex items-start">
+                  <p className="text-xs text-slate-400 leading-relaxed">Volume &gt; 5.000 avaliações.</p>
+              </div>
+              <p className="text-sm text-slate-300 mb-6 italic min-h-[60px]">Para grandes empresas, assessorias, franquias e SESMT corporativo que precisam de alto volume e contrato flexível.</p>
+              
+              <Button fullWidth variant="white" onClick={() => scrollToSection('contact')} className="bg-slate-900 text-white border-slate-800 hover:bg-slate-800 hover:border-amber-500/50 hover:text-amber-400 mb-6">Falar com Vendas</Button>
+
+              <div className="border-t border-slate-800 pt-6 flex-1">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">O que está incluso</p>
+                <ul className="space-y-3 text-sm text-slate-300">
+                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-amber-500 flex-shrink-0"/> Volume e condições sob medida</li>
+                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-amber-500 flex-shrink-0"/> Integrações (API/ERP)</li>
+                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-amber-500 flex-shrink-0"/> Migração Assistida</li>
+                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-amber-500 flex-shrink-0"/> SLA Garantido (99.9%)</li>
+                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-amber-500 flex-shrink-0"/> Contrato Personalizado</li>
+                </ul>
+              </div>
             </div>
           </div>
+          
+          {/* Trust Bar / Footer Pricing - FONT SIZE INCREASED */}
+          <div className="border-t border-slate-800/50 pt-10 mt-12 bg-slate-900/30 rounded-2xl p-8 backdrop-blur-sm">
+             <div className="grid md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-slate-800/50">
+               <div className="px-4 space-y-3">
+                 <div className="w-14 h-14 mx-auto bg-slate-800 rounded-full flex items-center justify-center text-blue-400 mb-3 shadow-lg shadow-blue-900/20">
+                   <ShieldCheck size={28} />
+                 </div>
+                 <h4 className="text-white font-bold text-lg">Garantia de Preço</h4>
+                 <p className="text-slate-400 text-base leading-relaxed">Clientes pioneiros garantem este preço vitalício, mesmo com futuros aumentos de tabela.</p>
+               </div>
+               
+               <div className="px-4 space-y-3 pt-6 md:pt-0">
+                  <div className="w-14 h-14 mx-auto bg-slate-800 rounded-full flex items-center justify-center text-blue-400 mb-3 shadow-lg shadow-blue-900/20">
+                    <Unlock size={28} />
+                  </div>
+                  <h4 className="text-white font-bold text-lg">Liberdade Total</h4>
+                  <p className="text-slate-400 text-base leading-relaxed">Sem contratos de fidelidade ou multas. Cancele sua assinatura a qualquer momento.</p>
+               </div>
+               
+               <div className="px-4 space-y-3 pt-6 md:pt-0">
+                  <div className="w-14 h-14 mx-auto bg-slate-800 rounded-full flex items-center justify-center text-blue-400 mb-3 shadow-lg shadow-blue-900/20">
+                    <HeartHandshake size={28} />
+                  </div>
+                  <h4 className="text-white font-bold text-lg">Setup Assistido</h4>
+                  <p className="text-slate-400 text-base leading-relaxed">No primeiro mês, nosso time te ajuda a configurar a conta e importar seus primeiros clientes.</p>
+               </div>
+             </div>
+          </div>
+
         </div>
       </section>
 
@@ -391,7 +534,7 @@ const LandingPage: React.FC = () => {
       <footer className="bg-white border-t border-slate-100 py-12">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-             <Link to="/" className="flex items-center gap-3 grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all">
+             <Link to="/" onClick={() => window.scrollTo(0,0)} className="flex items-center gap-3 grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all">
                <Logo />
              </Link>
              <div className="flex gap-8 text-sm font-medium text-slate-500">

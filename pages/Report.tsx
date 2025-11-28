@@ -8,17 +8,22 @@ const Report: React.FC = () => {
   const navigate = useNavigate();
 
   const handleClose = () => {
-    if (window.history.length > 1) {
+    // Tenta fechar a aba se foi aberta como _blank, senão volta
+    if (window.opener) {
+      window.close();
+    } else if (window.history.length > 1) {
       navigate(-1);
     } else {
-      window.close();
+      navigate('/app');
     }
   };
+
+  const currentDate = new Date().toLocaleDateString('pt-BR');
 
   return (
     <div className="bg-slate-200 min-h-screen p-8 print:p-0 print:bg-white font-sans text-slate-900">
       
-      <div className="max-w-[210mm] mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4 print:hidden">
+      <div className="max-w-[210mm] mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4 print:hidden animate-fade-in-down">
         <div>
           <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
             <FileText size={20} className="text-blue-600"/> 
@@ -46,7 +51,7 @@ const Report: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-[210mm] mx-auto bg-white min-h-[297mm] shadow-2xl print:shadow-none p-[20mm] print:p-0 relative overflow-hidden print:w-full">
+      <div className="max-w-[210mm] mx-auto bg-white min-h-[297mm] shadow-2xl print:shadow-none p-[20mm] print:p-0 relative overflow-hidden print:w-full print:h-auto">
         
         <header className="border-b-2 border-slate-800 pb-6 mb-8 flex justify-between items-end">
           <div>
@@ -61,7 +66,7 @@ const Report: React.FC = () => {
              <p className="text-slate-600">CNAE: 25.39-0 - Obras de caldeiraria pesada</p>
              <div className="mt-3 text-xs text-slate-400">
                Ref: Inventário de Riscos Psicossociais<br/>
-               Emissão: 28/10/2025
+               Emissão: {currentDate}
              </div>
           </div>
         </header>
