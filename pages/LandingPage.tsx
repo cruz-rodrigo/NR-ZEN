@@ -236,7 +236,7 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Pricing - UPDATED: Toggle & Inspiration */}
+      {/* Pricing - UPDATED: 4 Tiers, Trust Bar, Toggle */}
       <section className="py-24 bg-slate-950 text-white scroll-mt-20 relative overflow-hidden" id="pricing">
         {/* Background Mesh */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl opacity-40 pointer-events-none">
