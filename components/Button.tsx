@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'white' | 'glass';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'white' | 'glass' | 'dark';
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
 }
@@ -23,9 +23,12 @@ const Button: React.FC<ButtonProps> = ({
     // Secondary: Slate border with Blue hover
     secondary: "bg-white text-slate-700 border border-slate-300 hover:border-blue-600 hover:text-blue-600 hover:bg-blue-50 focus:ring-blue-200 shadow-sm",
     
-    // White: Blue text
+    // White: Blue text (Use on dark/blue backgrounds)
     white: "bg-white text-blue-600 hover:bg-slate-50 border border-transparent shadow-lg focus:ring-white/50",
     
+    // Dark: Dark background with White text (Use on dark cards)
+    dark: "bg-slate-800 text-white border border-slate-700 hover:bg-slate-700 focus:ring-slate-600 shadow-md",
+
     // Ghost
     ghost: "text-slate-600 hover:text-blue-600 hover:bg-slate-100 focus:ring-slate-200",
     

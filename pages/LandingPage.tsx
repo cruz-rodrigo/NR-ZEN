@@ -295,7 +295,8 @@ const LandingPage: React.FC = () => {
               </div>
               <p className="text-sm text-slate-300 mb-6 italic min-h-[60px]">Ideal para quem está começando a digitalizar a gestão da NR-01 e quer testar o NR Zen na prática.</p>
               
-              <Button fullWidth variant="white" onClick={() => scrollToSection('contact')} className="bg-slate-800 text-white border-slate-700 hover:bg-slate-700 mb-6">Começar agora</Button>
+              {/* BUTTON FIX: Use variant="dark" for proper contrast */}
+              <Button fullWidth variant="dark" onClick={() => scrollToSection('contact')} className="mb-6">Começar agora</Button>
               
               <div className="border-t border-slate-800 pt-6 flex-1">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">O que está incluso</p>
@@ -332,6 +333,7 @@ const LandingPage: React.FC = () => {
                 </div>
                 <p className="text-sm text-white mb-6 italic min-h-[60px]">Para consultorias que já têm carteira ativa e precisam de mais previsibilidade e eficiência na gestão da NR-01.</p>
                 
+                {/* BUTTON FIX: Use variant="white" here as it's on blue bg */}
                 <Button 
                   fullWidth 
                   variant="white"
@@ -375,7 +377,8 @@ const LandingPage: React.FC = () => {
               </div>
               <p className="text-sm text-slate-300 mb-6 italic min-h-[60px]">Para consultorias que atendem grandes contratos e precisam de apoio próximo na implantação do NR Zen.</p>
               
-              <Button fullWidth variant="white" onClick={() => scrollToSection('contact')} className="bg-slate-800 text-white border-slate-700 hover:bg-slate-700 mb-6">Contratar Corporate</Button>
+              {/* BUTTON FIX: Use variant="dark" */}
+              <Button fullWidth variant="dark" onClick={() => scrollToSection('contact')} className="mb-6">Contratar Corporate</Button>
 
               <div className="border-t border-slate-800 pt-6 flex-1">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">O que está incluso</p>
@@ -407,7 +410,8 @@ const LandingPage: React.FC = () => {
               </div>
               <p className="text-sm text-slate-300 mb-6 italic min-h-[60px]">Para grandes empresas, assessorias, franquias e SESMT corporativo que precisam de alto volume e contrato flexível.</p>
               
-              <Button fullWidth variant="white" onClick={() => scrollToSection('contact')} className="bg-slate-900 text-white border-slate-800 hover:bg-slate-800 hover:border-amber-500/50 hover:text-amber-400 mb-6">Falar com Vendas</Button>
+              {/* BUTTON FIX: Use variant="dark" with amber accent */}
+              <Button fullWidth variant="dark" onClick={() => scrollToSection('contact')} className="hover:border-amber-500/50 hover:text-amber-400 mb-6">Falar com Vendas</Button>
 
               <div className="border-t border-slate-800 pt-6 flex-1">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">O que está incluso</p>
