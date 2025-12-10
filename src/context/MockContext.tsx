@@ -15,19 +15,29 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+// Dados iniciais com IDs como STRING para compatibilidade com UUID
+const INITIAL_COMPANIES: Company[] = [
+  { id: '1', name: "Indústrias Metalúrgicas Beta", cnpj: "12.345.678/0001-99", sectorsCount: 8, sectorsActive: 8, lastCollection: "10/10/2025", status: "high" },
+  { id: '2', name: "Transportadora Veloz", cnpj: "98.765.432/0001-11", sectorsCount: 4, sectorsActive: 2, lastCollection: "05/10/2025", status: "moderate" },
+];
+
 export const MockProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserSession | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('nrzen_token'));
+  
+  // Inicia vazio se tiver token (para forçar fetch) ou com inicial se for visitante
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({ total: 0, activeSectors: 0, responses: 0, riskHighPercent: 0 });
 
-  // Ao carregar, verifica se tem token e tenta restaurar sessão e dados
   useEffect(() => {
     const storedUser = localStorage.getItem('nrzen_user');
     if (token && storedUser) {
       setUser(JSON.parse(storedUser));
       fetchDashboardData(token);
+    } else {
+      // Se não estiver logado, mostra dados de vitrine
+      setCompanies(INITIAL_COMPANIES);
     }
   }, [token]);
 
@@ -37,34 +47,25 @@ export const MockProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const statsRes = await fetch('/api/dashboard/stats', {
         headers: { 'Authorization': `Bearer ${authToken}` }
       });
-      
       if (statsRes.ok) {
-        const statsData = await statsRes.json();
-        setStats(statsData);
+        setStats(await statsRes.json());
       }
 
-      // 2. Fetch Companies
-      // Nota: Como o endpoint /api/companies ainda não foi totalmente implementado na iteração anterior,
-      // aqui mantemos um fallback seguro, mas a estrutura está pronta para a API.
-      /*
+      // 2. Fetch Companies Real
       const compRes = await fetch('/api/companies', {
         headers: { 'Authorization': `Bearer ${authToken}` }
       });
+      
       if (compRes.ok) {
-        const compData = await compRes.json();
-        setCompanies(compData);
-      }
-      */
-     
-      // MOCK FALLBACK (Para você ver dados enquanto não cadastra empresas reais)
-      if (companies.length === 0) {
-        setCompanies([
-          { id: '1', name: "Exemplo Metalúrgica", cnpj: "00.000.000/0001-00", sectorsCount: 3, sectorsActive: 1, lastCollection: "Demo", status: "moderate" }
-        ]);
-      }
+        const realCompanies = await compRes.json();
+        // Mapeia do banco para o front se necessário, ou usa direto se a API retornar certinho
+        // O endpoint api/companies retorna campos snake_case, o front espera camelCase ou compatível?
+        // Vamos garantir que a API retorne o formato certo.
+        setCompanies(realCompanies);
+      } 
 
     } catch (e) {
-      console.error("Erro ao buscar dados do dashboard:", e);
+      console.error("Erro ao buscar dados:", e);
     }
   };
 
@@ -78,10 +79,7 @@ export const MockProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.error || 'Erro ao realizar login');
-      }
+      if (!res.ok) throw new Error(data.error || 'Erro ao realizar login');
 
       const userData: UserSession = {
         id: data.user.id,
@@ -92,11 +90,9 @@ export const MockProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setToken(data.token);
       setUser(userData);
-      
       localStorage.setItem('nrzen_token', data.token);
       localStorage.setItem('nrzen_user', JSON.stringify(userData));
       
-      // Busca dados imediatamente após login
       fetchDashboardData(data.token);
 
     } catch (error) {
@@ -117,8 +113,6 @@ export const MockProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erro ao registrar');
-      
-      // Auto login
       await login(email, password);
     } catch (error) {
       console.error(error);
@@ -131,34 +125,38 @@ export const MockProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setToken(null);
     setUser(null);
-    setCompanies([]);
+    setCompanies(INITIAL_COMPANIES);
     localStorage.removeItem('nrzen_token');
     localStorage.removeItem('nrzen_user');
     window.location.href = '/login';
   };
 
   const addCompany = async (companyData: Omit<Company, 'id'>) => {
-    // Tenta enviar para a API real
+    // Tenta API
     try {
-        /*
-        const res = await fetch('/api/companies', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(companyData)
-        });
-        if (res.ok) fetchDashboardData(token!);
-        */
-       
-       // Fallback visual
-       const newComp: Company = { ...companyData, id: crypto.randomUUID(), status: 'low' };
-       setCompanies(prev => [newComp, ...prev]);
+        if(token) {
+            const res = await fetch('/api/companies', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(companyData)
+            });
+            if (res.ok) {
+                fetchDashboardData(token);
+                return;
+            }
+        }
+    } catch(e) { console.error(e); }
 
-    } catch (e) {
-        console.error(e);
-    }
+    // Fallback Local
+    const newComp: Company = { 
+        ...companyData, 
+        id: crypto.randomUUID(), // Gera UUID válido no browser
+        status: 'low' 
+    };
+    setCompanies(prev => [newComp, ...prev]);
   };
 
   const getCompanyStats = () => {

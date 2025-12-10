@@ -5,6 +5,7 @@ export interface AuthedRequest extends VercelRequest {
   user?: { id: string; email: string; plan_tier: string };
   headers: { authorization?: string; [key: string]: string | string[] | undefined };
   method?: string;
+  body: any;
 }
 
 export function requireAuth(
