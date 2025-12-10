@@ -11,18 +11,22 @@
     
     <!-- Script de Importmap para ambiente de Preview (opcional, Vercel usará build) -->
     <script type="importmap">
-    {
-      "imports": {
-        "react": "https://aistudiocdn.com/react@^19.2.0",
-        "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-        "react/": "https://aistudiocdn.com/react@^19.2.0/",
-        "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.6",
-        "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
-        "vite": "https://aistudiocdn.com/vite@^7.2.4",
-        "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
-      }
-    }
-    </script>
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.6",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "vite": "https://aistudiocdn.com/vite@^7.2.4",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
+    "@vercel/node": "https://esm.sh/@vercel/node@^5.5.15",
+    "jsonwebtoken": "https://esm.sh/jsonwebtoken@^9.0.3",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.87.1",
+    "bcrypt": "https://esm.sh/bcrypt@^6.0.0"
+  }
+}
+</script>
 
     <!-- Tailwind CDN para Preview Local (Corrige o layout "quebrado" na sua tela) -->
     <script src="https://cdn.tailwindcss.com"></script>
