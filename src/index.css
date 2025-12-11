@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- REGRAS CRÍTICAS DE IMPRESSÃO --- */
+@media print {
+  @page {
+    margin: 0;
+    size: A4;
+  }
+  
+  body {
+    background: white !important;
+    /* FORÇA O NAVEGADOR A IMPRIMIR AS CORES DE FUNDO */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Esconde elementos de navegação e botões */
+  .no-print, header, footer, nav, button, .fixed, .hidden-print {
+    display: none !important;
+  }
+
+  /* Garante que o container do relatório ocupe 100% */
+  .print-container {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 20mm !important; /* Margem interna do papel */
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Evita que tabelas e seções sejam cortadas no meio */
+  .print-break-inside-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  
+  /* Força quebra de página antes desta classe */
+  .print-break-before {
+    break-before: page;
+    page-break-before: always;
+  }
+}

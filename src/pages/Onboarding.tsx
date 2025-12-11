@@ -89,7 +89,7 @@ const Onboarding: React.FC = () => {
   const handleNext = async () => {
     if (validateStep(step)) {
       if (step === 2) {
-        // CALL API REAL
+        // CALL API REAL COM DADOS DO SETOR
         setLoading(true);
         setApiError('');
         try {
@@ -97,7 +97,9 @@ const Onboarding: React.FC = () => {
             method: 'POST',
             body: JSON.stringify({
               name: formData.name,
-              cnpj: formData.cnpj
+              cnpj: formData.cnpj,
+              firstSectorName: formData.sectorName, // Novo campo
+              employeesCount: formData.employees   // Novo campo
             })
           });
           // Se passou, avançamos para sucesso
