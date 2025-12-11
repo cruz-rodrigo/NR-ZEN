@@ -18,9 +18,21 @@
     "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    
+    /* Types */
+    "types": ["node", "vite/client"]
   },
-  "include": ["."],
-  "exclude": ["node_modules", "vite.config.ts", "dist"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": [
+    "components",
+    "context",
+    "lib",
+    "pages",
+    "App.tsx",
+    "index.tsx",
+    "types.ts",
+    "constants.ts",
+    "vite-env.d.ts"
+  ],
+  "exclude": ["node_modules", "dist", "api", "src"]
 }
