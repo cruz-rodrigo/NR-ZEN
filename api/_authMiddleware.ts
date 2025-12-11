@@ -9,7 +9,7 @@ export interface AuthedRequest extends VercelRequest {
 }
 
 export function requireAuth(
-  handler: (req: AuthedRequest, res: VercelResponse) => Promise<void> | void,
+  handler: (req: AuthedRequest, res: VercelResponse) => Promise<any> | any,
 ) {
   return async (req: AuthedRequest, res: VercelResponse) => {
     const authHeader = req.headers.authorization;
