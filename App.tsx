@@ -10,6 +10,7 @@ import SectorDetail from './pages/SectorDetail';
 import Questionnaire from './pages/Questionnaire';
 import Report from './pages/Report';
 import DemoLogin from './pages/DemoLogin';
+import TestDb from './pages/TestDb';
 import { MockProvider } from './context/MockContext';
 
 const App: React.FC = () => {
@@ -34,6 +35,7 @@ const App: React.FC = () => {
           
           {/* Utilities */}
           <Route path="/relatorio" element={<Report />} />
+          <Route path="/test-db" element={<TestDb />} />
           
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
