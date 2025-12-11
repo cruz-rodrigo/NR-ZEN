@@ -1,26 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { Logo } from '../components/Layout';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
-const Login: React.FC = () => {
+const Register: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
-  const [searchParams] = useSearchParams();
+  const { register } = useAuth();
   
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
-
-  useEffect(() => {
-    if (searchParams.get('success')) {
-      setSuccessMsg('Conta criada com sucesso! Faça login para continuar.');
-    }
-  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,10 +20,11 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      await login(formData.email, formData.password);
-      navigate('/app');
+      await register(formData.name, formData.email, formData.password);
+      // Sucesso: Redireciona para login
+      navigate('/login?success=true');
     } catch (err: any) {
-      setError(err.message || 'Credenciais inválidas.');
+      setError(err.message || 'Erro ao criar conta.');
     } finally {
       setLoading(false);
     }
@@ -44,14 +37,8 @@ const Login: React.FC = () => {
       </div>
       
       <Card className="w-full max-w-md p-8">
-        <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center">Acesse sua conta</h1>
-        <p className="text-slate-500 text-center mb-8">Bem-vindo de volta ao NR ZEN.</p>
-
-        {successMsg && (
-          <div className="bg-emerald-50 text-emerald-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2">
-            <CheckCircle2 size={16} /> {successMsg}
-          </div>
-        )}
+        <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center">Crie sua conta</h1>
+        <p className="text-slate-500 text-center mb-8">Comece a gerenciar riscos psicossociais hoje.</p>
 
         {error && (
           <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2">
@@ -60,6 +47,16 @@ const Login: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Nome da Consultoria / Profissional</label>
+            <input 
+              type="text" 
+              required
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
+              value={formData.name}
+              onChange={e => setFormData({...formData, name: e.target.value})}
+            />
+          </div>
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5">E-mail</label>
             <input 
@@ -71,13 +68,11 @@ const Login: React.FC = () => {
             />
           </div>
           <div>
-            <div className="flex justify-between mb-1.5">
-               <label className="block text-sm font-semibold text-slate-700">Senha</label>
-               <a href="#" className="text-xs text-blue-600 hover:underline">Esqueceu?</a>
-            </div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Senha</label>
             <input 
               type="password" 
               required
+              minLength={6}
               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
               value={formData.password}
               onChange={e => setFormData({...formData, password: e.target.value})}
@@ -85,16 +80,16 @@ const Login: React.FC = () => {
           </div>
 
           <Button fullWidth size="lg" type="submit" disabled={loading} className="mt-4">
-            {loading ? 'Entrando...' : 'Entrar'}
+            {loading ? 'Criando conta...' : 'Cadastrar Grátis'}
           </Button>
         </form>
 
         <div className="mt-6 text-center text-sm text-slate-500">
-          Não tem uma conta? <Link to="/register" className="text-blue-600 font-bold hover:underline">Criar conta grátis</Link>
+          Já tem uma conta? <Link to="/login" className="text-blue-600 font-bold hover:underline">Fazer Login</Link>
         </div>
       </Card>
     </div>
   );
 };
 
-export default Login;
+export default Register;
