@@ -136,3 +136,19 @@ begin
   end if;
 end $$;
 ```
+
+---
+
+## 5. Configuração de Produção (Vercel)
+
+Para que a API funcione no Vercel, você deve configurar as variáveis de ambiente manualmente.
+
+1. Vá no painel do Vercel > Settings > **Environment Variables**.
+2. Adicione as seguintes chaves (obtidas no painel do Supabase > Project Settings > API):
+
+| Key | Value (Origem: Supabase) |
+| :--- | :--- |
+| `VITE_SUPABASE_URL` | Project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | `service_role` secret (NÃO use a anon key) |
+
+3. **IMPORTANTE:** Após adicionar as variáveis, vá na aba **Deployments** do Vercel, clique nos três pontos (...) do último deploy e selecione **Redeploy**.
