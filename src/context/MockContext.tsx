@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Company, UserSession } from '../types';
+import { supabase } from '../lib/supabaseClient';
 
 interface AppContextType {
   user: UserSession | null;
@@ -15,124 +16,125 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Dados iniciais (Seed Data)
-const INITIAL_COMPANIES: Company[] = [
-  { id: '1', name: "Indústrias Metalúrgicas Beta", cnpj: "12.345.678/0001-99", sectorsCount: 8, sectorsActive: 8, lastCollection: "10/10/2025", status: "high" },
-  { id: '2', name: "Transportadora Veloz", cnpj: "98.765.432/0001-11", sectorsCount: 4, sectorsActive: 2, lastCollection: "05/10/2025", status: "moderate" },
-  { id: '3', name: "Call Center Solutions", cnpj: "11.222.333/0001-00", sectorsCount: 12, sectorsActive: 12, lastCollection: "12/10/2025", status: "high" },
-  { id: '4', name: "Tech Softwares", cnpj: "44.555.666/0001-22", sectorsCount: 3, sectorsActive: 0, lastCollection: "20/09/2025", status: "low" },
-  { id: '5', name: "Rede Varejo Express", cnpj: "33.444.555/0001-66", sectorsCount: 20, sectorsActive: 18, lastCollection: "Hoje", status: "low" },
-];
+// Dados de fallback visual caso o banco esteja vazio
+const INITIAL_COMPANIES: Company[] = [];
 
 export const MockProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserSession | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('nrzen_token'));
-  
-  // Inicia COM dados mockados por padrão. Se a API responder, atualizamos.
   const [companies, setCompanies] = useState<Company[]>(INITIAL_COMPANIES);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({ 
-    total: 5, 
-    activeSectors: 40, 
-    responses: 142, 
-    riskHighPercent: 40 
+    total: 0, 
+    activeSectors: 0, 
+    responses: 0, 
+    riskHighPercent: 0 
   });
 
   useEffect(() => {
     const storedUser = localStorage.getItem('nrzen_user');
     if (token && storedUser) {
       setUser(JSON.parse(storedUser));
-      fetchDashboardData(token);
+      fetchDashboardData(JSON.parse(storedUser).id);
     }
   }, [token]);
 
-  const fetchDashboardData = async (authToken: string) => {
+  // Função unificada para buscar dados (API -> Supabase Client -> Mock)
+  const fetchDashboardData = async (userId: string) => {
     try {
-      // Tenta buscar estatísticas
-      const statsRes = await fetch('/api/dashboard/stats', {
-        headers: { 'Authorization': `Bearer ${authToken}` }
+      // 1. Tenta API Serverless (Produção)
+      const res = await fetch('/api/companies', {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       
-      if (statsRes.ok) {
-        const statsData = await statsRes.json();
-        setStats(statsData);
-      } else {
-        console.warn("API de Stats indisponível, usando dados locais.");
+      if (res.ok) {
+        const data = await res.json();
+        setCompanies(data);
+        updateStats(data);
+        return;
       }
-
-      // Tenta buscar empresas reais
-      const compRes = await fetch('/api/companies', {
-        headers: { 'Authorization': `Bearer ${authToken}` }
-      });
-      
-      if (compRes.ok) {
-        const realCompanies = await compRes.json();
-        if (Array.isArray(realCompanies) && realCompanies.length > 0) {
-           setCompanies(realCompanies);
-        }
-      } else {
-        console.warn("API de Companies indisponível, mantendo dados de exemplo.");
-      }
+      throw new Error("API Indisponível");
 
     } catch (e) {
-      console.warn("Backend offline ou não configurado. Usando modo Mock.", e);
-      // Não faz nada, mantém os dados iniciais do useState
+      // 2. Fallback: Conexão Direta Supabase (Desenvolvimento Local)
+      console.log("Modo Dev: Buscando dados diretamente do Supabase...");
+      
+      const { data, error } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        // Adaptar dados do banco para o frontend
+        const adaptedCompanies: Company[] = data.map(c => ({
+          ...c,
+          sectorsCount: 0, // Necessitaria de join
+          sectorsActive: 0,
+          lastCollection: 'N/A'
+        }));
+        setCompanies(adaptedCompanies);
+        updateStats(adaptedCompanies);
+      } else {
+        console.warn("Erro ao buscar do Supabase ou banco vazio:", error);
+      }
     }
+  };
+
+  const updateStats = (currentCompanies: Company[]) => {
+    setStats({
+      total: currentCompanies.length,
+      activeSectors: currentCompanies.reduce((acc, c) => acc + (c.sectorsActive || 0), 0),
+      responses: 142, // Mock fixo por enquanto
+      riskHighPercent: currentCompanies.length > 0 
+        ? Math.round((currentCompanies.filter(c => c.status === 'high').length / currentCompanies.length) * 100) 
+        : 0
+    });
   };
 
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // Simulação de "Bypass" caso a API não exista (para teste de UI)
-      // Se quiser testar o layout sem backend, descomente as linhas abaixo se o fetch falhar
-      /*
-      if (email === "demo@nrzen.com") {
-         const mockUser: UserSession = { id: 'demo', name: 'Usuário Demo', email, plan_tier: 'business' };
-         setUser(mockUser);
-         setToken('mock_token');
-         localStorage.setItem('nrzen_token', 'mock_token');
-         localStorage.setItem('nrzen_user', JSON.stringify(mockUser));
-         setLoading(false);
-         return;
-      }
-      */
-
+      // 1. Tenta API
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
       
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao realizar login');
-
-      const userData: UserSession = {
-        id: data.user.id,
-        name: data.user.name,
-        email: data.user.email,
-        plan_tier: data.user.plan_tier as any
-      };
-
-      setToken(data.token);
-      setUser(userData);
-      localStorage.setItem('nrzen_token', data.token);
-      localStorage.setItem('nrzen_user', JSON.stringify(userData));
-      
-      fetchDashboardData(data.token);
-
-    } catch (error) {
-      console.error(error);
-      // Fallback para login de demonstração se a API falhar (DX melhorada)
-      if (email.includes('demo') || email.includes('teste')) {
-          console.log("Ativando modo demonstração local devido a erro na API.");
-          const mockUser: UserSession = { id: 'local', name: 'Demo Local', email, plan_tier: 'business' };
-          setUser(mockUser);
-          setToken('local_token');
-          localStorage.setItem('nrzen_token', 'local_token');
-          localStorage.setItem('nrzen_user', JSON.stringify(mockUser));
-      } else {
-          throw error;
+      if (res.ok) {
+        const data = await res.json();
+        handleAuthSuccess(data.token, data.user);
+        return;
       }
+
+      // 2. Fallback: Verifica tabela 'users' customizada diretamente
+      // NOTA DE SEGURANÇA: Em produção, NUNCA faça login direto no cliente sem hash.
+      // Isso é apenas para validar a conexão com a tabela que você criou.
+      console.log("Modo Dev: Tentando login direto no Supabase...");
+      
+      const { data: userRecord, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+      if (error || !userRecord) throw new Error('Usuário não encontrado ou credenciais inválidas.');
+
+      // Simula token e sucesso
+      const fakeToken = `dev-token-${userRecord.id}`;
+      const userData: UserSession = {
+        id: userRecord.id,
+        name: userRecord.name,
+        email: userRecord.email,
+        plan_tier: userRecord.plan_tier || 'free'
+      };
+      
+      handleAuthSuccess(fakeToken, userData);
+
+    } catch (error: any) {
+      console.error(error);
+      throw new Error(error.message || 'Erro ao realizar login');
     } finally {
       setLoading(false);
     }
@@ -141,69 +143,96 @@ export const MockProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (name: string, email: string, password: string) => {
     setLoading(true);
     try {
+      // 1. Tenta API
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao registrar');
+
+      if (res.ok) {
+        await login(email, password);
+        return;
+      }
+
+      // 2. Fallback: Insere na tabela 'users' diretamente
+      console.log("Modo Dev: Registrando direto no Supabase...");
+      
+      const { error } = await supabase
+        .from('users')
+        .insert([{
+          name,
+          email,
+          password_hash: 'hash-simulado-local', // API serverless faria o hash real
+          plan_tier: 'free'
+        }]);
+
+      if (error) throw error;
       await login(email, password);
-    } catch (error) {
+
+    } catch (error: any) {
       console.error(error);
-      // Fallback local
-      await login(email, password);
+      throw new Error(error.message || 'Erro ao registrar');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleAuthSuccess = (newToken: string, newUser: UserSession) => {
+    setToken(newToken);
+    setUser(newUser);
+    localStorage.setItem('nrzen_token', newToken);
+    localStorage.setItem('nrzen_user', JSON.stringify(newUser));
+    fetchDashboardData(newUser.id);
+  };
+
   const logout = () => {
     setToken(null);
     setUser(null);
-    setCompanies(INITIAL_COMPANIES); // Reseta para os dados iniciais
+    setCompanies([]);
     localStorage.removeItem('nrzen_token');
     localStorage.removeItem('nrzen_user');
     window.location.href = '/login';
   };
 
   const addCompany = async (companyData: Omit<Company, 'id'>) => {
-    // Tenta API primeiro
-    try {
-        if(token && token !== 'local_token' && token !== 'mock_token') {
-            const res = await fetch('/api/companies', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(companyData)
-            });
-            if (res.ok) {
-                fetchDashboardData(token);
-                return;
-            }
-        }
-    } catch(e) { console.error(e); }
+    if (!user) return;
 
-    // Fallback Local (Atualiza o estado localmente para feedback imediato)
-    const newComp: Company = { 
-        ...companyData, 
-        id: crypto.randomUUID(), 
-        status: 'low',
-        sectorsCount: 1,
-        sectorsActive: 1,
-        lastCollection: 'Hoje'
+    // Prepara objeto para inserção
+    const payload = {
+      user_id: user.id,
+      name: companyData.name,
+      cnpj: companyData.cnpj,
+      status: 'active'
     };
-    
-    setCompanies(prev => [newComp, ...prev]);
-    
-    // Atualiza stats locais simples
-    setStats(prev => ({
-        ...prev,
-        total: prev.total + 1,
-        activeSectors: prev.activeSectors + 1
-    }));
+
+    try {
+      // 1. Tenta API
+      const res = await fetch('/api/companies', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        fetchDashboardData(user.id);
+        return;
+      }
+
+      // 2. Fallback: Insert direto
+      console.log("Modo Dev: Criando empresa direto no Supabase...");
+      const { error } = await supabase.from('companies').insert([payload]);
+      
+      if (error) throw error;
+      fetchDashboardData(user.id);
+
+    } catch(e) { 
+      console.error("Erro ao adicionar empresa:", e);
+      alert("Erro ao salvar no banco de dados.");
+    }
   };
 
   const getCompanyStats = () => {
