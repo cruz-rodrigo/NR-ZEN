@@ -98,11 +98,10 @@ const Onboarding: React.FC = () => {
             body: JSON.stringify({
               name: formData.name,
               cnpj: formData.cnpj,
-              firstSectorName: formData.sectorName, // Novo campo
-              employeesCount: formData.employees   // Novo campo
+              firstSectorName: formData.sectorName, 
+              employeesCount: formData.employees
             })
           });
-          // Se passou, avançamos para sucesso
           setStep(step + 1);
         } catch (err: any) {
           console.error(err);

@@ -43,7 +43,7 @@ const Report: React.FC = () => {
       </div>
 
       {/* Folha A4 - Simulada na tela, Real na impressão */}
-      <div className="print-container mt-16 print:mt-0 w-[210mm] min-h-[297mm] bg-white shadow-2xl print:shadow-none p-[15mm] flex flex-col justify-between">
+      <div className="print-container mt-16 print:mt-0 w-[210mm] min-h-[297mm] bg-white shadow-2xl print:shadow-none p-[15mm] flex flex-col justify-between box-border">
         
         {/* Conteúdo Principal */}
         <div>

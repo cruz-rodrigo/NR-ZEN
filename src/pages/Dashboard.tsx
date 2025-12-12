@@ -18,15 +18,18 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Busca simultânea de estatísticas e lista de empresas
         const [statsData, companiesData] = await Promise.all([
-          apiCall('/api/dashboard/stats'),
-          apiCall('/api/companies')
+          apiCall('/api/dashboard/stats').catch(() => null),
+          apiCall('/api/companies').catch(() => null)
         ]);
         
-        setStats(statsData);
-        setCompanies(companiesData);
+        // Fallbacks seguros caso a API falhe (comum em preview)
+        setStats(statsData || { total: 0, activeSectors: 0, responses: 0, riskHighPercent: 0 });
+        setCompanies(companiesData || []);
+        
       } catch (error) {
-        console.error("Erro ao carregar dashboard:", error);
+        console.error("Erro no Dashboard:", error);
       } finally {
         setLoading(false);
       }
@@ -50,7 +53,7 @@ const Dashboard: React.FC = () => {
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-heading font-bold text-slate-800">Visão Geral</h1>
-          <p className="text-slate-500 mt-1">Bem-vindo de volta, {user?.name}.</p>
+          <p className="text-slate-500 mt-1">Bem-vindo de volta, {user?.name || 'Visitante'}.</p>
         </div>
         <div className="flex items-center gap-4">
            <Button size="sm" onClick={() => navigate('/app/onboarding')}><Plus size={16} className="mr-1"/> Nova Empresa</Button>
@@ -103,7 +106,11 @@ const Dashboard: React.FC = () => {
         <div className="overflow-x-auto">
           {companies.length === 0 ? (
             <div className="p-8 text-center text-slate-500">
-              Nenhuma empresa encontrada. Cadastre sua primeira empresa para começar.
+              <Building2 size={40} className="mx-auto text-slate-200 mb-3"/>
+              <p>Nenhuma empresa encontrada.</p>
+              <Button variant="ghost" className="mt-2 text-blue-600" onClick={() => navigate('/app/onboarding')}>
+                Cadastre sua primeira empresa
+              </Button>
             </div>
           ) : (
             <table className="w-full text-left">
