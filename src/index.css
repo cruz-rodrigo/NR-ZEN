@@ -12,11 +12,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* --- REGRAS CRÍTICAS DE IMPRESSÃO (A4 RIGOROSO) --- */
+/* Regras de Impressão */
 @media print {
   @page {
     size: A4;
-    margin: 0; /* Remove margem forçada pelo navegador */
+    margin: 0;
   }
 
   html, body {
@@ -27,17 +27,15 @@ body {
     background: white !important;
   }
 
-  /* Oculta elementos de UI */
   .no-print, header:not(.print-header), footer:not(.print-footer), nav, button, .fixed, .hidden-print, ::-webkit-scrollbar {
     display: none !important;
   }
 
-  /* Container Principal do Relatório */
   .print-container {
     width: 210mm !important;
     min-height: 297mm !important;
     margin: 0 !important;
-    padding: 15mm 15mm !important; /* Margem interna segura de 1.5cm */
+    padding: 15mm 15mm !important;
     box-shadow: none !important;
     border: none !important;
     background: white !important;
@@ -45,13 +43,11 @@ body {
     overflow: visible !important;
   }
 
-  /* Força impressão de Backgrounds (Cores) */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   
-  /* Controle de Quebra de Página */
   .print-break-inside-avoid {
     break-inside: avoid;
     page-break-inside: avoid;
@@ -63,7 +59,6 @@ body {
     margin-top: 0;
   }
 
-  /* Remove sombras e bordas decorativas na impressão */
   .shadow-2xl, .shadow-xl, .shadow-lg, .shadow-md, .shadow-sm {
     box-shadow: none !important;
   }

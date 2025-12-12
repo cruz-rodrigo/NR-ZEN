@@ -4,29 +4,27 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import { QUESTIONNAIRE_DATA } from '../constants';
-import { ScoreResult } from '../types';
+import { ScoreResult, Domain, Question } from '../types';
 import { Logo } from '../components/Layout';
 
 type Screen = 'consent' | 'questions' | 'result';
 
-const DEMO_DATA = QUESTIONNAIRE_DATA.map(domain => ({
+const DEMO_DATA = QUESTIONNAIRE_DATA.map((domain: Domain) => ({
   ...domain,
   questions: domain.questions.slice(0, 2)
 }));
 
 const Questionnaire: React.FC = () => {
   const navigate = useNavigate();
-  const { code } = useParams(); // Captura o código da URL (ex: ref-123)
+  const { code } = useParams();
   const [screen, setScreen] = useState<Screen>('consent');
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [result, setResult] = useState<ScoreResult | null>(null);
 
-  // Simulação de metadados baseados no código do link
   const [meta, setMeta] = useState({ sector: "Setor Logística", shift: "Geral" });
 
   useEffect(() => {
     if (code) {
-      // Pequena lógica visual para parecer dinâmico
       if (code.includes('adm')) setMeta({ sector: "Administrativo", shift: "Comercial" });
       else if (code.includes('log')) setMeta({ sector: "Operação Logística", shift: "Turno 1" });
       else if (code.includes('ref')) setMeta({ sector: "Produção", shift: "Geral" });
@@ -37,11 +35,11 @@ const Questionnaire: React.FC = () => {
 
   const calculateResults = () => {
     let globalSum = 0;
-    const domainScores = ACTIVE_DATA.map(domain => {
+    const domainScores = ACTIVE_DATA.map((domain: Domain) => {
       let domainSum = 0;
       let count = 0;
       
-      domain.questions.forEach(q => {
+      domain.questions.forEach((q: Question) => {
         const val = answers[q.id];
         if (val) {
           let score = 0;
@@ -64,14 +62,14 @@ const Questionnaire: React.FC = () => {
     const globalAvg = Math.round(globalSum / ACTIVE_DATA.length);
     
     let riskLevel: ScoreResult['riskLevel'] = 'Moderado';
-    let riskColor = '#F59E0B'; // Amber
+    let riskColor = '#F59E0B'; 
 
     if (globalAvg <= 39) {
       riskLevel = 'Baixo';
-      riskColor = '#10B981'; // Emerald
+      riskColor = '#10B981';
     } else if (globalAvg >= 70) {
       riskLevel = 'Alto';
-      riskColor = '#EF4444'; // Red
+      riskColor = '#EF4444'; 
     }
 
     setResult({
@@ -89,8 +87,8 @@ const Questionnaire: React.FC = () => {
   };
 
   const handleSubmit = () => {
-    const allQuestions = ACTIVE_DATA.flatMap(d => d.questions);
-    const unanswered = allQuestions.find(q => !answers[q.id]);
+    const allQuestions = ACTIVE_DATA.flatMap((d: Domain) => d.questions);
+    const unanswered = allQuestions.find((q: Question) => !answers[q.id]);
     
     if (unanswered) {
       const el = document.getElementById(unanswered.id);
@@ -319,7 +317,7 @@ const Questionnaire: React.FC = () => {
         </div>
 
         <div className="space-y-8">
-          {ACTIVE_DATA.map((domain, index) => (
+          {ACTIVE_DATA.map((domain: Domain, index: number) => (
             <div key={domain.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
               <div className="bg-slate-50/50 px-6 py-4 border-b border-slate-100 flex items-center gap-3">
                  <span className="bg-white border border-slate-200 text-slate-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-sm">{index + 1}</span>
@@ -327,7 +325,7 @@ const Questionnaire: React.FC = () => {
               </div>
               
               <div className="p-2 sm:p-6 space-y-1">
-                {domain.questions.map((q) => (
+                {domain.questions.map((q: Question) => (
                   <div key={q.id} id={q.id} className="p-4 rounded-xl hover:bg-slate-50 transition-colors group scroll-mt-24">
                     <p className="font-medium text-slate-800 mb-5 text-base sm:text-lg leading-relaxed">{q.text}</p>
                     
@@ -365,7 +363,7 @@ const Questionnaire: React.FC = () => {
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] print:hidden">
         <div className="max-w-3xl mx-auto flex justify-between items-center gap-4">
            <div className="hidden sm:block text-sm text-slate-500">
-              {Object.keys(answers).length} de {ACTIVE_DATA.flatMap(d => d.questions).length} respondidas
+              {Object.keys(answers).length} de {ACTIVE_DATA.flatMap((d: Domain) => d.questions).length} respondidas
            </div>
            <Button size="lg" onClick={handleSubmit} className="w-full sm:w-auto shadow-lg shadow-blue-600/20 px-8">
              Finalizar e Enviar
