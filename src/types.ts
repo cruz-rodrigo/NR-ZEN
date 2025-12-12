@@ -17,23 +17,20 @@ export interface ScoreResult {
   riskColor: string;
 }
 
-// Interface que reflete a tabela 'companies' do Supabase
 export interface Company {
-  id: string; // UUID no banco
+  id: string;
   user_id?: string;
   name: string;
   cnpj: string;
-  status: 'active' | 'inactive' | 'low' | 'moderate' | 'high'; // 'low'...'high' são usados visualmente no front, 'active' no banco
+  status: 'active' | 'inactive' | 'low' | 'moderate' | 'high';
   
-  // Propriedades calculadas/agregadas (frontend helper props)
+  // Frontend helpers
   sectorsCount?: number;
   sectorsActive?: number;
   lastCollection?: string;
-  
   created_at?: string;
 }
 
-// Interface para o Usuário (Sessão)
 export interface UserSession {
   id: string;
   name: string;
