@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { 
   CheckCircle2, ArrowRight, BarChart3, Lock, Users, FileCheck, 
   Menu, X, Star, ShieldCheck, Zap, HeartHandshake, Unlock, 
-  ChevronDown, ChevronUp, Play
+  ChevronDown, ChevronUp, Play, Gem
 } from 'lucide-react';
 import Button from '../components/Button';
 import { Logo } from '../components/Layout';
@@ -267,21 +267,33 @@ const LandingPage: React.FC = () => {
               Comece pequeno e cresça conforme sua carteira de clientes aumenta. Sem fidelidade.
             </p>
 
-            {/* Toggle */}
-            <div className="flex items-center justify-center gap-4 bg-slate-800/50 backdrop-blur p-1.5 rounded-full inline-block border border-slate-700">
-              <button 
-                onClick={() => setBillingCycle('monthly')}
-                className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${billingCycle === 'monthly' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
-              >
+            {/* HIGH VISIBILITY TOGGLE SWITCH */}
+            <div className="flex items-center justify-center gap-6 mt-8 mb-4">
+              <span className={`text-base font-bold tracking-wide transition-colors ${billingCycle === 'monthly' ? 'text-white' : 'text-slate-500'}`}>
                 Mensal
-              </button>
+              </span>
+              
               <button 
-                onClick={() => setBillingCycle('yearly')}
-                className={`px-6 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 ${billingCycle === 'yearly' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                onClick={() => setBillingCycle(prev => prev === 'monthly' ? 'yearly' : 'monthly')}
+                className="w-20 h-10 bg-slate-800 rounded-full p-1 relative transition-all duration-300 border-2 border-slate-600 hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                role="switch"
+                aria-checked={billingCycle === 'yearly'}
               >
-                Anual
-                <span className="text-[10px] bg-emerald-500 text-white px-1.5 py-0.5 rounded font-bold uppercase">-17%</span>
+                {/* Track Background */}
+                <div className={`absolute inset-1 rounded-full transition-colors duration-300 ${billingCycle === 'yearly' ? 'bg-blue-900/50' : 'bg-transparent'}`}></div>
+                
+                {/* Knob */}
+                <div className={`w-7 h-7 bg-blue-500 rounded-full shadow-lg transform transition-transform duration-300 flex items-center justify-center ${billingCycle === 'yearly' ? 'translate-x-10 bg-emerald-400' : 'translate-x-0'}`}>
+                   {billingCycle === 'yearly' && <span className="block w-2 h-2 bg-white rounded-full"></span>}
+                </div>
               </button>
+              
+              <span className={`text-base font-bold tracking-wide transition-colors flex items-center gap-2 ${billingCycle === 'yearly' ? 'text-white' : 'text-slate-500'}`}>
+                Anual
+                <span className="bg-emerald-500 text-white text-[10px] uppercase font-black px-2 py-1 rounded shadow-lg shadow-emerald-500/20 animate-pulse">
+                  -17% OFF
+                </span>
+              </span>
             </div>
           </div>
 
@@ -347,23 +359,37 @@ const LandingPage: React.FC = () => {
               </ul>
             </div>
 
-            {/* PLANO ENTERPRISE */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col hover:border-blue-900 transition-colors">
-              <h3 className="text-lg font-bold text-white mb-2">Enterprise</h3>
-              <div className="mb-4">
-                <span className="text-3xl font-bold text-white">Sob Medida</span>
+            {/* PLANO ENTERPRISE - RESTORED PREMIUM LOOK */}
+            <div className="bg-[#0B1120] rounded-3xl p-6 border border-[#1E293B] hover:border-amber-500/40 transition-all hover:shadow-2xl hover:shadow-amber-900/10 flex flex-col group h-full relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#0B1120] via-amber-500/60 to-[#0B1120]"></div>
+              
+              <div className="flex justify-between items-start mb-2">
+                 <h3 className="text-lg font-bold text-white tracking-tight group-hover:text-amber-400 transition-colors">Enterprise</h3>
+                 <Gem size={20} className="text-amber-500" />
               </div>
-              <p className="text-sm text-slate-400 mb-6 min-h-[40px]">SESMT Corporativo e Redes de Franquias.</p>
-              <Button fullWidth variant="ghost" onClick={() => window.location.href='mailto:contato@nrzen.com.br'} className="mb-6 border border-slate-700 text-slate-300 hover:text-white hover:border-white">
+              
+              <div className="mb-4">
+                 <div className="text-3xl font-bold text-white">Custom</div>
+                 <p className="text-[10px] text-amber-500/80 font-medium mt-1 tracking-widest uppercase">Solução Sob Medida</p>
+              </div>
+
+              <p className="text-sm text-slate-300 mb-6 italic min-h-[40px]">Para grandes empresas, assessorias, franquias e SESMT Corporativo.</p>
+              
+              {/* BUTTON FIX: Use variant="dark" with amber accent */}
+              <Button fullWidth variant="dark" onClick={() => scrollToSection('contact')} className="hover:border-amber-500/50 hover:text-amber-400 mb-6 transition-all group-hover:bg-slate-800">
                 Falar com Vendas
               </Button>
-              
-              <ul className="space-y-3 text-sm text-slate-400 flex-1">
-                <li className="flex gap-2"><CheckCircle2 size={16} className="text-slate-500 shrink-0"/> Volume Ilimitado</li>
-                <li className="flex gap-2"><CheckCircle2 size={16} className="text-slate-500 shrink-0"/> Instância Dedicada</li>
-                <li className="flex gap-2"><CheckCircle2 size={16} className="text-slate-500 shrink-0"/> SSO & SAML</li>
-                <li className="flex gap-2"><CheckCircle2 size={16} className="text-slate-500 shrink-0"/> Contrato Personalizado</li>
-              </ul>
+
+              <div className="border-t border-slate-800 pt-6 flex-1">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 group-hover:text-amber-500/50 transition-colors">Exclusivo Enterprise</p>
+                <ul className="space-y-3 text-sm text-slate-300">
+                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-amber-500 flex-shrink-0"/> Volume Ilimitado</li>
+                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-amber-500 flex-shrink-0"/> Instância Dedicada</li>
+                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-amber-500 flex-shrink-0"/> Integração SSO & SAML</li>
+                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-amber-500 flex-shrink-0"/> Contrato Personalizado</li>
+                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-amber-500 flex-shrink-0"/> SLA Garantido</li>
+                </ul>
+              </div>
             </div>
 
           </div>
