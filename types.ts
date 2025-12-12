@@ -18,13 +18,24 @@ export interface ScoreResult {
 }
 
 export interface Company {
-  id: number;
+  id: string;
+  user_id?: string;
   name: string;
   cnpj: string;
-  sectorsCount: number;
-  sectorsActive: number;
-  lastCollection: string;
-  status: 'low' | 'moderate' | 'high';
+  status: 'active' | 'inactive' | 'low' | 'moderate' | 'high';
+  
+  // Frontend helpers
+  sectorsCount?: number;
+  sectorsActive?: number;
+  lastCollection?: string;
+  created_at?: string;
+}
+
+export interface UserSession {
+  id: string;
+  name: string;
+  email: string;
+  plan_tier: 'free' | 'consultant' | 'business' | 'enterprise';
 }
 
 export interface ActionPlanItem {
