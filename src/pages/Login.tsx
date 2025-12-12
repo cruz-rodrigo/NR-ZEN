@@ -4,14 +4,14 @@ import { Logo } from '../components/Layout';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Info } from 'lucide-react';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [searchParams] = useSearchParams();
   
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ email: 'teste@nrzen.com', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
@@ -28,10 +28,12 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      await login(formData.email, formData.password);
+      // Tenta login (AuthContext lidará com fallback se API falhar)
+      await login(formData.email, formData.password || '123456');
       navigate('/app');
     } catch (err: any) {
-      setError(err.message || 'Credenciais inválidas.');
+      // Se chegar aqui, é um erro muito grave, pois o fallback captura a maioria
+      setError(err.message || 'Erro inesperado.');
     } finally {
       setLoading(false);
     }
@@ -45,7 +47,15 @@ const Login: React.FC = () => {
       
       <Card className="w-full max-w-md p-8">
         <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center">Acesse sua conta</h1>
-        <p className="text-slate-500 text-center mb-8">Bem-vindo de volta ao NR ZEN.</p>
+        <p className="text-slate-500 text-center mb-6">Bem-vindo de volta ao NR ZEN.</p>
+
+        <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-6 text-sm text-blue-800 flex items-start gap-3">
+           <Info className="shrink-0 mt-0.5" size={18} />
+           <div>
+             <span className="font-bold block mb-1">Ambiente de Demonstração</span>
+             Caso a API não esteja conectada, você entrará automaticamente no modo offline. Use qualquer senha.
+           </div>
+        </div>
 
         {successMsg && (
           <div className="bg-emerald-50 text-emerald-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2">
@@ -77,15 +87,15 @@ const Login: React.FC = () => {
             </div>
             <input 
               type="password" 
-              required
               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
               value={formData.password}
               onChange={e => setFormData({...formData, password: e.target.value})}
+              placeholder="Digite qualquer senha"
             />
           </div>
 
           <Button fullWidth size="lg" type="submit" disabled={loading} className="mt-4">
-            {loading ? 'Entrando...' : 'Entrar'}
+            {loading ? 'Acessando...' : 'Entrar na Plataforma'}
           </Button>
         </form>
 

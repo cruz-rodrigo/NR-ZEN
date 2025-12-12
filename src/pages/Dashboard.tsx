@@ -15,21 +15,30 @@ const Dashboard: React.FC = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Dados Mockados para o caso da API falhar
+  const MOCK_STATS = { total: 12, activeSectors: 34, responses: 892, riskHighPercent: 18 };
+  const MOCK_COMPANIES: Company[] = [
+    { id: '1', name: "Indústrias Metalúrgicas Beta", cnpj: "12.345.678/0001-99", sectorsCount: 8, sectorsActive: 8, lastCollection: "10/10/2025", status: "active" },
+    { id: '2', name: "Transportadora Veloz", cnpj: "98.765.432/0001-11", sectorsCount: 4, sectorsActive: 2, lastCollection: "05/10/2025", status: "active" },
+    { id: '3', name: "Call Center Solutions", cnpj: "11.222.333/0001-00", sectorsCount: 12, sectorsActive: 12, lastCollection: "12/10/2025", status: "active" },
+  ];
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Busca simultânea de estatísticas e lista de empresas
+        // Tenta buscar dados. Se apiCall retornar null (erro/mock mode), usamos os dados mockados
         const [statsData, companiesData] = await Promise.all([
           apiCall('/api/dashboard/stats').catch(() => null),
           apiCall('/api/companies').catch(() => null)
         ]);
         
-        // Fallbacks seguros caso a API falhe (comum em preview)
-        setStats(statsData || { total: 0, activeSectors: 0, responses: 0, riskHighPercent: 0 });
-        setCompanies(companiesData || []);
+        setStats(statsData || MOCK_STATS);
+        setCompanies(companiesData || MOCK_COMPANIES);
         
       } catch (error) {
-        console.error("Erro no Dashboard:", error);
+        console.error("Erro no Dashboard, usando dados locais:", error);
+        setStats(MOCK_STATS);
+        setCompanies(MOCK_COMPANIES);
       } finally {
         setLoading(false);
       }

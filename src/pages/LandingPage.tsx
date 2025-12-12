@@ -96,7 +96,7 @@ const LandingPage: React.FC = () => {
           </nav>
 
           <div className="hidden md:flex items-center gap-6">
-            <Link to="/app" className="text-slate-600 font-medium hover:text-blue-600 px-2 text-lg transition-colors">Login</Link>
+            <Link to="/login" className="text-slate-600 font-medium hover:text-blue-600 px-2 text-lg transition-colors">Login</Link>
             <Button size="lg" onClick={() => scrollToSection('contact')}>Falar com Consultor</Button>
           </div>
 
@@ -112,7 +112,7 @@ const LandingPage: React.FC = () => {
               <button onClick={() => scrollToSection('pricing')} className="text-left font-medium text-slate-600">Planos</button>
               <Link to="/demo" onClick={() => setMobileMenuOpen(false)} className="font-medium text-blue-600">Teste Grátis</Link>
               <hr className="border-slate-100"/>
-              <Link to="/app" onClick={() => setMobileMenuOpen(false)} className="font-medium text-slate-800">Login</Link>
+              <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="font-medium text-slate-800">Login</Link>
               <Button fullWidth size="lg" onClick={() => scrollToSection('contact')}>Falar com Consultor</Button>
             </nav>
           </div>
