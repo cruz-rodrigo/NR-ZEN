@@ -4,14 +4,14 @@ import { Logo } from '../components/Layout';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
-import { AlertCircle, CheckCircle2, Info, Lock, ArrowRight } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Info, Lock, ArrowRight, Zap } from 'lucide-react';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, loginDemo } = useAuth();
   const [searchParams] = useSearchParams();
   
-  const [formData, setFormData] = useState({ email: 'teste@nrzen.com', password: '' });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
@@ -28,18 +28,18 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      // Tenta login (AuthContext lidará com fallback se API falhar)
-      await login(formData.email, formData.password || '123456');
+      await login(formData.email, formData.password);
       navigate('/app');
     } catch (err: any) {
-      // Fallback final para garantir acesso em caso de erro crítico
-      console.error("Erro crítico no login, forçando modo offline:", err);
-      // Se o AuthContext falhar completamente (o que é raro com o fallback interno),
-      // podemos ter uma rede de segurança aqui, mas o AuthContext já deve lidar com isso.
       setError(err.message || 'Erro inesperado ao conectar.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDemoLogin = () => {
+    loginDemo();
+    navigate('/app');
   };
 
   return (
@@ -50,24 +50,16 @@ const Login: React.FC = () => {
       
       <Card className="w-full max-w-md p-8 shadow-xl border-t-4 border-t-blue-600">
         <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center">Acesse sua conta</h1>
-        <p className="text-slate-500 text-center mb-6">Bem-vindo de volta ao NR ZEN.</p>
-
-        <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-6 text-sm text-blue-800 flex items-start gap-3">
-           <Info className="shrink-0 mt-0.5" size={18} />
-           <div>
-             <span className="font-bold block mb-1">Ambiente de Demonstração</span>
-             O sistema entrará em modo offline caso a API não esteja disponível. Use a senha sugerida ou qualquer outra.
-           </div>
-        </div>
+        <p className="text-slate-500 text-center mb-6">Gestão de Riscos Psicossociais</p>
 
         {successMsg && (
-          <div className="bg-emerald-50 text-emerald-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2 border border-emerald-100">
+          <div className="bg-emerald-50 text-emerald-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2 border border-emerald-100 animate-fade-in-down">
             <CheckCircle2 size={16} /> {successMsg}
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2 border border-red-100">
+          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2 border border-red-100 animate-fade-in-down">
             <AlertCircle size={16} /> {error}
           </div>
         )}
@@ -91,10 +83,11 @@ const Login: React.FC = () => {
             </div>
             <input 
               type="password" 
+              required
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all"
               value={formData.password}
               onChange={e => setFormData({...formData, password: e.target.value})}
-              placeholder="Digite qualquer senha"
+              placeholder="••••••••"
             />
           </div>
 
@@ -103,8 +96,30 @@ const Login: React.FC = () => {
           </Button>
         </form>
 
+        <div className="mt-6">
+           <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200"></div>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-slate-400 font-medium">Ou teste sem senha</span>
+              </div>
+           </div>
+
+           <Button 
+             variant="secondary" 
+             fullWidth 
+             size="lg" 
+             onClick={handleDemoLogin}
+             className="mt-6 border-dashed"
+           >
+             <Zap size={16} className="mr-2 text-amber-500" />
+             Acessar Modo Demo (Offline)
+           </Button>
+        </div>
+
         <div className="mt-8 pt-6 border-t border-slate-100 text-center text-sm text-slate-500 flex flex-col gap-2">
-          <p>Não tem uma conta?</p>
+          <p>Ainda não tem cadastro?</p>
           <Link to="/register" className="text-blue-600 font-bold hover:underline inline-flex items-center justify-center gap-1">
             Criar conta grátis <ArrowRight size={14} />
           </Link>

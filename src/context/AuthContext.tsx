@@ -7,6 +7,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginDemo: () => void;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   apiCall: (endpoint: string, options?: RequestInit) => Promise<any>;
@@ -36,6 +37,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
   }, []);
 
+  const loginDemo = () => {
+    const mockUser: UserSession = {
+      id: 'demo-user-id',
+      name: 'Usuário Demo (Offline)',
+      email: 'demo@nrzen.com',
+      plan_tier: 'business'
+    };
+    const demoToken = 'demo-token-jwt';
+    
+    setToken(demoToken);
+    setUser(mockUser);
+    localStorage.setItem('nrzen_token', demoToken);
+    localStorage.setItem('nrzen_user', JSON.stringify(mockUser));
+  };
+
   const login = async (email: string, password: string) => {
     try {
       const res = await fetch('/api/auth/login', {
@@ -46,54 +62,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const contentType = res.headers.get("content-type");
       
-      // FALLBACK ROBUSTO (MODO DEMO/DEV): 
-      // Se a API retornar erro de servidor (500), não encontrar (404) ou retornar HTML (erro do Vercel/Vite),
-      // ativamos o modo demonstração automaticamente para não bloquear o usuário.
-      if (!res.ok || !contentType || !contentType.includes("application/json")) {
-        console.warn("API indisponível ou erro de servidor. Ativando Modo Demo Local.");
-        
-        // Simula delay de rede para UX
-        await new Promise(resolve => setTimeout(resolve, 800));
-
-        const mockUser: UserSession = {
-          id: 'demo-user-id',
-          name: 'Usuário Demo (Offline)',
-          email: email,
-          plan_tier: 'business'
-        };
-        const demoToken = 'demo-token-jwt';
-        
-        // Atualiza estado
-        setToken(demoToken);
-        setUser(mockUser);
-        
-        // Persiste
-        localStorage.setItem('nrzen_token', demoToken);
-        localStorage.setItem('nrzen_user', JSON.stringify(mockUser));
-        return; // Sucesso simulado
+      // 1. Tratamento de Erro de Credencial (401)
+      if (res.status === 401) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'E-mail ou senha incorretos.');
       }
 
+      // 2. Fallback para Erro de Servidor/Rede (Ativa Demo se API estiver fora)
+      if (!res.ok || !contentType || !contentType.includes("application/json")) {
+        console.warn("API indisponível (Erro 500 ou Network). Ativando Modo Demo Local.");
+        await new Promise(resolve => setTimeout(resolve, 800)); // Delay UX
+        loginDemo();
+        return;
+      }
+
+      // 3. Sucesso
       const data = await res.json();
       setToken(data.token);
       setUser(data.user);
       localStorage.setItem('nrzen_token', data.token);
       localStorage.setItem('nrzen_user', JSON.stringify(data.user));
 
-    } catch (err) {
-      console.error("Erro de conexão no login, usando fallback:", err);
-      // Fallback em caso de erro de rede (Network Error / Offline)
-      const mockUser: UserSession = {
-        id: 'demo-user-id',
-        name: 'Usuário Demo (Offline)',
-        email: email,
-        plan_tier: 'business'
-      };
-      const demoToken = 'demo-token-jwt';
+    } catch (err: any) {
+      // Se for erro de credencial, repassa o erro para a UI
+      if (err.message === 'E-mail ou senha incorretos.') {
+        throw err;
+      }
       
-      setToken(demoToken);
-      setUser(mockUser);
-      localStorage.setItem('nrzen_token', demoToken);
-      localStorage.setItem('nrzen_user', JSON.stringify(mockUser));
+      console.error("Erro de conexão no login:", err);
+      // Se for erro de rede (fetch failed), entra no modo demo como fallback
+      loginDemo();
     }
   };
 
@@ -107,14 +105,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const contentType = res.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json") || !res.ok) {
-         console.warn("API de registro indisponível. Simulando sucesso.");
-         return; 
+         // Se a API não responder JSON, pode ser erro 500 do Vercel
+         const text = await res.text();
+         console.error("Erro no registro:", text);
+         throw new Error("Erro ao conectar com o servidor de registro.");
       }
 
-      await res.json();
-    } catch (err) {
-      console.error("Erro no registro, simulando sucesso:", err);
-      return; 
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+    } catch (err: any) {
+      console.error("Erro no registro:", err);
+      throw err; 
     }
   };
 
@@ -130,7 +132,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!token) throw new Error("Usuário não autenticado");
 
     // Se estiver em modo Demo (token falso), retorna null imediatamente 
-    // para que os componentes usem seus dados mockados (Dashboard, Companies, etc)
     if (token === 'demo-token-jwt') {
       return null; 
     }
@@ -149,13 +150,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error("Sessão expirada");
       }
 
-      // Se for 204 (No Content)
       if (res.status === 204) return null;
 
       const contentType = res.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        // Se a API não retornar JSON, tratamos como erro silencioso (retorna null)
-        // para que a UI use dados mockados.
         return null;
       }
 
@@ -165,7 +163,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return data;
     } catch (error) {
       console.error(`Erro na chamada API ${endpoint}:`, error);
-      return null; // Retorna null para a UI tratar com dados mockados
+      return null; 
     }
   };
 
@@ -176,6 +174,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isAuthenticated: !!token, 
       isLoading, 
       login, 
+      loginDemo,
       register, 
       logout,
       apiCall 
