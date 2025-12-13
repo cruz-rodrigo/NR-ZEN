@@ -66,8 +66,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // 6. Sucesso: Extrair dados aninhados para resposta plana
     // Tratamento de tipos do Supabase (array vs objeto único dependendo da relação)
-    const sectorData = Array.isArray(survey.sectors) ? survey.sectors[0] : survey.sectors;
-    const companyData = sectorData?.companies; 
+    // Cast as any para evitar erro TS2339 onde o compilador infere 'never' em joins complexos
+    const sectorData = (Array.isArray(survey.sectors) ? survey.sectors[0] : survey.sectors) as any;
+    const companyData = sectorData?.companies as any; 
     
     // Fallback de segurança caso o join falhe
     const companyName = Array.isArray(companyData) ? companyData[0]?.name : companyData?.name;
