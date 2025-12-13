@@ -33,11 +33,11 @@ const Questionnaire: React.FC = () => {
 
   const ACTIVE_DATA = DEMO_DATA;
 
+  // TODO: Substituir lógica client-side abaixo pela integração com a API
+  // 1. Criar função async submitAnswers()
+  // 2. Chamar POST /api/surveys/submit com { token: code, answers: formattedAnswers }
+  // 3. Receber OK e mostrar tela de agradecimento sem expor score individual (opcional)
   const calculateResults = () => {
-    // TODO: MIGRAÇÃO PARA BACKEND (lib/riskEngine.ts)
-    // Atualmente o cálculo é feito no client-side para demonstração.
-    // Em produção, esta função deve enviar `answers` para o endpoint POST /api/survey/submit
-    // O backend usará `calculateRisk` do riskEngine.ts para garantir integridade e salvar no banco.
     
     let globalSum = 0;
     const domainScores = ACTIVE_DATA.map((domain: Domain) => {
@@ -49,12 +49,9 @@ const Questionnaire: React.FC = () => {
         if (val) {
           let score = 0;
           // Logic: 100 = High Risk, 0 = Low Risk
-          // NOTE: Esta lógica deve bater com scoreForQuestion do riskEngine.ts
           if (q.type === 'positive') {
-             // Positive factor (e.g. Support): High Value (5) = Low Risk (0)
              score = ((5 - val) / 4) * 100;
           } else {
-             // Negative factor (e.g. Stress): High Value (5) = High Risk (100)
              score = ((val - 1) / 4) * 100;
           }
           domainSum += score;
@@ -108,6 +105,9 @@ const Questionnaire: React.FC = () => {
       }
       return;
     }
+    
+    // TODO: Chamar função de submissão para API aqui
+    // await submitAnswers();
     calculateResults();
   };
 
