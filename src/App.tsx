@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { Component, ReactNode, ErrorInfo } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
@@ -14,7 +14,7 @@ import Report from './pages/Report';
 import DemoLogin from './pages/DemoLogin';
 import TestDb from './pages/TestDb';
 import { PaymentSuccess, PaymentCancel } from './pages/PaymentResult';
-import { AuthProvider, useAuth } from '../context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { AlertTriangle } from 'lucide-react';
 
 interface ErrorBoundaryProps {
@@ -27,7 +27,7 @@ interface ErrorBoundaryState {
 }
 
 // Error Boundary Component
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -37,7 +37,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Uncaught error:", error, errorInfo);
   }
 
@@ -50,15 +50,18 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
               <AlertTriangle size={32} />
               <h1 className="text-xl font-bold">Algo deu errado</h1>
             </div>
-            <p className="text-slate-600 mb-4">A aplicação encontrou um erro inesperado.</p>
+            <p className="text-slate-600 mb-4">A aplicação encontrou um erro crítico de inicialização.</p>
             <div className="bg-slate-100 p-3 rounded text-xs font-mono text-slate-500 overflow-auto max-h-32 mb-6">
               {this.state.error?.message}
             </div>
             <button 
-              onClick={() => window.location.reload()} 
+              onClick={() => {
+                localStorage.clear();
+                window.location.href = '/';
+              }} 
               className="w-full bg-slate-900 text-white py-3 rounded-lg font-bold hover:bg-slate-800 transition-colors"
             >
-              Recarregar Página
+              Limpar Cache e Recarregar
             </button>
           </div>
         </div>
@@ -76,7 +79,7 @@ interface PrivateRouteProps {
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-500">Carregando...</div>;
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-500">Carregando aplicação...</div>;
   
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 };

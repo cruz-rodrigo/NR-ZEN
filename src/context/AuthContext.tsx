@@ -46,11 +46,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const contentType = res.headers.get("content-type");
       
-      // FALLBACK DE ROBUSTEZ (MODO DEMO/DEV): 
-      // Se a API retornar erro (404/500) ou HTML (comum em dev server sem backend configurado),
-      // ativamos o modo demonstração automaticamente para permitir o login.
+      // FALLBACK ROBUSTO (MODO DEMO/DEV): 
+      // Se a API retornar erro de servidor (500), não encontrar (404) ou retornar HTML (erro do Vercel/Vite),
+      // ativamos o modo demonstração automaticamente para não bloquear o usuário.
       if (!res.ok || !contentType || !contentType.includes("application/json")) {
         console.warn("API indisponível ou erro de servidor. Ativando Modo Demo Local.");
+        
+        // Simula delay de rede para UX
+        await new Promise(resolve => setTimeout(resolve, 800));
+
         const mockUser: UserSession = {
           id: 'demo-user-id',
           name: 'Usuário Demo (Offline)',
@@ -77,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     } catch (err) {
       console.error("Erro de conexão no login, usando fallback:", err);
-      // Fallback em caso de erro de rede (Network Error)
+      // Fallback em caso de erro de rede (Network Error / Offline)
       const mockUser: UserSession = {
         id: 'demo-user-id',
         name: 'Usuário Demo (Offline)',
@@ -126,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!token) throw new Error("Usuário não autenticado");
 
     // Se estiver em modo Demo (token falso), retorna null imediatamente 
-    // para que os componentes usem seus dados mockados
+    // para que os componentes usem seus dados mockados (Dashboard, Companies, etc)
     if (token === 'demo-token-jwt') {
       return null; 
     }
