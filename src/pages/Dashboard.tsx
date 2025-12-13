@@ -15,7 +15,7 @@ const Dashboard: React.FC = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Dados Mockados para o caso da API falhar
+  // Dados Mockados de Backup (Modo Offline/Demo)
   const MOCK_STATS = { total: 12, activeSectors: 34, responses: 892, riskHighPercent: 18 };
   const MOCK_COMPANIES: Company[] = [
     { id: '1', name: "Indústrias Metalúrgicas Beta", cnpj: "12.345.678/0001-99", sectorsCount: 8, sectorsActive: 8, lastCollection: "10/10/2025", status: "active" },
@@ -24,27 +24,36 @@ const Dashboard: React.FC = () => {
   ];
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchData = async () => {
       try {
-        // Tenta buscar dados. Se apiCall retornar null (erro/mock mode), usamos os dados mockados
+        // Tenta buscar dados. Se apiCall falhar ou retornar null (modo demo),
+        // usamos imediatamente os dados mockados.
         const [statsData, companiesData] = await Promise.all([
           apiCall('/api/dashboard/stats').catch(() => null),
           apiCall('/api/companies').catch(() => null)
         ]);
         
-        setStats(statsData || MOCK_STATS);
-        setCompanies(companiesData || MOCK_COMPANIES);
+        if (isMounted) {
+          setStats(statsData || MOCK_STATS);
+          setCompanies(companiesData || MOCK_COMPANIES);
+        }
         
       } catch (error) {
         console.error("Erro no Dashboard, usando dados locais:", error);
-        setStats(MOCK_STATS);
-        setCompanies(MOCK_COMPANIES);
+        if (isMounted) {
+          setStats(MOCK_STATS);
+          setCompanies(MOCK_COMPANIES);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchData();
+
+    return () => { isMounted = false; };
   }, [apiCall]);
 
   if (loading) {

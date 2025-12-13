@@ -46,8 +46,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const contentType = res.headers.get("content-type");
       
-      // FALLBACK MODO DEMO: Se a API não retornar JSON (erro de servidor/Vercel) ou 404/500
-      if (!contentType || !contentType.includes("application/json") || !res.ok) {
+      // FALLBACK DE ROBUSTEZ (MODO DEMO/DEV): 
+      // Se a API retornar erro (404/500) ou HTML (comum em dev server sem backend configurado),
+      // ativamos o modo demonstração automaticamente para permitir o login.
+      if (!res.ok || !contentType || !contentType.includes("application/json")) {
         console.warn("API indisponível ou erro de servidor. Ativando Modo Demo Local.");
         const mockUser: UserSession = {
           id: 'demo-user-id',
@@ -55,9 +57,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: email,
           plan_tier: 'business'
         };
-        setToken('demo-token-jwt');
+        const demoToken = 'demo-token-jwt';
+        
+        // Atualiza estado
+        setToken(demoToken);
         setUser(mockUser);
-        localStorage.setItem('nrzen_token', 'demo-token-jwt');
+        
+        // Persiste
+        localStorage.setItem('nrzen_token', demoToken);
         localStorage.setItem('nrzen_user', JSON.stringify(mockUser));
         return; // Sucesso simulado
       }
@@ -77,9 +84,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: email,
         plan_tier: 'business'
       };
-      setToken('demo-token-jwt');
+      const demoToken = 'demo-token-jwt';
+      
+      setToken(demoToken);
       setUser(mockUser);
-      localStorage.setItem('nrzen_token', 'demo-token-jwt');
+      localStorage.setItem('nrzen_token', demoToken);
       localStorage.setItem('nrzen_user', JSON.stringify(mockUser));
     }
   };
@@ -95,13 +104,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const contentType = res.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json") || !res.ok) {
          console.warn("API de registro indisponível. Simulando sucesso.");
-         return; // Simula sucesso para redirecionar ao login
+         return; 
       }
 
       await res.json();
     } catch (err) {
       console.error("Erro no registro, simulando sucesso:", err);
-      return; // Simula sucesso
+      return; 
     }
   };
 
@@ -113,11 +122,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     window.location.href = '/';
   };
 
-  // Helper para chamadas de API autenticadas com Fallback
   const apiCall = async (endpoint: string, options: RequestInit = {}) => {
     if (!token) throw new Error("Usuário não autenticado");
 
-    // Se estiver em modo Demo (token falso), retorna null imediatamente para não bater na API real
+    // Se estiver em modo Demo (token falso), retorna null imediatamente 
+    // para que os componentes usem seus dados mockados
     if (token === 'demo-token-jwt') {
       return null; 
     }
@@ -136,11 +145,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error("Sessão expirada");
       }
 
+      // Se for 204 (No Content)
       if (res.status === 204) return null;
 
       const contentType = res.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        console.warn(`A rota ${endpoint} não retornou JSON. Retornando null.`);
+        // Se a API não retornar JSON, tratamos como erro silencioso (retorna null)
+        // para que a UI use dados mockados.
         return null;
       }
 

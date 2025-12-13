@@ -1,7 +1,7 @@
 {
   "name": "nr-zen",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.0",
+    "@supabase/supabase-js": "^2.39.7",
     "@vercel/node": "^3.0.0",
     "bcrypt": "^5.1.1",
     "jsonwebtoken": "^9.0.2",
@@ -23,7 +23,7 @@
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.5",
-    "@types/node": "^20.10.0",
+    "@types/node": "^20.11.24",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
     "@vitejs/plugin-react": "^4.2.1",
@@ -32,5 +32,11 @@
     "tailwindcss": "^3.4.1",
     "typescript": "^5.4.2",
     "vite": "^5.1.5"
+  },
+  "overrides": {
+    "are-we-there-yet": "^3.0.0",
+    "gauge": "^4.0.0",
+    "npmlog": "^6.0.0",
+    "glob": "^10.0.0"
   }
 }
