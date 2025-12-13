@@ -34,6 +34,11 @@ const Questionnaire: React.FC = () => {
   const ACTIVE_DATA = DEMO_DATA;
 
   const calculateResults = () => {
+    // TODO: MIGRAÇÃO PARA BACKEND (lib/riskEngine.ts)
+    // Atualmente o cálculo é feito no client-side para demonstração.
+    // Em produção, esta função deve enviar `answers` para o endpoint POST /api/survey/submit
+    // O backend usará `calculateRisk` do riskEngine.ts para garantir integridade e salvar no banco.
+    
     let globalSum = 0;
     const domainScores = ACTIVE_DATA.map((domain: Domain) => {
       let domainSum = 0;
@@ -43,9 +48,13 @@ const Questionnaire: React.FC = () => {
         const val = answers[q.id];
         if (val) {
           let score = 0;
+          // Logic: 100 = High Risk, 0 = Low Risk
+          // NOTE: Esta lógica deve bater com scoreForQuestion do riskEngine.ts
           if (q.type === 'positive') {
+             // Positive factor (e.g. Support): High Value (5) = Low Risk (0)
              score = ((5 - val) / 4) * 100;
           } else {
+             // Negative factor (e.g. Stress): High Value (5) = High Risk (100)
              score = ((val - 1) / 4) * 100;
           }
           domainSum += score;
