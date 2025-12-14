@@ -9,15 +9,16 @@ import { Company } from '../types';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, apiCall } = useAuth();
+  const { user, apiCall, token } = useAuth();
   
   const [stats, setStats] = useState({ total: 0, activeSectors: 0, responses: 0, riskHighPercent: 0 });
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Dados Mockados de Backup (Modo Offline/Demo)
-  const MOCK_STATS = { total: 12, activeSectors: 34, responses: 892, riskHighPercent: 18 };
-  const MOCK_COMPANIES: Company[] = [
+  // Dados Mockados APENAS para Modo Demo
+  const DEMO_STATS = { total: 12, activeSectors: 34, responses: 892, riskHighPercent: 18 };
+  const DEMO_COMPANIES: Company[] = [
     { id: '1', name: "Indústrias Metalúrgicas Beta", cnpj: "12.345.678/0001-99", sectorsCount: 8, sectorsActive: 8, lastCollection: "10/10/2025", status: "active" },
     { id: '2', name: "Transportadora Veloz", cnpj: "98.765.432/0001-11", sectorsCount: 4, sectorsActive: 2, lastCollection: "05/10/2025", status: "active" },
     { id: '3', name: "Call Center Solutions", cnpj: "11.222.333/0001-00", sectorsCount: 12, sectorsActive: 12, lastCollection: "12/10/2025", status: "active" },
@@ -27,24 +28,31 @@ const Dashboard: React.FC = () => {
     let isMounted = true;
 
     const fetchData = async () => {
+      // Se for token demo, usa dados demo imediatamente
+      if (token === 'demo-token-jwt') {
+        if (isMounted) {
+          setStats(DEMO_STATS);
+          setCompanies(DEMO_COMPANIES);
+          setLoading(false);
+        }
+        return;
+      }
+
+      // Se for usuário real, tenta buscar dados reais
       try {
-        // Tenta buscar dados. Se apiCall falhar ou retornar null (modo demo),
-        // usamos imediatamente os dados mockados.
         const [statsData, companiesData] = await Promise.all([
-          apiCall('/api/dashboard/stats').catch(() => null),
-          apiCall('/api/companies').catch(() => null)
+          apiCall('/api/dashboard/stats'),
+          apiCall('/api/companies')
         ]);
         
         if (isMounted) {
-          setStats(statsData || MOCK_STATS);
-          setCompanies(companiesData || MOCK_COMPANIES);
+          setStats(statsData || { total: 0, activeSectors: 0, responses: 0, riskHighPercent: 0 });
+          setCompanies(companiesData || []);
         }
-        
-      } catch (error) {
-        console.error("Erro no Dashboard, usando dados locais:", error);
+      } catch (error: any) {
+        console.error("Erro no Dashboard:", error);
         if (isMounted) {
-          setStats(MOCK_STATS);
-          setCompanies(MOCK_COMPANIES);
+          setError("Não foi possível carregar os dados. Verifique a conexão com o banco.");
         }
       } finally {
         if (isMounted) setLoading(false);
@@ -54,7 +62,7 @@ const Dashboard: React.FC = () => {
     fetchData();
 
     return () => { isMounted = false; };
-  }, [apiCall]);
+  }, [apiCall, token]);
 
   if (loading) {
     return (
@@ -83,6 +91,16 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </header>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl mb-6 flex items-center gap-3">
+          <AlertTriangle size={24} />
+          <div>
+            <p className="font-bold">Erro de Conexão</p>
+            <p className="text-sm">{error}</p>
+          </div>
+        </div>
+      )}
 
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -126,9 +144,11 @@ const Dashboard: React.FC = () => {
             <div className="p-8 text-center text-slate-500">
               <Building2 size={40} className="mx-auto text-slate-200 mb-3"/>
               <p>Nenhuma empresa encontrada.</p>
-              <Button variant="ghost" className="mt-2 text-blue-600" onClick={() => navigate('/app/onboarding')}>
-                Cadastre sua primeira empresa
-              </Button>
+              {!error && (
+                <Button variant="ghost" className="mt-2 text-blue-600" onClick={() => navigate('/app/onboarding')}>
+                  Cadastre sua primeira empresa
+                </Button>
+              )}
             </div>
           ) : (
             <table className="w-full text-left">
