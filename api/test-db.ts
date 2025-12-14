@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // 1. Diagnóstico das Variáveis de Ambiente
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const supabaseKey = process.env.SUPABASE_SECRET_KEY || '';
 
   const debug = {
     nodeEnv: process.env.NODE_ENV || 'unknown',
@@ -18,7 +18,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({
       status: 'config_error',
       message: 'Variáveis de Ambiente ausentes no Vercel.',
-      details: 'Vá em Settings > Environment Variables. Adicione VITE_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.',
+      details: 'Vá em Settings > Environment Variables. Adicione NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SECRET_KEY.',
       debug
     });
   }
@@ -72,7 +72,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .select('*', { count: 'exact', head: true });
 
     if (error) {
-      // Código 42P01 no Postgres significa "undefined table"
       if (error.code === '42P01' || error.message.includes('does not exist')) {
         return res.status(200).json({
           status: 'missing_table',

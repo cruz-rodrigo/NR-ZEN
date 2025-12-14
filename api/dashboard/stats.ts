@@ -1,6 +1,6 @@
 import type { VercelResponse } from '@vercel/node';
 import { AuthedRequest, requireAuth } from '../_authMiddleware';
-import { supabaseServer } from '../_supabaseServer';
+import { supabaseAdmin } from '../_supabaseServer';
 
 async function handler(req: AuthedRequest, res: VercelResponse) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
@@ -8,14 +8,13 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
   const userId = req.user!.id;
 
   // 1. Total Companies
-  const { count: companiesCount } = await supabaseServer
+  const { count: companiesCount } = await supabaseAdmin
     .from('companies')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', userId);
 
   // 2. Active Sectors (Need to join companies)
-  // Simple approximation: fetch companies then count sectors
-  const { data: companies } = await supabaseServer
+  const { data: companies } = await supabaseAdmin
     .from('companies')
     .select('id')
     .eq('user_id', userId);
@@ -28,7 +27,7 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
     const companyIds = companies.map(c => c.id);
     
     // Count sectors
-    const { count: sectorsCount } = await supabaseServer
+    const { count: sectorsCount } = await supabaseAdmin
       .from('sectors')
       .select('*', { count: 'exact', head: true })
       .in('company_id', companyIds);
@@ -36,12 +35,13 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
     activeSectors = sectorsCount || 0;
 
     // Get Analytics for risk
-    const { data: analytics } = await supabaseServer
+    const { data: analytics } = await supabaseAdmin
       .from('sector_analytics')
       .select('risk_level')
       .in('sector_id', 
-        supabaseServer.from('sectors').select('id').in('company_id', companyIds) as any
-      ); // Note: Subquery simulation via join is tricky in simple Supabase JS client without Views, doing simplified logic
+        // Subquery workaround using JS array logic if needed, but here simple IN clause
+        (await supabaseAdmin.from('sectors').select('id').in('company_id', companyIds)).data?.map(s => s.id) || []
+      ); 
 
     if (analytics) {
       totalSectorsAnalyzed = analytics.length;
@@ -56,7 +56,7 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
   return res.status(200).json({
     total: companiesCount || 0,
     activeSectors,
-    responses: 142, // Mocked for now, implies count from survey_responses
+    responses: 142, // Mocked for now
     riskHighPercent
   });
 }

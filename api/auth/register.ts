@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseServer } from '../_supabaseServer';
+import { supabaseAdmin } from '../_supabaseServer';
 import { hashPassword } from '../_authUtils';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -12,7 +12,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Check if user exists
-  const { data: existing } = await supabaseServer
+  const { data: existing } = await supabaseAdmin
     .from('users')
     .select('id')
     .eq('email', email)
@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const password_hash = await hashPassword(password);
 
-  const { data, error } = await supabaseServer
+  const { data, error } = await supabaseAdmin
     .from('users')
     .insert([{ name, email, password_hash, plan_tier: 'free' }])
     .select('id, email, name')

@@ -1,13 +1,13 @@
 import type { VercelResponse } from '@vercel/node';
 import { AuthedRequest, requireAuth } from '../_authMiddleware';
-import { supabaseServer } from '../_supabaseServer';
+import { supabaseAdmin } from '../_supabaseServer';
 
 async function handler(req: AuthedRequest, res: VercelResponse) {
   const userId = req.user!.id;
 
   if (req.method === 'GET') {
     // Listar empresas
-    const { data: companies, error } = await supabaseServer
+    const { data: companies, error } = await supabaseAdmin
       .from('companies')
       .select('*, sectors(*)')
       .eq('user_id', userId)
@@ -34,7 +34,7 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
     }
 
     // 1. Criar Empresa
-    const { data: company, error: companyError } = await supabaseServer
+    const { data: company, error: companyError } = await supabaseAdmin
       .from('companies')
       .insert([{ 
           user_id: userId,
@@ -49,7 +49,7 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
 
     // 2. Se tiver setor inicial (vindo do Onboarding), cria o setor
     if (firstSectorName) {
-      const { data: sector, error: sectorError } = await supabaseServer
+      const { data: sector, error: sectorError } = await supabaseAdmin
         .from('sectors')
         .insert([{
           company_id: company.id,
@@ -61,14 +61,13 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
 
        if (sectorError) {
          console.error("Erro ao criar setor:", sectorError);
-         // Não retornamos erro 500 para não travar o fluxo, mas o setor falhou
        } else {
-         // 3. (Opcional) Cria analytics vazio para não quebrar o dashboard
-         await supabaseServer
+         // 3. (Opcional) Cria analytics vazio
+         await supabaseAdmin
            .from('sector_analytics')
            .insert([{
              sector_id: sector.id,
-             risk_level: 'low', // Começa baixo até ter resposta
+             risk_level: 'low',
              score: 0
            }]);
        }

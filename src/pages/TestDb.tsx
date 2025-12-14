@@ -166,6 +166,15 @@ const TestDb: React.FC = () => {
                  <h3 className="font-bold text-red-800 flex items-center gap-2"><ServerCrash size={20}/> Erro de Conexão</h3>
                  <p className="text-sm text-red-700 mt-2 mb-4">{result?.message}</p>
                  <pre className="bg-white p-3 rounded border border-red-100 text-xs text-red-600 overflow-auto">{JSON.stringify(result, null, 2)}</pre>
+                 
+                 <div className="text-left text-sm text-slate-600 mt-4 space-y-3 bg-white p-4 rounded border border-slate-200">
+                    <p className="font-bold flex items-center gap-2"><AlertTriangle size={16}/> Verifique as Variáveis:</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>No Vercel (Production/Preview): Adicione <code>NEXT_PUBLIC_SUPABASE_URL</code> e <code>SUPABASE_SECRET_KEY</code>.</li>
+                      <li>Localmente: Verifique se o arquivo <code>.env.local</code> está na raiz.</li>
+                    </ul>
+                 </div>
+
                  <div className="mt-4 text-center">
                    <Button onClick={runReadTest} variant="danger">Tentar Novamente</Button>
                  </div>

@@ -1,9 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
-import { supabaseServer } from '../_supabaseServer';
+import { supabaseAdmin } from '../_supabaseServer';
 import { calculateRisk, QuestionMeta, DomainMeta } from '../../lib/riskEngine';
 
-// Schema de Validação
 const submitSchema = z.object({
   token: z.string(),
   answers: z.array(z.object({
@@ -12,29 +11,22 @@ const submitSchema = z.object({
   })).min(1, "Pelo menos uma resposta é necessária")
 });
 
-// Metadados de Fallback (Caso o banco de dados de metadados esteja vazio ou inacessível)
 const FALLBACK_QUESTIONS: QuestionMeta[] = [
-  // Domínio 1
   { id: "D1_Q1", domainId: 1, type: "positive" }, { id: "D1_Q2", domainId: 1, type: "negative" },
   { id: "D1_Q3", domainId: 1, type: "positive" }, { id: "D1_Q4", domainId: 1, type: "negative" },
   { id: "D1_Q5", domainId: 1, type: "positive" },
-  // Domínio 2
   { id: "D2_Q1", domainId: 2, type: "positive" }, { id: "D2_Q2", domainId: 2, type: "negative" },
   { id: "D2_Q3", domainId: 2, type: "positive" }, { id: "D2_Q4", domainId: 2, type: "negative" },
   { id: "D2_Q5", domainId: 2, type: "positive" },
-  // Domínio 3
   { id: "D3_Q1", domainId: 3, type: "positive" }, { id: "D3_Q2", domainId: 3, type: "negative" },
   { id: "D3_Q3", domainId: 3, type: "positive" }, { id: "D3_Q4", domainId: 3, type: "positive" },
   { id: "D3_Q5", domainId: 3, type: "negative" },
-  // Domínio 4
   { id: "D4_Q1", domainId: 4, type: "positive" }, { id: "D4_Q2", domainId: 4, type: "negative" },
   { id: "D4_Q3", domainId: 4, type: "positive" }, { id: "D4_Q4", domainId: 4, type: "negative" },
   { id: "D4_Q5", domainId: 4, type: "positive" },
-  // Domínio 5
   { id: "D5_Q1", domainId: 5, type: "positive" }, { id: "D5_Q2", domainId: 5, type: "negative" },
   { id: "D5_Q3", domainId: 5, type: "positive" }, { id: "D5_Q4", domainId: 5, type: "positive" },
   { id: "D5_Q5", domainId: 5, type: "negative" },
-  // Domínio 6
   { id: "D6_Q1", domainId: 6, type: "positive" }, { id: "D6_Q2", domainId: 6, type: "negative" },
   { id: "D6_Q3", domainId: 6, type: "positive" }, { id: "D6_Q4", domainId: 6, type: "negative" },
   { id: "D6_Q5", domainId: 6, type: "positive" }
@@ -54,7 +46,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // 1. Validação do Payload
   const parseResult = submitSchema.safeParse(req.body);
   if (!parseResult.success) {
     return res.status(400).json({ error: parseResult.error.errors });
@@ -63,8 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { token, answers } = parseResult.data;
 
   try {
-    // 2. Validação do Token e Obtenção do Sector ID
-    const { data: survey, error: surveyError } = await supabaseServer
+    const { data: survey, error: surveyError } = await supabaseAdmin
       .from('surveys')
       .select('id, sector_id, active, expires_at')
       .eq('access_code', token)
@@ -82,15 +72,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Survey expired' });
     }
 
-    // 3. Obter Metadados (Banco de Dados ou Fallback)
     let questionsMeta = FALLBACK_QUESTIONS;
     let domainsMeta = FALLBACK_DOMAINS;
 
-    // Tenta buscar do banco se as tabelas existirem e estiverem populadas
     try {
       const [questionsRes, domainsRes] = await Promise.all([
-        supabaseServer.from('questions').select('id, domain_id, type'),
-        supabaseServer.from('domains').select('id, name, weight')
+        supabaseAdmin.from('questions').select('id, domain_id, type'),
+        supabaseAdmin.from('domains').select('id, name, weight')
       ]);
 
       if (questionsRes.data && questionsRes.data.length > 0 && domainsRes.data && domainsRes.data.length > 0) {
@@ -110,15 +98,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.warn("Could not fetch metadata from DB, using fallback.", metaErr);
     }
 
-    // 4. Cálculo de Risco (Engine)
     const result = calculateRisk(answers, questionsMeta, domainsMeta);
 
-    // 5. Salvar Resposta (Survey Response)
-    const { error: insertError } = await supabaseServer
+    const { error: insertError } = await supabaseAdmin
       .from('survey_responses')
       .insert([{
         survey_id: survey.id,
-        answers: answers, // JSONB
+        answers: answers,
         risk_score: result.globalScore,
       }]);
 
@@ -127,8 +113,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Failed to save response' });
     }
 
-    // 6. Agregação e Atualização de Analytics (Sector Analytics)
-    const { data: surveysInSector } = await supabaseServer
+    const { data: surveysInSector } = await supabaseAdmin
       .from('surveys')
       .select('id')
       .eq('sector_id', survey.sector_id);
@@ -136,8 +121,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (surveysInSector && surveysInSector.length > 0) {
       const surveyIds = surveysInSector.map(s => s.id);
 
-      // Média de todos os scores de risco
-      const { data: aggregatedData, error: aggError } = await supabaseServer
+      const { data: aggregatedData, error: aggError } = await supabaseAdmin
         .from('survey_responses')
         .select('risk_score')
         .in('survey_id', surveyIds);
@@ -151,8 +135,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (averageScore >= 40) riskLevel = 'moderate';
         if (averageScore >= 70) riskLevel = 'high';
 
-        // Upsert na tabela de analytics
-        const { data: existingAnalytics } = await supabaseServer
+        const { data: existingAnalytics } = await supabaseAdmin
           .from('sector_analytics')
           .select('id')
           .eq('sector_id', survey.sector_id)
@@ -166,19 +149,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         };
 
         if (existingAnalytics) {
-          await supabaseServer
+          await supabaseAdmin
             .from('sector_analytics')
             .update(analyticsData)
             .eq('id', existingAnalytics.id);
         } else {
-          await supabaseServer
+          await supabaseAdmin
             .from('sector_analytics')
             .insert([analyticsData]);
         }
       }
     }
 
-    // 7. Resposta Sucesso
     return res.status(200).json({ 
       ok: true, 
       message: 'Response submitted successfully' 
