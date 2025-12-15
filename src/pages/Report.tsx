@@ -45,8 +45,8 @@ const Report: React.FC = () => {
       {/* Folha A4 - Otimizada para Caber em 1 Página */}
       <div className="mt-20 print:mt-0 w-[210mm] min-h-[297mm] bg-white shadow-2xl print:shadow-none flex flex-col relative mx-auto box-border p-[12mm] print:p-[12mm]">
         
-        {/* HEADER */}
-        <header className="border-b-2 border-slate-900 pb-2 mb-4">
+        {/* HEADER COM CLASSE print-header PARA FORÇAR EXIBIÇÃO */}
+        <header className="border-b-2 border-slate-900 pb-2 mb-4 print-header">
             <div className="flex justify-between items-end">
                 <div className="flex flex-col">
                     <div className="mb-2 scale-90 origin-left -ml-1">
@@ -205,8 +205,8 @@ const Report: React.FC = () => {
 
         </main>
 
-        {/* FOOTER */}
-        <footer className="mt-auto pt-2 border-t border-slate-200">
+        {/* FOOTER COM CLASSE print-footer PARA FORÇAR EXIBIÇÃO */}
+        <footer className="mt-auto pt-2 border-t border-slate-200 print-footer">
             <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                     <span className="font-black text-slate-700 text-[9px] tracking-tight">NR ZEN</span>
