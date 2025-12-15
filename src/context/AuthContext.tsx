@@ -18,15 +18,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserSession | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Carrega sessão do localStorage ao iniciar
   useEffect(() => {
     const storedToken = localStorage.getItem('nrzen_token');
+    const storedRefreshToken = localStorage.getItem('nrzen_refresh_token');
     const storedUser = localStorage.getItem('nrzen_user');
 
     if (storedToken && storedUser) {
       setToken(storedToken);
+      if (storedRefreshToken) setRefreshToken(storedRefreshToken);
       try {
         setUser(JSON.parse(storedUser));
       } catch (e) {
@@ -62,7 +65,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const contentType = res.headers.get("content-type");
       
-      // Validação Estrita de Erro de Servidor
       if (!contentType || !contentType.includes("application/json")) {
         const text = await res.text();
         console.error("Login Response (Non-JSON):", text);
@@ -76,13 +78,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setToken(data.token);
+      setRefreshToken(data.refreshToken);
       setUser(data.user);
+      
       localStorage.setItem('nrzen_token', data.token);
+      if (data.refreshToken) {
+        localStorage.setItem('nrzen_refresh_token', data.refreshToken);
+      }
       localStorage.setItem('nrzen_user', JSON.stringify(data.user));
 
     } catch (err: any) {
       console.error("Erro no login:", err);
-      throw err; // Repassa o erro real para a UI
+      throw err;
     }
   };
 
@@ -110,38 +117,82 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     } catch (err: any) {
       console.error("Erro no registro:", err);
-      throw err; // Repassa o erro real para a UI
+      throw err;
     }
   };
 
   const logout = () => {
     setToken(null);
+    setRefreshToken(null);
     setUser(null);
     localStorage.removeItem('nrzen_token');
+    localStorage.removeItem('nrzen_refresh_token');
     localStorage.removeItem('nrzen_user');
     window.location.href = '/';
+  };
+
+  const handleRefresh = async (): Promise<string | null> => {
+    const currentRefreshToken = localStorage.getItem('nrzen_refresh_token');
+    if (!currentRefreshToken) return null;
+
+    try {
+      const res = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken: currentRefreshToken }),
+      });
+
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      
+      setToken(data.token);
+      setRefreshToken(data.refreshToken);
+      localStorage.setItem('nrzen_token', data.token);
+      localStorage.setItem('nrzen_refresh_token', data.refreshToken);
+      
+      return data.token;
+    } catch (e) {
+      console.error("Failed to refresh token", e);
+      return null;
+    }
   };
 
   const apiCall = async (endpoint: string, options: RequestInit = {}) => {
     if (!token) throw new Error("Usuário não autenticado");
 
-    // Se estiver em modo Demo (token falso), retorna null ou simula
     if (token === 'demo-token-jwt') {
       return null; 
     }
 
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-      ...options.headers,
+    let currentToken = token;
+
+    const performRequest = async (tokenToUse: string) => {
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${tokenToUse}`,
+        ...options.headers,
+      };
+      return fetch(endpoint, { ...options, headers });
     };
 
     try {
-      const res = await fetch(endpoint, { ...options, headers });
+      let res = await performRequest(currentToken);
       
+      // Token Expired / Invalid
       if (res.status === 401) {
-        logout();
-        throw new Error("Sessão expirada");
+        console.log("Token expired, attempting refresh...");
+        const newToken = await handleRefresh();
+        
+        if (newToken) {
+          console.log("Refresh successful, retrying request...");
+          currentToken = newToken;
+          res = await performRequest(newToken);
+        } else {
+          console.warn("Refresh failed, logging out.");
+          logout();
+          throw new Error("Sessão expirada");
+        }
       }
 
       if (res.status === 204) return null;
@@ -157,7 +208,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return data;
     } catch (error) {
       console.error(`Erro na chamada API ${endpoint}:`, error);
-      throw error; // Lança o erro para ser tratado pelo componente
+      throw error;
     }
   };
 

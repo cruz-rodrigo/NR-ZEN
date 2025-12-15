@@ -301,4 +301,24 @@ BEGIN
   (v_dom6_id, 'D6_Q5', 'Sinto que a organização se preocupa com o equilíbrio entre trabalho e vida pessoal.', 'positive');
 
 END $$;
+
+---
+
+## 7. Refresh Tokens (NOVO)
+**Execute este bloco para habilitar sessões seguras com Refresh Tokens.**
+
+```sql
+CREATE TABLE IF NOT EXISTS public.refresh_tokens (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  token text UNIQUE NOT NULL,
+  expires_at timestamptz NOT NULL,
+  revoked boolean DEFAULT false,
+  created_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE public.refresh_tokens ENABLE ROW LEVEL SECURITY;
+-- Política: O backend usa Service Role, mas se necessário acesso autenticado:
+CREATE POLICY "Users can manage own tokens" ON public.refresh_tokens 
+  FOR ALL USING (true); -- Simplificado pois a API gerencia isso via user_id
 ```

@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'default_dev_secret';
 
@@ -13,9 +14,14 @@ export async function comparePassword(password: string, hash: string): Promise<b
 }
 
 export function signJwt(payload: { sub: string; email: string; plan_tier: string }) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+  // Short-lived Access Token (15 minutes)
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
 }
 
 export function verifyJwt(token: string) {
   return jwt.verify(token, JWT_SECRET) as { sub: string; email: string; plan_tier: string };
+}
+
+export function generateRefreshToken(): string {
+  return crypto.randomBytes(40).toString('hex');
 }
