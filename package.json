@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "clean-api": "rm -f api/auth/login.ts api/auth/register.ts api/auth/refresh.ts api/auth/forgot-password.ts api/auth/reset-password.ts api/dashboard/stats.ts api/surveys/submit.ts api/surveys/validate.ts",
+    "build": "npm run clean-api && tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {

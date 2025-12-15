@@ -9,3 +9,13 @@ dist-ssr
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Ignore redundant API files (using consolidated endpoints)
+api/auth/login.ts
+api/auth/register.ts
+api/auth/refresh.ts
+api/auth/forgot-password.ts
+api/auth/reset-password.ts
+api/dashboard/stats.ts
+api/surveys/submit.ts
+api/surveys/validate.ts
