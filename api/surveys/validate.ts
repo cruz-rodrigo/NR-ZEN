@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseAdmin } from '../_supabaseServer';
+import { supabaseServerClient } from '../_supabaseServer';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
@@ -13,7 +13,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { data: survey, error } = await supabaseAdmin
+    const { data: survey, error } = await supabaseServerClient
       .from('surveys')
       .select(`
         id,

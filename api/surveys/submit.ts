@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
-import { supabaseAdmin } from '../_supabaseServer';
+import { supabaseServerClient } from '../_supabaseServer';
 import { calculateRisk, QuestionMeta, DomainMeta } from '../../lib/riskEngine';
 
 const submitSchema = z.object({
@@ -54,7 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { token, answers } = parseResult.data;
 
   try {
-    const { data: survey, error: surveyError } = await supabaseAdmin
+    const { data: survey, error: surveyError } = await supabaseServerClient
       .from('surveys')
       .select('id, sector_id, active, expires_at')
       .eq('access_code', token)
@@ -77,8 +77,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     try {
       const [questionsRes, domainsRes] = await Promise.all([
-        supabaseAdmin.from('questions').select('id, domain_id, type'),
-        supabaseAdmin.from('domains').select('id, name, weight')
+        supabaseServerClient.from('questions').select('id, domain_id, type'),
+        supabaseServerClient.from('domains').select('id, name, weight')
       ]);
 
       if (questionsRes.data && questionsRes.data.length > 0 && domainsRes.data && domainsRes.data.length > 0) {
@@ -100,7 +100,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const result = calculateRisk(answers, questionsMeta, domainsMeta);
 
-    const { error: insertError } = await supabaseAdmin
+    const { error: insertError } = await supabaseServerClient
       .from('survey_responses')
       .insert([{
         survey_id: survey.id,
@@ -113,7 +113,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Failed to save response' });
     }
 
-    const { data: surveysInSector } = await supabaseAdmin
+    const { data: surveysInSector } = await supabaseServerClient
       .from('surveys')
       .select('id')
       .eq('sector_id', survey.sector_id);
@@ -121,7 +121,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (surveysInSector && surveysInSector.length > 0) {
       const surveyIds = surveysInSector.map(s => s.id);
 
-      const { data: aggregatedData, error: aggError } = await supabaseAdmin
+      const { data: aggregatedData, error: aggError } = await supabaseServerClient
         .from('survey_responses')
         .select('risk_score')
         .in('survey_id', surveyIds);
@@ -135,7 +135,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (averageScore >= 40) riskLevel = 'moderate';
         if (averageScore >= 70) riskLevel = 'high';
 
-        const { data: existingAnalytics } = await supabaseAdmin
+        const { data: existingAnalytics } = await supabaseServerClient
           .from('sector_analytics')
           .select('id')
           .eq('sector_id', survey.sector_id)
@@ -149,12 +149,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         };
 
         if (existingAnalytics) {
-          await supabaseAdmin
+          await supabaseServerClient
             .from('sector_analytics')
             .update(analyticsData)
             .eq('id', existingAnalytics.id);
         } else {
-          await supabaseAdmin
+          await supabaseServerClient
             .from('sector_analytics')
             .insert([analyticsData]);
         }

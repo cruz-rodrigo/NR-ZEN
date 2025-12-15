@@ -1,13 +1,13 @@
 import type { VercelResponse } from '@vercel/node';
 import { AuthedRequest, requireAuth } from '../_authMiddleware';
-import { supabaseAdmin } from '../_supabaseServer';
+import { supabaseServerClient } from '../_supabaseServer';
 
 async function handler(req: AuthedRequest, res: VercelResponse) {
   const userId = req.user!.id;
 
   if (req.method === 'GET') {
     // Listar empresas
-    const { data: companies, error } = await supabaseAdmin
+    const { data: companies, error } = await supabaseServerClient
       .from('companies')
       .select('*, sectors(*)')
       .eq('user_id', userId)
@@ -34,7 +34,7 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
     }
 
     // 1. Criar Empresa
-    const { data: company, error: companyError } = await supabaseAdmin
+    const { data: company, error: companyError } = await supabaseServerClient
       .from('companies')
       .insert([{ 
           user_id: userId,
@@ -49,7 +49,7 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
 
     // 2. Se tiver setor inicial (vindo do Onboarding), cria o setor
     if (firstSectorName) {
-      const { data: sector, error: sectorError } = await supabaseAdmin
+      const { data: sector, error: sectorError } = await supabaseServerClient
         .from('sectors')
         .insert([{
           company_id: company.id,
@@ -63,7 +63,7 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
          console.error("Erro ao criar setor:", sectorError);
        } else {
          // 3. (Opcional) Cria analytics vazio
-         await supabaseAdmin
+         await supabaseServerClient
            .from('sector_analytics')
            .insert([{
              sector_id: sector.id,

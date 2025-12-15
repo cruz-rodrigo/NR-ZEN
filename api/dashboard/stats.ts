@@ -1,6 +1,6 @@
 import type { VercelResponse } from '@vercel/node';
 import { AuthedRequest, requireAuth } from '../_authMiddleware';
-import { supabaseAdmin } from '../_supabaseServer';
+import { supabaseServerClient } from '../_supabaseServer';
 
 async function handler(req: AuthedRequest, res: VercelResponse) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
@@ -8,13 +8,13 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
   const userId = req.user!.id;
 
   // 1. Total Companies
-  const { count: companiesCount } = await supabaseAdmin
+  const { count: companiesCount } = await supabaseServerClient
     .from('companies')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', userId);
 
   // 2. Active Sectors (Need to join companies)
-  const { data: companies } = await supabaseAdmin
+  const { data: companies } = await supabaseServerClient
     .from('companies')
     .select('id')
     .eq('user_id', userId);
@@ -27,7 +27,7 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
     const companyIds = companies.map(c => c.id);
     
     // Count sectors
-    const { count: sectorsCount } = await supabaseAdmin
+    const { count: sectorsCount } = await supabaseServerClient
       .from('sectors')
       .select('*', { count: 'exact', head: true })
       .in('company_id', companyIds);
@@ -35,12 +35,12 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
     activeSectors = sectorsCount || 0;
 
     // Get Analytics for risk
-    const { data: analytics } = await supabaseAdmin
+    const { data: analytics } = await supabaseServerClient
       .from('sector_analytics')
       .select('risk_level')
       .in('sector_id', 
         // Subquery workaround using JS array logic if needed, but here simple IN clause
-        (await supabaseAdmin.from('sectors').select('id').in('company_id', companyIds)).data?.map(s => s.id) || []
+        (await supabaseServerClient.from('sectors').select('id').in('company_id', companyIds)).data?.map(s => s.id) || []
       ); 
 
     if (analytics) {

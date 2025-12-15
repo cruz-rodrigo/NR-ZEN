@@ -11,7 +11,7 @@ import Onboarding from './pages/Onboarding';
 import SectorDetail from './pages/SectorDetail';
 import Questionnaire from './pages/Questionnaire';
 import Report from './pages/Report';
-import Reports from './pages/Reports'; // Importar nova página
+import Reports from './pages/Reports';
 import DemoLogin from './pages/DemoLogin';
 import TestDb from './pages/TestDb';
 import { PaymentSuccess, PaymentCancel } from './pages/PaymentResult';
@@ -29,10 +29,13 @@ interface ErrorBoundaryState {
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  public state: ErrorBoundaryState = {
-    hasError: false,
-    error: null
-  };
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null
+    };
+  }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
@@ -104,7 +107,7 @@ const App: React.FC = () => {
             <Route path="/app" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
             <Route path="/app/companies" element={<PrivateRoute><Companies /></PrivateRoute>} />
             <Route path="/app/surveys" element={<PrivateRoute><Surveys /></PrivateRoute>} />
-            <Route path="/app/reports" element={<PrivateRoute><Reports /></PrivateRoute>} /> {/* Nova Rota */}
+            <Route path="/app/reports" element={<PrivateRoute><Reports /></PrivateRoute>} />
             <Route path="/app/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
             <Route path="/app/onboarding" element={<PrivateRoute><Onboarding /></PrivateRoute>} />
             <Route path="/app/setor/:id" element={<PrivateRoute><SectorDetail /></PrivateRoute>} />

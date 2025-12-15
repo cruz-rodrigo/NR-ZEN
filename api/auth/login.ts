@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseAdmin } from '../_supabaseServer';
+import { supabaseServerClient } from '../_supabaseServer';
 import { comparePassword, signJwt } from '../_authUtils';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -7,7 +7,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { email, password } = req.body;
 
-  const { data: user, error } = await supabaseAdmin
+  const { data: user, error } = await supabaseServerClient
     .from('users')
     .select('*')
     .eq('email', email)
