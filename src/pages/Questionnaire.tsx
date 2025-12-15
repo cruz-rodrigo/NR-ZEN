@@ -124,7 +124,8 @@ const Questionnaire: React.FC = () => {
 
       // Tenta enviar para o banco de dados APENAS se tiver código (modo real)
       if (code) {
-        await apiCall('/api/surveys/submit', {
+        // Updated Endpoint: /api/surveys (POST)
+        await apiCall('/api/surveys', {
           method: 'POST',
           body: JSON.stringify({
             token: code,

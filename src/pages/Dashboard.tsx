@@ -40,8 +40,9 @@ const Dashboard: React.FC = () => {
 
       // Se for usuário real, tenta buscar dados reais
       try {
+        // Updated API call: Use /api/companies?mode=stats instead of /api/dashboard/stats
         const [statsData, companiesData] = await Promise.all([
-          apiCall('/api/dashboard/stats'),
+          apiCall('/api/companies?mode=stats'),
           apiCall('/api/companies')
         ]);
         
