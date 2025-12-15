@@ -98,35 +98,45 @@ create table if not exists public.action_plans (
   created_at timestamptz default now()
 );
 
--- 4. POLÍTICAS DE SEGURANÇA (SIMPLIFICADO PARA INÍCIO)
+-- 4. POLÍTICAS DE SEGURANÇA (IDEMPOTENTE)
 alter table public.users enable row level security;
+drop policy if exists "Public access users" on public.users;
 create policy "Public access users" on public.users for all using (true);
 
 alter table public.companies enable row level security;
+drop policy if exists "Enable all access" on public.companies;
 create policy "Enable all access" on public.companies for all using (true);
 
 alter table public.sectors enable row level security;
+drop policy if exists "Enable all access" on public.sectors;
 create policy "Enable all access" on public.sectors for all using (true);
 
 alter table public.surveys enable row level security;
+drop policy if exists "Enable all access" on public.surveys;
 create policy "Enable all access" on public.surveys for all using (true);
 
 alter table public.survey_responses enable row level security;
+drop policy if exists "Enable all access" on public.survey_responses;
 create policy "Enable all access" on public.survey_responses for all using (true);
 
 alter table public.action_plans enable row level security;
+drop policy if exists "Enable all access" on public.action_plans;
 create policy "Enable all access" on public.action_plans for all using (true);
 
 alter table public.sector_analytics enable row level security;
+drop policy if exists "Enable all access" on public.sector_analytics;
 create policy "Enable all access" on public.sector_analytics for all using (true);
 
 alter table public.questionnaire_templates enable row level security;
+drop policy if exists "Public read templates" on public.questionnaire_templates;
 create policy "Public read templates" on public.questionnaire_templates for select using (true);
 
 alter table public.domains enable row level security;
+drop policy if exists "Public read domains" on public.domains;
 create policy "Public read domains" on public.domains for select using (true);
 
 alter table public.questions enable row level security;
+drop policy if exists "Public read questions" on public.questions;
 create policy "Public read questions" on public.questions for select using (true);
 `;
 
