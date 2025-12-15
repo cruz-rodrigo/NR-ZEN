@@ -45,7 +45,9 @@ export default requireAuth(async function handler(req: AuthedRequest, res: Verce
     };
 
     const selectedPriceId = priceMap[plan]?.[billingCycle];
-    let lineItem;
+    
+    // Explicit type for lineItem to satisfy TS
+    let lineItem: Stripe.Checkout.SessionCreateParams.LineItem;
 
     // Prioriza o uso do Price ID se configurado corretamente
     if (selectedPriceId && selectedPriceId.startsWith('price_')) {
@@ -60,18 +62,21 @@ export default requireAuth(async function handler(req: AuthedRequest, res: Verce
         'business': { monthly: 59700, yearly: 597000 },
         'corporate': { monthly: 89900, yearly: 899000 },
       };
+      
+      const safePlan = String(plan || 'consultant');
+      const safeCycle = String(billingCycle || 'monthly');
       const amount = pricesMock[plan]?.[billingCycle] || 19900;
 
       lineItem = {
         price_data: {
           currency: 'brl',
           product_data: {
-            name: `NR ZEN - Plano ${plan.charAt(0).toUpperCase() + plan.slice(1)} (${billingCycle === 'monthly' ? 'Mensal' : 'Anual'})`,
+            name: `NR ZEN - Plano ${safePlan.charAt(0).toUpperCase() + safePlan.slice(1)} (${safeCycle === 'monthly' ? 'Mensal' : 'Anual'})`,
             description: 'Assinatura da plataforma de gestão de riscos psicossociais.',
           },
           unit_amount: amount,
           recurring: {
-            interval: billingCycle === 'monthly' ? 'month' : 'year',
+            interval: (billingCycle === 'monthly' ? 'month' : 'year') as 'month' | 'year',
           },
         },
         quantity: 1,
@@ -86,9 +91,9 @@ export default requireAuth(async function handler(req: AuthedRequest, res: Verce
       cancel_url: `${SITE_URL}/payment/cancel`,
       customer_email: user.email,
       metadata: {
-        userId: user.id,
-        plan: plan,
-        billingCycle: billingCycle
+        userId: String(user.id),
+        plan: String(plan),
+        billingCycle: String(billingCycle)
       },
     });
 
