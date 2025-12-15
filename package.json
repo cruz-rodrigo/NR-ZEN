@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "clean-functions": "rm -f api/auth/login.ts api/auth/register.ts api/auth/refresh.ts api/auth/forgot-password.ts api/auth/reset-password.ts api/dashboard/stats.ts api/surveys/submit.ts api/surveys/validate.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.7",
