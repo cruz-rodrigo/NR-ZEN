@@ -15,7 +15,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     // 1. Verificar se usuário já existe usando supabaseServerClient
-    // Usamos maybeSingle() para não estourar erro se não encontrar (retorna null)
     const { data: existing } = await supabaseServerClient
       .from('users')
       .select('id')
