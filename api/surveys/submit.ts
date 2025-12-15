@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
-import { supabaseServerClient } from '../_supabaseServer';
-import { calculateRisk, QuestionMeta, DomainMeta } from '../../lib/riskEngine';
+import { supabaseServerClient } from '../_supabaseServer.js';
+import { calculateRisk, QuestionMeta, DomainMeta } from '../../lib/riskEngine.js';
 
 const submitSchema = z.object({
   token: z.string(),

@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { verifyJwt } from './_authUtils';
+import { verifyJwt } from './_authUtils.js';
 
 export interface AuthedRequest extends VercelRequest {
   user?: { id: string; email: string; plan_tier: string };

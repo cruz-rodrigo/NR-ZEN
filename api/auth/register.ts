@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseServerClient } from '../_supabaseServer';
-import { hashPassword } from '../_authUtils';
+import { supabaseServerClient } from '../_supabaseServer.js';
+import { hashPassword } from '../_authUtils.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Apenas método POST é permitido

@@ -1,6 +1,6 @@
 import type { VercelResponse } from '@vercel/node';
-import { AuthedRequest, requireAuth } from '../_authMiddleware';
-import { supabaseServerClient } from '../_supabaseServer';
+import { AuthedRequest, requireAuth } from '../_authMiddleware.js';
+import { supabaseServerClient } from '../_supabaseServer.js';
 
 async function handler(req: AuthedRequest, res: VercelResponse) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
