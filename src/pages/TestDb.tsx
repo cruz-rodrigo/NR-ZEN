@@ -5,9 +5,10 @@ import Card from '../components/Card';
 import { Database, CheckCircle2, AlertTriangle, Loader2, ServerCrash, Save, Copy } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const REQUIRED_SQL = `-- Rode este código no SQL Editor do Supabase para criar as tabelas necessárias
+const REQUIRED_SQL = `-- SCRIPT COMPLETO PARA RECRIAR O BANCO (BASEADO NO ERD)
 
-create table public.users (
+-- 1. TABELAS BÁSICAS
+create table if not exists public.users (
   id uuid default gen_random_uuid() primary key,
   name text not null,
   email text unique not null,
@@ -16,11 +17,7 @@ create table public.users (
   created_at timestamptz default now()
 );
 
-alter table public.users enable row level security;
-create policy "Public read users" on public.users for select using (true);
-create policy "Public insert users" on public.users for insert with check (true);
-
-create table public.companies (
+create table if not exists public.companies (
   id uuid default gen_random_uuid() primary key,
   user_id uuid not null, 
   name text not null,
@@ -29,10 +26,7 @@ create table public.companies (
   created_at timestamptz default now()
 );
 
-alter table public.companies enable row level security;
-create policy "Enable all access" on public.companies for all using (true);
-
-create table public.sectors (
+create table if not exists public.sectors (
   id uuid default gen_random_uuid() primary key,
   company_id uuid references public.companies on delete cascade not null,
   name text not null,
@@ -40,8 +34,100 @@ create table public.sectors (
   created_at timestamptz default now()
 );
 
+-- 2. QUESTIONÁRIOS E TEMPLATES
+create table if not exists public.questionnaire_templates (
+  id uuid default gen_random_uuid() primary key,
+  name text not null,
+  description text,
+  active boolean default true,
+  created_at timestamptz default now()
+);
+
+create table if not exists public.domains (
+  id serial primary key,
+  template_id uuid references public.questionnaire_templates on delete cascade not null,
+  name text not null,
+  weight float default 1.0,
+  created_at timestamptz default now()
+);
+
+create table if not exists public.questions (
+  id text primary key,
+  domain_id int references public.domains on delete cascade not null,
+  text text not null,
+  type text not null check (type in ('positive', 'negative')),
+  created_at timestamptz default now()
+);
+
+create table if not exists public.surveys (
+  id uuid default gen_random_uuid() primary key,
+  sector_id uuid references public.sectors not null,
+  template_id uuid references public.questionnaire_templates,
+  access_code text unique not null,
+  active boolean default true,
+  expires_at timestamptz,
+  created_at timestamptz default now()
+);
+
+-- 3. RESPOSTAS E DADOS
+create table if not exists public.survey_responses (
+  id uuid default gen_random_uuid() primary key,
+  survey_id uuid references public.surveys not null,
+  answers jsonb not null,
+  risk_score int,
+  created_at timestamptz default now()
+);
+
+create table if not exists public.sector_analytics (
+  id uuid default gen_random_uuid() primary key,
+  sector_id uuid references public.sectors on delete cascade,
+  risk_level text,
+  score int,
+  last_updated timestamptz default now()
+);
+
+create table if not exists public.action_plans (
+  id uuid default gen_random_uuid() primary key,
+  sector_id uuid references public.sectors on delete cascade not null,
+  domain text,
+  risk text,
+  action text,
+  responsible text,
+  deadline text,
+  status text DEFAULT 'Pendente',
+  created_at timestamptz default now()
+);
+
+-- 4. POLÍTICAS DE SEGURANÇA (SIMPLIFICADO PARA INÍCIO)
+alter table public.users enable row level security;
+create policy "Public access users" on public.users for all using (true);
+
+alter table public.companies enable row level security;
+create policy "Enable all access" on public.companies for all using (true);
+
 alter table public.sectors enable row level security;
 create policy "Enable all access" on public.sectors for all using (true);
+
+alter table public.surveys enable row level security;
+create policy "Enable all access" on public.surveys for all using (true);
+
+alter table public.survey_responses enable row level security;
+create policy "Enable all access" on public.survey_responses for all using (true);
+
+alter table public.action_plans enable row level security;
+create policy "Enable all access" on public.action_plans for all using (true);
+
+alter table public.sector_analytics enable row level security;
+create policy "Enable all access" on public.sector_analytics for all using (true);
+
+alter table public.questionnaire_templates enable row level security;
+create policy "Public read templates" on public.questionnaire_templates for select using (true);
+
+alter table public.domains enable row level security;
+create policy "Public read domains" on public.domains for select using (true);
+
+alter table public.questions enable row level security;
+create policy "Public read questions" on public.questions for select using (true);
 `;
 
 const TestDb: React.FC = () => {
@@ -90,7 +176,7 @@ const TestDb: React.FC = () => {
 
   const copySql = () => {
     navigator.clipboard.writeText(REQUIRED_SQL);
-    alert('SQL copiado! Cole no "SQL Editor" do painel Supabase.');
+    alert('SQL completo copiado! Cole no "SQL Editor" do painel Supabase.');
   };
 
   return (
@@ -102,7 +188,7 @@ const TestDb: React.FC = () => {
             Diagnóstico de Banco de Dados
           </h1>
           <p className="text-slate-500 mt-2">
-            Verifique a conexão e teste a gravação de dados reais.
+            Verifique a conexão e sincronize o esquema com o ERD oficial.
           </p>
         </header>
 
@@ -141,7 +227,7 @@ const TestDb: React.FC = () => {
                   <div>
                     <h3 className="font-bold text-amber-800 text-lg">Tabelas não encontradas!</h3>
                     <p className="text-amber-700 text-sm mt-1">
-                      O Vercel conectou ao Supabase, mas o banco está vazio. Você precisa criar as tabelas 'users', 'companies', etc.
+                      O Vercel conectou ao Supabase, mas o banco parece incompleto. Use o script abaixo para criar toda a estrutura (Action Plans, Templates, etc).
                     </p>
                   </div>
                 </div>
@@ -150,7 +236,7 @@ const TestDb: React.FC = () => {
                   <pre className="text-emerald-400 font-mono text-xs overflow-x-auto h-48 custom-scrollbar">
                     {REQUIRED_SQL}
                   </pre>
-                  <button onClick={copySql} className="absolute top-2 right-2 bg-white/10 hover:bg-white/20 text-white p-2 rounded transition-colors" title="Copiar SQL">
+                  <button onClick={copySql} className="absolute top-2 right-2 bg-white/10 hover:bg-white/20 text-white p-2 rounded transition-colors" title="Copiar SQL Completo">
                     <Copy size={16} />
                   </button>
                 </div>

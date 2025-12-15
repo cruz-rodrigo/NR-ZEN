@@ -124,7 +124,23 @@ create table public.sector_analytics (
 alter table public.sector_analytics enable row level security;
 create policy "Enable read access" on public.sector_analytics for select using (true);
 
--- 4.3 Ajuste de Referência (Opcional: Apenas se deu erro ao inserir empresa)
+-- 4.3 Plano de Ação (Gestão de Riscos)
+create table public.action_plans (
+  id uuid default gen_random_uuid() primary key,
+  sector_id uuid references public.sectors on delete cascade not null,
+  domain text,
+  risk text,
+  action text,
+  responsible text,
+  deadline text,
+  status text DEFAULT 'Pendente',
+  created_at timestamptz default now()
+);
+
+alter table public.action_plans enable row level security;
+create policy "Enable all access" on public.action_plans for all using (true);
+
+-- 4.4 Ajuste de Referência (Opcional: Apenas se deu erro ao inserir empresa)
 do $$
 begin
   if exists (select 1 from information_schema.table_constraints where constraint_name = 'companies_user_id_fkey') then

@@ -39,10 +39,13 @@ export interface UserSession {
 }
 
 export interface ActionPlanItem {
+  id?: string;
+  sector_id?: string;
   domain: string;
   risk: string;
   action: string;
   responsible: string;
   deadline: string;
   status: 'Pendente' | 'Em andamento' | 'Concluído';
+  created_at?: string;
 }

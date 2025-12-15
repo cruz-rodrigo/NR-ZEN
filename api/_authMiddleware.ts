@@ -6,6 +6,7 @@ export interface AuthedRequest extends VercelRequest {
   headers: { authorization?: string; [key: string]: string | string[] | undefined };
   method?: string;
   body: any;
+  query: { [key: string]: string | string[] };
 }
 
 export function requireAuth(
