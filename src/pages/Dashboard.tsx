@@ -40,7 +40,7 @@ const Dashboard: React.FC = () => {
 
       // Se for usuário real, tenta buscar dados reais
       try {
-        // Updated API call: Use /api/companies?mode=stats instead of /api/dashboard/stats
+        // CORREÇÃO: Usar rota consolidada para evitar erro 404 se api/dashboard/stats for deletado
         const [statsData, companiesData] = await Promise.all([
           apiCall('/api/companies?mode=stats'),
           apiCall('/api/companies')
