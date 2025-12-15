@@ -9,7 +9,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // --- LOGIN ---
   if (action === 'login') {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-    const { email, password } = req.body;
+    const { email: rawEmail, password } = req.body;
+    
+    // Normalização do e-mail
+    const email = rawEmail ? rawEmail.toLowerCase().trim() : '';
 
     const { data: user, error } = await supabaseServerClient
       .from('users')
@@ -46,7 +49,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // --- REGISTER ---
   if (action === 'register') {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-    const { name, email, password } = req.body;
+    const { name, email: rawEmail, password } = req.body;
+
+    const email = rawEmail ? rawEmail.toLowerCase().trim() : '';
 
     if (!name || !email || !password) return res.status(400).json({ error: 'Missing fields' });
 
@@ -100,7 +105,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // --- FORGOT PASSWORD ---
   if (action === 'forgot-password') {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-    const { email } = req.body;
+    const { email: rawEmail } = req.body;
+    
+    const email = rawEmail ? rawEmail.toLowerCase().trim() : '';
+    
     if (!email) return res.status(400).json({ error: 'Email required' });
 
     const { data: user } = await supabaseServerClient.from('users').select('id').eq('email', email).single();

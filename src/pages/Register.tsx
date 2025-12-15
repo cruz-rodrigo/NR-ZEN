@@ -64,7 +64,7 @@ const Register: React.FC = () => {
               required
               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
               value={formData.email}
-              onChange={e => setFormData({...formData, email: e.target.value})}
+              onChange={e => setFormData({...formData, email: e.target.value.toLowerCase().trim()})}
             />
           </div>
           <div>
