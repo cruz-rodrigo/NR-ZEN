@@ -26,6 +26,15 @@ create table if not exists public.refresh_tokens (
   created_at timestamptz DEFAULT now()
 );
 
+create table if not exists public.password_reset_tokens (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  token text UNIQUE NOT NULL,
+  expires_at timestamptz NOT NULL,
+  used boolean DEFAULT false,
+  created_at timestamptz DEFAULT now()
+);
+
 create table if not exists public.companies (
   id uuid default gen_random_uuid() primary key,
   user_id uuid not null, 
@@ -115,6 +124,10 @@ create policy "Public access users" on public.users for all using (true);
 alter table public.refresh_tokens enable row level security;
 drop policy if exists "Users manage tokens" on public.refresh_tokens;
 create policy "Users manage tokens" on public.refresh_tokens for all using (true);
+
+alter table public.password_reset_tokens enable row level security;
+drop policy if exists "System manages reset tokens" on public.password_reset_tokens;
+create policy "System manages reset tokens" on public.password_reset_tokens for all using (true);
 
 alter table public.companies enable row level security;
 drop policy if exists "Enable all access" on public.companies;
