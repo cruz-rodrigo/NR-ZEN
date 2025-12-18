@@ -9,7 +9,6 @@ import { FileText, Download, Eye, Calendar, Building2, Info, HelpCircle } from '
 const Reports: React.FC = () => {
   const navigate = useNavigate();
 
-  // Dados Mockados para a lista
   const reports = [
     { 
       id: 1, 
@@ -18,7 +17,7 @@ const Reports: React.FC = () => {
       date: "10/10/2025", 
       status: "Concluído", 
       type: "PGR Anexo II",
-      description: "Relatório consolidado com Inventário de Riscos e Plano de Ação completo para o PGR."
+      description: "Inventário de Riscos + Plano de Ação. Documento robusto para compor o PGR definitivo da empresa."
     },
     { 
       id: 2, 
@@ -27,7 +26,7 @@ const Reports: React.FC = () => {
       date: "05/10/2025", 
       status: "Em Análise", 
       type: "Preliminar",
-      description: "Levantamento inicial de perigos e riscos para triagem rápida conforme NR-01."
+      description: "Levantamento inicial de perigos psicossociais. Ideal para triagem e atendimento rápido à NR-01."
     },
     { 
       id: 3, 
@@ -36,14 +35,13 @@ const Reports: React.FC = () => {
       date: "01/10/2025", 
       status: "Concluído", 
       type: "PGR Anexo II",
-      description: "Relatório consolidado com Inventário de Riscos e Plano de Ação completo para o PGR."
+      description: "Inventário de Riscos + Plano de Ação. Documento robusto para compor o PGR definitivo da empresa."
     },
   ];
 
   const handleDownload = (id: number) => {
-    // Para webapps modernos, o "Visualizar" seguido de "Imprimir (Salvar como PDF)" 
-    // é o método mais fiel à formatação. O botão baixar levará direto para a tela de relatório.
-    navigate('/relatorio');
+    // Adiciona o parâmetro 'download=true' para o componente de relatório saber que deve abrir a impressão
+    navigate('/relatorio?download=true');
   };
 
   return (
@@ -55,7 +53,7 @@ const Reports: React.FC = () => {
         </div>
         <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-2 flex items-center gap-3 text-xs text-blue-700">
           <HelpCircle size={16} />
-          <span>Dica: Use <b>PGR Anexo II</b> para auditorias e <b>Preliminar</b> para triagens.</span>
+          <span>Dica: O <b>PGR II</b> é o documento completo com plano de ação; a <b>Preliminar</b> é para triagem inicial.</span>
         </div>
       </header>
 
@@ -81,10 +79,13 @@ const Reports: React.FC = () => {
                       <div>
                         <div className="flex items-center gap-1.5">
                           <p className="font-bold text-slate-800 text-sm">{report.type}</p>
-                          <div className="group/info relative">
+                          <div className="relative flex items-center group/tooltip">
                             <Info size={14} className="text-slate-300 cursor-help hover:text-blue-500 transition-colors" />
-                            <div className="absolute left-0 bottom-full mb-2 hidden group-hover/info:block w-48 p-2 bg-slate-800 text-white text-[10px] rounded shadow-xl z-20 leading-relaxed">
+                            {/* TOOLTIP FIX: Centered and with higher Z-index */}
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tooltip:block w-56 p-3 bg-slate-800 text-white text-[10px] rounded-lg shadow-2xl z-[100] leading-relaxed animate-fade-in">
+                              <div className="font-bold mb-1 border-b border-white/10 pb-1 uppercase">{report.type}</div>
                               {report.description}
+                              <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-800"></div>
                             </div>
                           </div>
                         </div>

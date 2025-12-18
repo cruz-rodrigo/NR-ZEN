@@ -1,11 +1,23 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import { Logo } from '../components/Layout';
 import Button from '../components/Button';
 import { FileText, Printer, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const Report: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    // Se a página abrir com ?download=true, aciona o print automaticamente
+    if (searchParams.get('download') === 'true') {
+      // Pequeno timeout para garantir que o layout renderizou
+      setTimeout(() => {
+        window.print();
+      }, 500);
+    }
+  }, [searchParams]);
 
   const handleClose = () => {
     if (window.opener) {
@@ -45,7 +57,6 @@ const Report: React.FC = () => {
       {/* Folha A4 - Otimizada para Caber em 1 Página */}
       <div className="mt-20 print:mt-0 w-[210mm] min-h-[297mm] bg-white shadow-2xl print:shadow-none flex flex-col relative mx-auto box-border p-[12mm] print:p-[12mm]">
         
-        {/* HEADER COM CLASSE print-header PARA FORÇAR EXIBIÇÃO */}
         <header className="border-b-2 border-slate-900 pb-2 mb-4 print-header">
             <div className="flex justify-between items-end">
                 <div className="flex flex-col">
@@ -70,10 +81,7 @@ const Report: React.FC = () => {
             </div>
         </header>
 
-        {/* CONTENT */}
         <main className="flex-1">
-            
-            {/* Title Block */}
             <div className="text-center mb-5 bg-slate-50 py-3 rounded border border-slate-100 print:border-none">
                 <h1 className="text-lg font-heading font-black text-slate-900 uppercase tracking-tight mb-1">
                     Avaliação de Riscos Psicossociais
@@ -87,7 +95,6 @@ const Report: React.FC = () => {
                 </div>
             </div>
 
-            {/* 1. Metodologia */}
             <section className="mb-5 print:break-inside-avoid">
                 <div className="flex items-center gap-2 mb-2 border-b border-slate-200 pb-1">
                     <span className="bg-slate-900 text-white w-4 h-4 rounded flex items-center justify-center text-[9px] font-bold">1</span>
@@ -112,7 +119,6 @@ const Report: React.FC = () => {
                 </div>
             </section>
 
-            {/* 2. Inventário */}
             <section className="mb-5 print:break-inside-avoid">
                 <div className="flex items-center gap-2 mb-2 border-b border-slate-200 pb-1">
                     <span className="bg-slate-900 text-white w-4 h-4 rounded flex items-center justify-center text-[9px] font-bold">2</span>
@@ -153,7 +159,6 @@ const Report: React.FC = () => {
                 </table>
             </section>
 
-            {/* 3. Plano de Ação */}
             <section className="mb-6 print:break-inside-avoid">
                 <div className="flex items-center gap-2 mb-2 border-b border-slate-200 pb-1">
                     <span className="bg-slate-900 text-white w-4 h-4 rounded flex items-center justify-center text-[9px] font-bold">3</span>
@@ -185,7 +190,6 @@ const Report: React.FC = () => {
                 </table>
             </section>
 
-            {/* Assinaturas */}
             <section className="mt-8 mb-4 print:break-inside-avoid">
                 <div className="flex justify-between gap-12 px-8">
                     <div className="flex-1 text-center">
@@ -202,10 +206,8 @@ const Report: React.FC = () => {
                     </div>
                 </div>
             </section>
-
         </main>
 
-        {/* FOOTER COM CLASSE print-footer PARA FORÇAR EXIBIÇÃO */}
         <footer className="mt-auto pt-2 border-t border-slate-200 print-footer">
             <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
@@ -219,7 +221,6 @@ const Report: React.FC = () => {
                 </div>
             </div>
         </footer>
-
       </div>
     </div>
   );

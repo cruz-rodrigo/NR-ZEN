@@ -32,11 +32,14 @@ interface ErrorBoundaryState {
 // Error Boundary Component
 // Use named Component import to ensure correct typing of state and props.
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  // Initialize state as a class property for better TypeScript compatibility and inheritance visibility.
-  state: ErrorBoundaryState = {
-    hasError: false,
-    error: null
-  };
+  // Fix: Explicitly add constructor and call super(props) to ensure this.props is correctly recognized by TypeScript.
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null
+    };
+  }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
