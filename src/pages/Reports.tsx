@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Card from '../components/Card';
 import Button from '../components/Button';
-import { FileText, Download, Eye, Calendar, Building2, Info, HelpCircle } from 'lucide-react';
+import { FileText, Download, Eye, Calendar, Building2, Info, HelpCircle, ClipboardCheck, LayoutList } from 'lucide-react';
 
 const Reports: React.FC = () => {
   const navigate = useNavigate();
@@ -17,7 +17,8 @@ const Reports: React.FC = () => {
       date: "10/10/2025", 
       status: "Concluído", 
       type: "PGR Anexo II",
-      description: "Inventário de Riscos + Plano de Ação. Documento robusto para compor o PGR definitivo da empresa."
+      icon: <LayoutList size={18} className="text-blue-600" />,
+      description: "DOCUMENTO COMPLETO: Inclui o Inventário de Riscos (Matriz 3x3/4x4) e o Plano de Ação obrigatório para o PGR da empresa."
     },
     { 
       id: 2, 
@@ -26,7 +27,8 @@ const Reports: React.FC = () => {
       date: "05/10/2025", 
       status: "Em Análise", 
       type: "Preliminar",
-      description: "Levantamento inicial de perigos psicossociais. Ideal para triagem e atendimento rápido à NR-01."
+      icon: <ClipboardCheck size={18} className="text-amber-600" />,
+      description: "TRIAGEM INICIAL: Levantamento preliminar de perigos. Serve para identificar se há necessidade de uma análise profunda ou se o risco é irrelevante."
     },
     { 
       id: 3, 
@@ -35,12 +37,12 @@ const Reports: React.FC = () => {
       date: "01/10/2025", 
       status: "Concluído", 
       type: "PGR Anexo II",
-      description: "Inventário de Riscos + Plano de Ação. Documento robusto para compor o PGR definitivo da empresa."
+      icon: <LayoutList size={18} className="text-blue-600" />,
+      description: "DOCUMENTO COMPLETO: Inclui o Inventário de Riscos (Matriz 3x3/4x4) e o Plano de Ação obrigatório para o PGR da empresa."
     },
   ];
 
   const handleDownload = (id: number) => {
-    // Adiciona o parâmetro 'download=true' para o componente de relatório saber que deve abrir a impressão
     navigate('/relatorio?download=true');
   };
 
@@ -51,15 +53,18 @@ const Reports: React.FC = () => {
           <h1 className="text-3xl font-heading font-bold text-slate-800">Relatórios</h1>
           <p className="text-slate-500 mt-1">Histórico de laudos e avaliações geradas.</p>
         </div>
-        <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-2 flex items-center gap-3 text-xs text-blue-700">
-          <HelpCircle size={16} />
-          <span>Dica: O <b>PGR II</b> é o documento completo com plano de ação; a <b>Preliminar</b> é para triagem inicial.</span>
+        <div className="bg-slate-800 text-white rounded-lg px-4 py-3 flex items-center gap-3 text-xs shadow-lg">
+          <HelpCircle size={18} className="text-blue-400" />
+          <div>
+            <p className="font-bold">Diferença entre Documentos:</p>
+            <p className="opacity-80">O <b>PGR Anexo II</b> é para o documento base do cliente. A <b>Preliminar</b> é sua triagem de campo.</p>
+          </div>
         </div>
       </header>
 
-      <Card>
+      <Card padding="p-0">
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="w-full text-left border-collapse">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Documento</th>
@@ -71,25 +76,27 @@ const Reports: React.FC = () => {
             <tbody className="divide-y divide-slate-100">
               {reports.map((report) => (
                 <tr key={report.id} className="hover:bg-slate-50/50 transition-colors group">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="bg-blue-50 p-2 rounded text-blue-600">
-                        <FileText size={20} />
+                      <div className={`p-2 rounded ${report.type === 'Preliminar' ? 'bg-amber-50' : 'bg-blue-50'}`}>
+                        {report.icon}
                       </div>
-                      <div>
+                      <div className="relative">
                         <div className="flex items-center gap-1.5">
                           <p className="font-bold text-slate-800 text-sm">{report.type}</p>
-                          <div className="relative flex items-center group/tooltip">
+                          
+                          {/* TOOLTIP FIX: Alinhado à esquerda (left-0) e com largura controlada para não cortar */}
+                          <div className="group/info relative inline-block">
                             <Info size={14} className="text-slate-300 cursor-help hover:text-blue-500 transition-colors" />
-                            {/* TOOLTIP FIX: Centered and with higher Z-index */}
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tooltip:block w-56 p-3 bg-slate-800 text-white text-[10px] rounded-lg shadow-2xl z-[100] leading-relaxed animate-fade-in">
-                              <div className="font-bold mb-1 border-b border-white/10 pb-1 uppercase">{report.type}</div>
+                            <div className="absolute bottom-full left-0 mb-3 hidden group-hover/info:block w-64 p-3 bg-slate-900 text-white text-[10px] rounded-lg shadow-2xl z-[999] leading-relaxed border border-slate-700 animate-fade-in">
+                              <div className="font-bold mb-1 text-blue-400 uppercase tracking-tighter">O que é este documento?</div>
                               {report.description}
-                              <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-800"></div>
+                              {/* Seta do tooltip alinhada com o ícone */}
+                              <div className="absolute top-full left-1 border-8 border-transparent border-t-slate-900"></div>
                             </div>
                           </div>
                         </div>
-                        <p className="text-xs text-slate-500">{report.status}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-tighter text-slate-400">{report.status}</p>
                       </div>
                     </div>
                   </td>
@@ -130,9 +137,9 @@ const Reports: React.FC = () => {
         </div>
       </Card>
       
-      <div className="mt-6 text-center">
-        <p className="text-xs text-slate-400 uppercase font-bold tracking-widest">
-          Padronização NR ZEN • SST 4.0
+      <div className="mt-8 text-center border-t border-slate-100 pt-6">
+        <p className="text-[10px] text-slate-300 uppercase font-black tracking-[0.3em]">
+          Plataforma NR ZEN • Inteligência em SST
         </p>
       </div>
     </Layout>
