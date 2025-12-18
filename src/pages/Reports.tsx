@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Card from '../components/Card';
 import Button from '../components/Button';
-import { FileText, Download, Eye, Calendar, Building2, Info, HelpCircle, ClipboardCheck, LayoutList } from 'lucide-react';
+import { Download, Eye, Calendar, Building2, Info, HelpCircle, ClipboardCheck, LayoutList } from 'lucide-react';
 
 const Reports: React.FC = () => {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ const Reports: React.FC = () => {
       status: "Concluído", 
       type: "PGR Anexo II",
       icon: <LayoutList size={18} className="text-blue-600" />,
-      description: "DOCUMENTO COMPLETO: Inclui o Inventário de Riscos (Matriz 3x3/4x4) e o Plano de Ação obrigatório para o PGR da empresa."
+      description: "DOCUMENTO COMPLETO: Relatório consolidado com Inventário de Riscos (Matriz 3x3/4x4) e Plano de Ação estruturado para o PGR."
     },
     { 
       id: 2, 
@@ -28,7 +28,7 @@ const Reports: React.FC = () => {
       status: "Em Análise", 
       type: "Preliminar",
       icon: <ClipboardCheck size={18} className="text-amber-600" />,
-      description: "TRIAGEM INICIAL: Levantamento preliminar de perigos. Serve para identificar se há necessidade de uma análise profunda ou se o risco é irrelevante."
+      description: "TRIAGEM (NR-01.5.4.4.1): Levantamento inicial de perigos psicossociais para triagem de campo e conformidade rápida."
     },
     { 
       id: 3, 
@@ -38,7 +38,7 @@ const Reports: React.FC = () => {
       status: "Concluído", 
       type: "PGR Anexo II",
       icon: <LayoutList size={18} className="text-blue-600" />,
-      description: "DOCUMENTO COMPLETO: Inclui o Inventário de Riscos (Matriz 3x3/4x4) e o Plano de Ação obrigatório para o PGR da empresa."
+      description: "DOCUMENTO COMPLETO: Relatório consolidado com Inventário de Riscos (Matriz 3x3/4x4) e Plano de Ação estruturado para o PGR."
     },
   ];
 
@@ -53,17 +53,18 @@ const Reports: React.FC = () => {
           <h1 className="text-3xl font-heading font-bold text-slate-800">Relatórios</h1>
           <p className="text-slate-500 mt-1">Histórico de laudos e avaliações geradas.</p>
         </div>
-        <div className="bg-slate-800 text-white rounded-lg px-4 py-3 flex items-center gap-3 text-xs shadow-lg">
+        <div className="bg-slate-800 text-white rounded-lg px-4 py-3 flex items-center gap-3 text-xs shadow-lg border border-slate-700">
           <HelpCircle size={18} className="text-blue-400" />
           <div>
-            <p className="font-bold">Diferença entre Documentos:</p>
-            <p className="opacity-80">O <b>PGR Anexo II</b> é para o documento base do cliente. A <b>Preliminar</b> é sua triagem de campo.</p>
+            <p className="font-bold">Guia de Documentos:</p>
+            <p className="opacity-80">Use <b>PGR II</b> para entregas finais e <b>Preliminar</b> para auditorias de campo.</p>
           </div>
         </div>
       </header>
 
-      <Card padding="p-0">
-        <div className="overflow-x-auto">
+      {/* PB-40 garante que o tooltip do último item também tenha espaço para abrir para baixo */}
+      <Card padding="p-0 pb-40">
+        <div className="overflow-visible">
           <table className="w-full text-left border-collapse">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
@@ -85,14 +86,16 @@ const Reports: React.FC = () => {
                         <div className="flex items-center gap-1.5">
                           <p className="font-bold text-slate-800 text-sm">{report.type}</p>
                           
-                          {/* TOOLTIP FIX: Alinhado à esquerda (left-0) e com largura controlada para não cortar */}
+                          {/* TOOLTIP FIX: Agora abre para baixo (top-full) para nunca ser cortado no topo */}
                           <div className="group/info relative inline-block">
                             <Info size={14} className="text-slate-300 cursor-help hover:text-blue-500 transition-colors" />
-                            <div className="absolute bottom-full left-0 mb-3 hidden group-hover/info:block w-64 p-3 bg-slate-900 text-white text-[10px] rounded-lg shadow-2xl z-[999] leading-relaxed border border-slate-700 animate-fade-in">
-                              <div className="font-bold mb-1 text-blue-400 uppercase tracking-tighter">O que é este documento?</div>
+                            <div className="absolute top-full left-0 mt-2 hidden group-hover/info:block w-72 p-4 bg-slate-900 text-white text-[11px] rounded-lg shadow-2xl z-[999] leading-relaxed border border-slate-700 animate-fade-in">
+                              <div className="font-bold mb-1.5 text-blue-400 uppercase tracking-tighter border-b border-white/10 pb-1">
+                                Especificação Técnica
+                              </div>
                               {report.description}
-                              {/* Seta do tooltip alinhada com o ícone */}
-                              <div className="absolute top-full left-1 border-8 border-transparent border-t-slate-900"></div>
+                              {/* Seta do tooltip apontando para CIMA */}
+                              <div className="absolute bottom-full left-1 border-8 border-transparent border-b-slate-900"></div>
                             </div>
                           </div>
                         </div>
@@ -139,7 +142,7 @@ const Reports: React.FC = () => {
       
       <div className="mt-8 text-center border-t border-slate-100 pt-6">
         <p className="text-[10px] text-slate-300 uppercase font-black tracking-[0.3em]">
-          Plataforma NR ZEN • Inteligência em SST
+          Padronização NR ZEN • Tecnologia para Consultorias
         </p>
       </div>
     </Layout>

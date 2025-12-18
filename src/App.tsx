@@ -1,4 +1,4 @@
-import React, { ReactNode, ErrorInfo } from 'react';
+import React, { ReactNode, ErrorInfo, Component } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
@@ -30,16 +30,13 @@ interface ErrorBoundaryState {
 }
 
 // Error Boundary Component
-// Use React.Component to ensure correct typing of state and props.
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  // Fix: Explicitly call super(props) and declare state initialization.
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = {
-      hasError: false,
-      error: null
-    };
-  }
+// Use Component directly to ensure correct typing of state and props via generics.
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  // Use property initializer for state to help TypeScript inference and avoid missing property errors.
+  state: ErrorBoundaryState = {
+    hasError: false,
+    error: null
+  };
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
@@ -51,7 +48,8 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
   // Explicitly define render return type as ReactNode.
   render(): ReactNode {
-    // Accessing state inherited from React.Component
+    // Accessing state inherited from Component. 
+    // Fix for errors where 'state' was reported as missing on ErrorBoundary.
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
@@ -78,7 +76,8 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
       );
     }
 
-    // Accessing children via this.props which is correctly inherited from React.Component.
+    // Accessing children via this.props which is correctly inherited from Component.
+    // Fix for error where 'props' was reported as missing on ErrorBoundary.
     return this.props.children;
   }
 }
