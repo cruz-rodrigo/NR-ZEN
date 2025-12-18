@@ -1,14 +1,12 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseServerClient, checkDbConnection } from '../_supabaseServer.js';
+import { checkDbConnection } from '../_supabaseServer.js';
 import { hashPassword, comparePassword, signJwt, generateRefreshToken } from '../_authUtils.js';
-import crypto from 'crypto';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { action } = req.query;
 
   try {
-    // Valida se o banco está configurado antes de qualquer ação
     const supabase = checkDbConnection();
 
     // --- LOGIN ---
@@ -28,16 +26,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const valid = await comparePassword(password, user.password_hash);
       if (!valid) return res.status(401).json({ error: 'E-mail ou senha inválidos.' });
 
+      // O login costuma falhar aqui se o JWT_SECRET estiver ausente
       const token = signJwt({ sub: user.id, email: user.email, plan_tier: user.plan_tier });
+      
       const refreshToken = generateRefreshToken();
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7);
 
       const { error: tokenError } = await supabase
         .from('refresh_tokens')
-        .insert([{ user_id: user.id, token: refreshToken, expires_at: expiresAt.toISOString(), revoked: false }]);
+        .insert([{ 
+          user_id: user.id, 
+          token: refreshToken, 
+          expires_at: expiresAt.toISOString(), 
+          revoked: false 
+        }]);
 
-      if (tokenError) throw new Error('Falha ao criar sessão de acesso.');
+      if (tokenError) {
+        console.error("Erro ao salvar refresh token:", tokenError);
+        return res.status(500).json({ error: 'Falha ao criar sessão de acesso.' });
+      }
 
       return res.status(200).json({
         token,
@@ -70,16 +78,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(201).json({ user: data });
     }
 
-    // --- Outras ações (refresh, forgot, etc) seguem o mesmo padrão...
-    // [Omitido por brevidade, mantendo a lógica de checkDbConnection]
+    // --- REFRESH TOKEN ---
+    if (action === 'refresh') {
+      const { refreshToken } = req.body;
+      if (!refreshToken) return res.status(400).json({ error: 'Token necessário.' });
+
+      const { data: storedToken, error } = await supabase
+        .from('refresh_tokens')
+        .select('*, users(*)')
+        .eq('token', refreshToken)
+        .eq('revoked', false)
+        .single();
+
+      if (error || !storedToken || new Date(storedToken.expires_at) < new Date()) {
+        return res.status(401).json({ error: 'Sessão inválida ou expirada.' });
+      }
+
+      const user = storedToken.users as any;
+      const newToken = signJwt({ sub: user.id, email: user.email, plan_tier: user.plan_tier });
+
+      return res.status(200).json({ token: newToken, refreshToken });
+    }
 
     return res.status(400).json({ error: 'Ação inválida.' });
 
   } catch (err: any) {
-    console.error('Auth API Error:', err.message);
+    console.error('API Error:', err.message);
     return res.status(500).json({ 
-      error: 'Internal Server Error', 
-      message: err.message || 'Erro desconhecido no servidor.' 
+      error: 'Erro Interno', 
+      message: err.message || 'Erro inesperado no servidor.' 
     });
   }
 }
