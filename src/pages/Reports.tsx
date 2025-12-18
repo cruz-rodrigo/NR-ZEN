@@ -18,7 +18,8 @@ const Reports: React.FC = () => {
       status: "Concluído", 
       type: "PGR Anexo II",
       icon: <LayoutList size={18} className="text-blue-600" />,
-      description: "DOCUMENTO COMPLETO: Relatório consolidado com Inventário de Riscos (Matriz 3x3/4x4) e Plano de Ação estruturado para o PGR."
+      tag: "Final",
+      description: "INVENTÁRIO COMPLETO: Documento oficial para o GRO. Contém Matriz de Risco (Probabilidade x Severidade) e o Plano de Ação (Medidas de Controle) exigidos pela NR-01."
     },
     { 
       id: 2, 
@@ -28,7 +29,8 @@ const Reports: React.FC = () => {
       status: "Em Análise", 
       type: "Preliminar",
       icon: <ClipboardCheck size={18} className="text-amber-600" />,
-      description: "TRIAGEM (NR-01.5.4.4.1): Levantamento inicial de perigos psicossociais para triagem de campo e conformidade rápida."
+      tag: "Campo",
+      description: "LEVANTAMENTO PRELIMINAR: Triagem inicial baseada na percepção dos trabalhadores. Utilizado para identificar se há necessidade de uma avaliação mais profunda."
     },
     { 
       id: 3, 
@@ -38,7 +40,8 @@ const Reports: React.FC = () => {
       status: "Concluído", 
       type: "PGR Anexo II",
       icon: <LayoutList size={18} className="text-blue-600" />,
-      description: "DOCUMENTO COMPLETO: Relatório consolidado com Inventário de Riscos (Matriz 3x3/4x4) e Plano de Ação estruturado para o PGR."
+      tag: "Final",
+      description: "INVENTÁRIO COMPLETO: Documento oficial para o GRO. Contém Matriz de Risco e Plano de Ação conforme NR-01."
     },
   ];
 
@@ -51,26 +54,30 @@ const Reports: React.FC = () => {
       <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-heading font-bold text-slate-800">Relatórios</h1>
-          <p className="text-slate-500 mt-1">Histórico de laudos e avaliações geradas.</p>
+          <p className="text-slate-500 mt-1">Histórico de documentos técnicos gerados.</p>
         </div>
-        <div className="bg-slate-800 text-white rounded-lg px-4 py-3 flex items-center gap-3 text-xs shadow-lg border border-slate-700">
-          <HelpCircle size={18} className="text-blue-400" />
+        <div className="bg-slate-900 text-white rounded-xl px-5 py-4 flex items-center gap-4 text-xs shadow-2xl border border-slate-700 max-w-md">
+          <div className="bg-blue-500/20 p-2 rounded-lg">
+            <HelpCircle size={20} className="text-blue-400" />
+          </div>
           <div>
-            <p className="font-bold">Guia de Documentos:</p>
-            <p className="opacity-80">Use <b>PGR II</b> para entregas finais e <b>Preliminar</b> para auditorias de campo.</p>
+            <p className="font-bold text-blue-400 mb-1 uppercase tracking-tight">Qual a diferença?</p>
+            <p className="opacity-70 leading-relaxed text-[11px]">
+              O <b>PGR II</b> é o documento final legal. A <b>Preliminar</b> é sua ferramenta de triagem para decidir onde focar o plano de ação.
+            </p>
           </div>
         </div>
       </header>
 
-      {/* PB-40 garante que o tooltip do último item também tenha espaço para abrir para baixo */}
-      <Card padding="p-0 pb-40">
+      {/* pb-48 garante que o tooltip da última linha tenha espaço para abrir para baixo */}
+      <Card padding="p-0 pb-48">
         <div className="overflow-visible">
           <table className="w-full text-left border-collapse">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Documento</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Tipo de Documento</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Empresa / Setor</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Data de Referência</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Emissão</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Ações</th>
               </tr>
             </thead>
@@ -79,19 +86,20 @@ const Reports: React.FC = () => {
                 <tr key={report.id} className="hover:bg-slate-50/50 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded ${report.type === 'Preliminar' ? 'bg-amber-50' : 'bg-blue-50'}`}>
+                      <div className={`p-2 rounded-lg ${report.type === 'Preliminar' ? 'bg-amber-50' : 'bg-blue-50'}`}>
                         {report.icon}
                       </div>
                       <div className="relative">
                         <div className="flex items-center gap-1.5">
                           <p className="font-bold text-slate-800 text-sm">{report.type}</p>
                           
-                          {/* TOOLTIP FIX: Agora abre para baixo (top-full) para nunca ser cortado no topo */}
+                          {/* TOOLTIP FIX: Agora abre para baixo (top-full) e tem Z-INDEX alto */}
                           <div className="group/info relative inline-block">
                             <Info size={14} className="text-slate-300 cursor-help hover:text-blue-500 transition-colors" />
-                            <div className="absolute top-full left-0 mt-2 hidden group-hover/info:block w-72 p-4 bg-slate-900 text-white text-[11px] rounded-lg shadow-2xl z-[999] leading-relaxed border border-slate-700 animate-fade-in">
-                              <div className="font-bold mb-1.5 text-blue-400 uppercase tracking-tighter border-b border-white/10 pb-1">
-                                Especificação Técnica
+                            <div className="absolute top-full left-0 mt-3 hidden group-hover/info:block w-72 p-4 bg-slate-900 text-white text-[11px] rounded-xl shadow-2xl z-[9999] leading-relaxed border border-white/10 animate-fade-in">
+                              <div className="font-bold mb-1.5 text-blue-400 uppercase tracking-tighter border-b border-white/10 pb-1.5 flex justify-between">
+                                Finalidade Técnica
+                                <span className="bg-white/10 px-1.5 rounded text-[9px]">{report.tag}</span>
                               </div>
                               {report.description}
                               {/* Seta do tooltip apontando para CIMA */}
@@ -99,7 +107,9 @@ const Reports: React.FC = () => {
                             </div>
                           </div>
                         </div>
-                        <p className="text-[10px] font-bold uppercase tracking-tighter text-slate-400">{report.status}</p>
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${report.status === 'Concluído' ? 'text-emerald-500' : 'text-amber-500'}`}>
+                          {report.status}
+                        </span>
                       </div>
                     </div>
                   </td>
@@ -111,7 +121,7 @@ const Reports: React.FC = () => {
                       <span className="text-xs text-slate-500 mt-0.5">{report.sector}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
                     <div className="flex items-center gap-2">
                       <Calendar size={14} className="text-slate-400"/>
                       {report.date}
@@ -139,11 +149,11 @@ const Reports: React.FC = () => {
           </table>
         </div>
       </Card>
-      
-      <div className="mt-8 text-center border-t border-slate-100 pt-6">
-        <p className="text-[10px] text-slate-300 uppercase font-black tracking-[0.3em]">
-          Padronização NR ZEN • Tecnologia para Consultorias
-        </p>
+
+      <div className="mt-12 text-center border-t border-slate-100 pt-8">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+           Padrão Normativo NR-01 • NR-17 • ISO 45003
+        </div>
       </div>
     </Layout>
   );

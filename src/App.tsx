@@ -1,4 +1,4 @@
-import React, { ReactNode, ErrorInfo, Component } from 'react';
+import React, { ReactNode, ErrorInfo } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
@@ -30,13 +30,15 @@ interface ErrorBoundaryState {
 }
 
 // Error Boundary Component
-// Use Component directly to ensure correct typing of state and props via generics.
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  // Use property initializer for state to help TypeScript inference and avoid missing property errors.
-  state: ErrorBoundaryState = {
-    hasError: false,
-    error: null
-  };
+// Fix: Using React.Component explicitly and a constructor to ensure props/state inheritance is correctly typed.
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null
+    };
+  }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
@@ -46,11 +48,12 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     console.error("Uncaught error:", error, errorInfo);
   }
 
-  // Explicitly define render return type as ReactNode.
   render(): ReactNode {
-    // Accessing state inherited from Component. 
-    // Fix for errors where 'state' was reported as missing on ErrorBoundary.
-    if (this.state.hasError) {
+    // Accessing state and props via this.state and this.props.
+    const { hasError, error } = this.state;
+    const { children } = this.props;
+
+    if (hasError) {
       return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
           <div className="bg-white p-8 rounded-xl shadow-xl max-w-md w-full border-l-4 border-red-500">
@@ -60,7 +63,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
             </div>
             <p className="text-slate-600 mb-4">A aplicação encontrou um erro crítico de inicialização.</p>
             <div className="bg-slate-100 p-3 rounded text-xs font-mono text-slate-500 overflow-auto max-h-32 mb-6">
-              {this.state.error?.message}
+              {error?.message}
             </div>
             <button 
               onClick={() => {
@@ -76,9 +79,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       );
     }
 
-    // Accessing children via this.props which is correctly inherited from Component.
-    // Fix for error where 'props' was reported as missing on ErrorBoundary.
-    return this.props.children;
+    return children;
   }
 }
 
