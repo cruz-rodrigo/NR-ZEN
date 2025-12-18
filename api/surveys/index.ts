@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
-import { supabaseServerClient } from '../_supabaseServer.js';
+import { checkDbConnection } from '../_supabaseServer.js';
 import { calculateRisk, QuestionMeta, DomainMeta } from '../../lib/riskEngine.js';
 
 // ---- SUBMIT LOGIC ----
@@ -44,16 +44,18 @@ const FALLBACK_DOMAINS: DomainMeta[] = [
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   
-  // --- VALIDATE (GET) ---
-  if (req.method === 'GET') {
-    const { token } = req.query;
+  try {
+    const supabase = checkDbConnection();
 
-    if (!token || typeof token !== 'string') {
-      return res.status(400).json({ valid: false, reason: 'missing_token' });
-    }
+    // --- VALIDATE (GET) ---
+    if (req.method === 'GET') {
+      const { token } = req.query;
 
-    try {
-      const { data: survey, error } = await supabaseServerClient
+      if (!token || typeof token !== 'string') {
+        return res.status(400).json({ valid: false, reason: 'missing_token' });
+      }
+
+      const { data: survey, error } = await supabase
         .from('surveys')
         .select(`
           id,
@@ -98,24 +100,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         sectorName: sectorData?.name || 'Setor não identificado',
         populationEstimated: sectorData?.employees_count || 0
       });
-
-    } catch (err: any) {
-      console.error('[Validate] Critical error:', err);
-      return res.status(500).json({ error: 'Internal server error' });
-    }
-  }
-
-  // --- SUBMIT (POST) ---
-  if (req.method === 'POST') {
-    const parseResult = submitSchema.safeParse(req.body);
-    if (!parseResult.success) {
-      return res.status(400).json({ error: parseResult.error.errors });
     }
 
-    const { token, answers } = parseResult.data;
+    // --- SUBMIT (POST) ---
+    if (req.method === 'POST') {
+      const parseResult = submitSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: parseResult.error.errors });
+      }
 
-    try {
-      const { data: survey, error: surveyError } = await supabaseServerClient
+      const { token, answers } = parseResult.data;
+
+      const { data: survey, error: surveyError } = await supabase
         .from('surveys')
         .select('id, sector_id, active, expires_at')
         .eq('access_code', token)
@@ -138,8 +134,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       try {
         const [questionsRes, domainsRes] = await Promise.all([
-          supabaseServerClient.from('questions').select('id, domain_id, type'),
-          supabaseServerClient.from('domains').select('id, name, weight')
+          supabase.from('questions').select('id, domain_id, type'),
+          supabase.from('domains').select('id, name, weight')
         ]);
 
         if (questionsRes.data && questionsRes.data.length > 0 && domainsRes.data && domainsRes.data.length > 0) {
@@ -161,7 +157,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const result = calculateRisk(answers, questionsMeta, domainsMeta);
 
-      const { error: insertError } = await supabaseServerClient
+      const { error: insertError } = await supabase
         .from('survey_responses')
         .insert([{
           survey_id: survey.id,
@@ -174,7 +170,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(500).json({ error: 'Failed to save response' });
       }
 
-      const { data: surveysInSector } = await supabaseServerClient
+      const { data: surveysInSector } = await supabase
         .from('surveys')
         .select('id')
         .eq('sector_id', survey.sector_id);
@@ -182,7 +178,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (surveysInSector && surveysInSector.length > 0) {
         const surveyIds = surveysInSector.map(s => s.id);
 
-        const { data: aggregatedData, error: aggError } = await supabaseServerClient
+        const { data: aggregatedData, error: aggError } = await supabase
           .from('survey_responses')
           .select('risk_score')
           .in('survey_id', surveyIds);
@@ -196,7 +192,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           if (averageScore >= 40) riskLevel = 'moderate';
           if (averageScore >= 70) riskLevel = 'high';
 
-          const { data: existingAnalytics } = await supabaseServerClient
+          const { data: existingAnalytics } = await supabase
             .from('sector_analytics')
             .select('id')
             .eq('sector_id', survey.sector_id)
@@ -210,12 +206,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           };
 
           if (existingAnalytics) {
-            await supabaseServerClient
+            await supabase
               .from('sector_analytics')
               .update(analyticsData)
               .eq('id', existingAnalytics.id);
           } else {
-            await supabaseServerClient
+            await supabase
               .from('sector_analytics')
               .insert([analyticsData]);
           }
@@ -226,12 +222,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ok: true, 
         message: 'Response submitted successfully' 
       });
-
-    } catch (err: any) {
-      console.error("Critical error in submit handler:", err);
-      return res.status(500).json({ error: 'Internal Server Error' });
     }
-  }
 
-  return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ error: 'Method not allowed' });
+  } catch (err: any) {
+    console.error("Critical error in surveys handler:", err);
+    return res.status(500).json({ error: 'Internal Server Error', message: err.message });
+  }
 }
