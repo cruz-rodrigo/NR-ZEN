@@ -15,7 +15,6 @@ const Onboarding: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [apiError, setApiError] = useState('');
 
-  // Form State
   const [formData, setFormData] = useState({
     name: '',
     cnpj: '',
@@ -23,7 +22,6 @@ const Onboarding: React.FC = () => {
     employees: ''
   });
 
-  // Validation State
   const [errors, setErrors] = useState({
     name: '',
     cnpj: '',
@@ -31,7 +29,6 @@ const Onboarding: React.FC = () => {
     employees: ''
   });
 
-  // CNPJ Mask
   const formatCNPJ = (value: string) => {
     return value
       .replace(/\D/g, '')
@@ -89,7 +86,6 @@ const Onboarding: React.FC = () => {
   const handleNext = async () => {
     if (validateStep(step)) {
       if (step === 2) {
-        // CALL API REAL COM DADOS DO SETOR
         setLoading(true);
         setApiError('');
         try {
@@ -161,7 +157,6 @@ const Onboarding: React.FC = () => {
 
         <Card className="p-0 overflow-hidden border-0 shadow-xl shadow-slate-200/50">
           <div className="p-8 md:p-10">
-            {/* Error Display */}
             {apiError && (
               <div className="mb-6 bg-red-50 text-red-600 p-3 rounded-lg flex items-center gap-2 text-sm">
                 <AlertCircle size={16} /> {apiError}

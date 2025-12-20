@@ -1,69 +1,120 @@
-import React from 'react';
+import React, { Component, ReactNode, ErrorInfo } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import LandingPage from './src/pages/LandingPage';
-import Login from './src/pages/Login';
-import Register from './src/pages/Register';
-import Dashboard from './src/pages/Dashboard';
-import Companies from './src/pages/Companies';
-import Surveys from './src/pages/Surveys';
-import Settings from './src/pages/Settings';
-import Onboarding from './src/pages/Onboarding';
-import SectorDetail from './src/pages/SectorDetail';
-import Questionnaire from './src/pages/Questionnaire';
-import Report from './src/pages/Report';
-import DemoLogin from './src/pages/DemoLogin';
-import TestDb from './src/pages/TestDb';
-import { PaymentSuccess, PaymentCancel } from './src/pages/PaymentResult';
-import { AuthProvider, useAuth } from './src/context/AuthContext';
+import LandingPage from './pages/LandingPage';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import Dashboard from './pages/Dashboard';
+import Companies from './pages/Companies';
+import Surveys from './pages/Surveys';
+import Settings from './pages/Settings';
+import Onboarding from './pages/Onboarding';
+import SectorDetail from './pages/SectorDetail';
+import Questionnaire from './pages/Questionnaire';
+import Report from './pages/Report';
+import Reports from './pages/Reports';
+import DemoLogin from './pages/DemoLogin';
+import TestDb from './pages/TestDb';
+import { PaymentSuccess, PaymentCancel } from './pages/PaymentResult';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { AlertTriangle, RefreshCcw } from 'lucide-react';
 
-interface PrivateRouteProps {
-  children: React.ReactNode;
+interface EBProps {
+  children?: ReactNode;
 }
 
-const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
+interface EBState {
+  hasError: boolean;
+}
+
+// Fix: Using React.Component explicitly and property initializer for state to ensure TypeScript correctly recognizes state and props properties
+class ErrorBoundary extends React.Component<EBProps, EBState> {
+  // Fix: Initialize state using property initializer for better type inference in class components
+  state: EBState = { hasError: false };
+
+  static getDerivedStateFromError(_: Error): EBState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error("Erro Crítico NR ZEN:", error, info);
+  }
+
+  render() {
+    // Fix: this.state is now correctly typed as EBState via React.Component generic parameters
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center font-sans">
+          <div className="bg-white p-10 rounded-2xl shadow-2xl max-w-md border-t-8 border-red-500">
+            <AlertTriangle className="mx-auto text-red-500 mb-6" size={60} />
+            <h1 className="text-2xl font-bold text-slate-900 mb-4">Falha de Carregamento</h1>
+            <p className="text-slate-600 mb-8 text-sm leading-relaxed">
+              O sistema detectou um conflito de módulos. Isso geralmente acontece após atualizações e pode ser resolvido limpando o cache do navegador.
+            </p>
+            <button 
+              onClick={() => {
+                localStorage.clear();
+                window.location.reload();
+              }} 
+              className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+            >
+              <RefreshCcw size={18} /> Forçar Sincronização
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Fix: this.props is now correctly typed as EBProps via React.Component generic parameters
+    return this.props.children;
+  }
+}
+
+const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-500">Carregando aplicação...</div>;
-  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent"></div>
+      </div>
+    );
+  }
+
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          
-          {/* Payment Flow Routes */}
-          <Route path="/payment/success" element={<PaymentSuccess />} />
-          <Route path="/payment/cancel" element={<PaymentCancel />} />
-          
-          {/* App Routes (Protected) */}
-          <Route path="/app" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-          <Route path="/app/companies" element={<PrivateRoute><Companies /></PrivateRoute>} />
-          <Route path="/app/surveys" element={<PrivateRoute><Surveys /></PrivateRoute>} />
-          <Route path="/app/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
-          <Route path="/app/onboarding" element={<PrivateRoute><Onboarding /></PrivateRoute>} />
-          <Route path="/app/setor/:id" element={<PrivateRoute><SectorDetail /></PrivateRoute>} />
-          
-          {/* Demo/Public Flow */}
-          <Route path="/demo" element={<DemoLogin />} />
-          <Route path="/questionario" element={<Questionnaire />} />
-          <Route path="/questionario/:code" element={<Questionnaire />} />
-          
-          {/* Utilities */}
-          <Route path="/relatorio" element={<Report />} />
-          <Route path="/test-db" element={<TestDb />} />
-          
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/payment/success" element={<PaymentSuccess />} />
+            <Route path="/payment/cancel" element={<PaymentCancel />} />
+            <Route path="/app" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+            <Route path="/app/companies" element={<PrivateRoute><Companies /></PrivateRoute>} />
+            <Route path="/app/surveys" element={<PrivateRoute><Surveys /></PrivateRoute>} />
+            <Route path="/app/reports" element={<PrivateRoute><Reports /></PrivateRoute>} />
+            <Route path="/app/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+            <Route path="/app/onboarding" element={<PrivateRoute><Onboarding /></PrivateRoute>} />
+            <Route path="/app/setor/:id" element={<PrivateRoute><SectorDetail /></PrivateRoute>} />
+            <Route path="/demo" element={<DemoLogin />} />
+            <Route path="/questionario" element={<Questionnaire />} />
+            <Route path="/questionario/:code" element={<Questionnaire />} />
+            <Route path="/relatorio" element={<Report />} />
+            <Route path="/test-db" element={<TestDb />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 };
 
