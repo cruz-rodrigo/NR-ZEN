@@ -28,9 +28,13 @@ interface EBState {
   hasError: boolean;
 }
 
-// Fix: Using the directly imported 'Component' class to ensure 'this.props' is correctly typed and available
-class ErrorBoundary extends Component<EBProps, EBState> {
-  state: EBState = { hasError: false };
+// Fix: Using React.Component explicitly with a constructor to ensure 'this.props' is correctly typed.
+// This addresses the error where 'props' was not recognized on the ErrorBoundary type.
+class ErrorBoundary extends React.Component<EBProps, EBState> {
+  constructor(props: EBProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
 
   static getDerivedStateFromError(_: Error): EBState {
     return { hasError: true };
@@ -64,7 +68,7 @@ class ErrorBoundary extends Component<EBProps, EBState> {
       );
     }
 
-    // Fix: Accessing children from props which is now properly recognized by the Component generic
+    // Fix: Accessing children from props which is now properly recognized by the React.Component generic
     return this.props.children;
   }
 }
