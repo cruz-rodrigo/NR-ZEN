@@ -12,5 +12,5 @@ if (rootElement) {
     </React.StrictMode>
   );
 } else {
-  console.error("ERRO CRÍTICO: Div 'root' não encontrada no index.html");
+  console.error("ERRO CRÍTICO: Div 'root' não encontrada.");
 }

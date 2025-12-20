@@ -28,9 +28,8 @@ interface EBState {
   hasError: boolean;
 }
 
-// Fix: Using React.Component explicitly and property initializer for state to ensure TypeScript correctly recognizes state and props properties
-class ErrorBoundary extends React.Component<EBProps, EBState> {
-  // Fix: Initialize state using property initializer for better type inference in class components
+// Fix: Using the directly imported 'Component' class to ensure 'this.props' is correctly typed and available
+class ErrorBoundary extends Component<EBProps, EBState> {
   state: EBState = { hasError: false };
 
   static getDerivedStateFromError(_: Error): EBState {
@@ -42,7 +41,6 @@ class ErrorBoundary extends React.Component<EBProps, EBState> {
   }
 
   render() {
-    // Fix: this.state is now correctly typed as EBState via React.Component generic parameters
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center font-sans">
@@ -50,7 +48,7 @@ class ErrorBoundary extends React.Component<EBProps, EBState> {
             <AlertTriangle className="mx-auto text-red-500 mb-6" size={60} />
             <h1 className="text-2xl font-bold text-slate-900 mb-4">Falha de Carregamento</h1>
             <p className="text-slate-600 mb-8 text-sm leading-relaxed">
-              O sistema detectou um conflito de módulos. Isso geralmente acontece após atualizações e pode ser resolvido limpando o cache do navegador.
+              O sistema detectou um conflito de módulos ou arquivo inexistente. Tente recarregar a página para sincronizar os dados.
             </p>
             <button 
               onClick={() => {
@@ -66,7 +64,7 @@ class ErrorBoundary extends React.Component<EBProps, EBState> {
       );
     }
 
-    // Fix: this.props is now correctly typed as EBProps via React.Component generic parameters
+    // Fix: Accessing children from props which is now properly recognized by the Component generic
     return this.props.children;
   }
 }

@@ -43,7 +43,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans">
       <div className="mb-8 hover:opacity-80 transition-opacity">
         <Link to="/"><Logo size="lg" /></Link>
       </div>
