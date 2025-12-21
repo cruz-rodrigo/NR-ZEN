@@ -32,9 +32,12 @@ interface EBState {
   error?: Error;
 }
 
-// Fix: Use React.Component to ensure props are correctly identified by TypeScript
-class ErrorBoundary extends React.Component<EBProps, EBState> {
-  public state: EBState = { hasError: false };
+// Fix: Use imported Component and explicit constructor to ensure props are correctly identified by TypeScript for inheritance
+class ErrorBoundary extends Component<EBProps, EBState> {
+  constructor(props: EBProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
 
   static getDerivedStateFromError(error: Error): EBState {
     return { hasError: true, error };
@@ -67,6 +70,7 @@ class ErrorBoundary extends React.Component<EBProps, EBState> {
         </div>
       );
     }
+    // Fix: Property 'props' is now correctly inherited from Component by using explicit named import and inheritance
     return this.props.children;
   }
 }

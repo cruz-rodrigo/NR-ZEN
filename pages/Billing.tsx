@@ -32,16 +32,25 @@ const Billing: React.FC = () => {
   const handleSubscribe = async (planId: string) => {
     setLoadingPlan(planId);
     setError(null);
+    
     try {
       const response = await apiCall('/api/checkout/create-session', {
         method: 'POST',
         body: JSON.stringify({ plan: planId })
       });
+      
       if (response?.url) {
         window.location.href = response.url;
+      } else {
+        throw new Error("URL de checkout não retornada pela API.");
       }
     } catch (err: any) {
-      setError(err.message || "Não foi possível iniciar o pagamento.");
+      // LOG DE DIAGNÓSTICO NO FRONTEND
+      console.group("Billing Error Diagnostic");
+      console.error("Payload do Erro:", err);
+      console.groupEnd();
+
+      setError("Não foi possível iniciar o processo de checkout. Verifique sua conexão ou tente novamente mais tarde.");
       setLoadingPlan(null);
     }
   };
@@ -82,8 +91,8 @@ const Billing: React.FC = () => {
       </Card>
 
       {error && (
-        <div className="mb-8 bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl flex items-center gap-3">
-          <AlertCircle size={20} />
+        <div className="mb-8 bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl flex items-center gap-3 animate-fade-in-down">
+          <AlertCircle size={20} className="shrink-0" />
           <p className="text-sm font-medium">{error}</p>
         </div>
       )}
