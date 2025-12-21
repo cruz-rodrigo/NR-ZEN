@@ -1,7 +1,9 @@
+
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Building2, FileText, Settings, LogOut, ClipboardList } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Building2, FileText, Settings, LogOut, ClipboardList, CreditCard } from 'lucide-react';
 import { LOGO_IMAGE_URL } from '../constants';
+import { useAuth } from '../context/AuthContext';
 
 export const Logo: React.FC<{ className?: string, light?: boolean, size?: 'sm' | 'md' | 'lg' }> = ({ 
   className = "", 
@@ -22,37 +24,17 @@ export const Logo: React.FC<{ className?: string, light?: boolean, size?: 'sm' |
   const iconSize = size === 'sm' ? 24 : size === 'lg' ? 40 : 32;
   const textSize = size === 'sm' ? 'text-lg' : size === 'lg' ? 'text-4xl' : 'text-2xl';
   
-  // UNIFIED COLORS: Blue-600 (#2563EB)
   const nrColor = light ? "text-white" : "text-slate-900"; 
   const zenColor = light ? "text-blue-300" : "text-blue-600";
-  const iconColor = light ? "#93C5FD" : "#2563EB"; // Blue 300 / Blue 600
+  const iconColor = light ? "#93C5FD" : "#2563EB";
 
   return (
     <div className={`flex items-center gap-2.5 select-none ${className}`}>
-      <svg 
-        width={iconSize} 
-        height={iconSize} 
-        viewBox="0 0 32 32" 
-        fill="none" 
-        xmlns="http://www.w3.org/2000/svg"
-        className="flex-shrink-0"
-      >
+      <svg width={iconSize} height={iconSize} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="16" cy="16" r="15" stroke={iconColor} strokeWidth="2.5" />
-        <path 
-          d="M9.5 16L13.5 20L23 10.5" 
-          stroke={iconColor} 
-          strokeWidth="3" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-        />
-        <path 
-          d="M7 23C10 21 13 25 16 25C19 25 22 21 25 23" 
-          stroke={iconColor} 
-          strokeWidth="2" 
-          strokeLinecap="round"
-        />
+        <path d="M9.5 16L13.5 20L23 10.5" stroke={iconColor} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M7 23C10 21 13 25 16 25C19 25 22 21 25 23" stroke={iconColor} strokeWidth="2" strokeLinecap="round" />
       </svg>
-
       <div className={`font-heading tracking-tight leading-none ${textSize}`}>
         <span className={`font-extrabold ${nrColor}`}>NR</span>
         <span className={`font-light ml-1 ${zenColor}`}>ZEN</span>
@@ -67,12 +49,15 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout, user } = useAuth();
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/app' },
     { icon: Building2, label: 'Empresas', path: '/app/companies' },
     { icon: ClipboardList, label: 'Questionários', path: '/app/surveys' },
     { icon: FileText, label: 'Relatórios', path: '/app/reports' },
+    { icon: CreditCard, label: 'Assinatura', path: '/app/billing' },
     { icon: Settings, label: 'Configurações', path: '/app/settings' },
   ];
 
@@ -88,12 +73,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1.5">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path || (item.path !== '/app' && location.pathname.startsWith(item.path));
-            
             return (
               <Link
                 key={item.label}
                 to={item.path}
-                // UNIFIED ACTIVE STATE: Blue-50 background, Blue-700 text
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                   isActive 
                     ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100' 
@@ -108,7 +91,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </nav>
 
         <div className="p-4 border-t border-slate-100">
-          <button className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+          <div className="mb-4 px-4 flex items-center gap-3">
+             <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold">
+               {user?.name?.substring(0,2).toUpperCase()}
+             </div>
+             <div className="truncate">
+               <p className="text-xs font-bold text-slate-800 truncate">{user?.name}</p>
+               <p className="text-[10px] text-blue-600 font-medium capitalize">{user?.plan_tier}</p>
+             </div>
+          </div>
+          <button onClick={logout} className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
             <LogOut size={20} />
             Sair
           </button>

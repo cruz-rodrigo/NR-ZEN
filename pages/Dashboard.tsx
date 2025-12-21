@@ -1,9 +1,12 @@
+
+
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import Card from '../components/Card';
 import Button from '../components/Button';
-import { useNavigate } from 'react-router-dom';
-import { Building2, Users, AlertTriangle, Activity, Plus, ArrowRight, RefreshCcw } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+// Added Zap to the imports
+import { Building2, Users, AlertTriangle, Activity, Plus, RefreshCcw, Lock, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Company } from '../types';
 
@@ -16,11 +19,12 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const isFreePlan = user?.plan_tier === 'free';
+  const hasReachedLimit = isFreePlan && stats.total >= 1;
+
   const DEMO_STATS = { total: 12, activeSectors: 34, responses: 892, riskHighPercent: 18 };
   const DEMO_COMPANIES: Company[] = [
     { id: '1', name: "Indústrias Metalúrgicas Beta", cnpj: "12.345.678/0001-99", sectorsCount: 8, sectorsActive: 8, lastCollection: "10/10/2025", status: "active" },
-    { id: '2', name: "Transportadora Veloz", cnpj: "98.765.432/0001-11", sectorsCount: 4, sectorsActive: 2, lastCollection: "05/10/2025", status: "active" },
-    { id: '3', name: "Call Center Solutions", cnpj: "11.222.333/0001-00", sectorsCount: 12, sectorsActive: 12, lastCollection: "12/10/2025", status: "active" },
   ];
 
   const fetchData = async () => {
@@ -70,17 +74,39 @@ const Dashboard: React.FC = () => {
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-heading font-bold text-slate-800 tracking-tight">Painel de Controle</h1>
-          <p className="text-slate-500 mt-1">Bem-vindo, <span className="font-semibold text-slate-700">{user?.name?.split(' ')[0] || 'Consultor'}</span>. Aqui está o resumo da sua carteira.</p>
+          <p className="text-slate-500 mt-1">Bem-vindo, <span className="font-semibold text-slate-700">{user?.name?.split(' ')[0] || 'Consultor'}</span>.</p>
         </div>
         <div className="flex items-center gap-3">
            <Button variant="secondary" size="sm" onClick={fetchData} className="hidden md:flex">
              <RefreshCcw size={16} className="mr-2"/> Atualizar
            </Button>
-           <Button size="sm" onClick={() => navigate('/app/onboarding')} className="shadow-lg shadow-blue-600/20">
-             <Plus size={16} className="mr-1"/> Nova Empresa
-           </Button>
+           
+           {hasReachedLimit ? (
+             <Button variant="dark" size="sm" onClick={() => navigate('/app/billing')} className="bg-slate-800 text-white border-none shadow-lg">
+                <Lock size={16} className="mr-2 text-amber-500"/> Fazer Upgrade
+             </Button>
+           ) : (
+             <Button size="sm" onClick={() => navigate('/app/onboarding')} className="shadow-lg shadow-blue-600/20">
+               <Plus size={16} className="mr-1"/> Nova Empresa
+             </Button>
+           )}
         </div>
       </header>
+
+      {isFreePlan && hasReachedLimit && (
+        <div className="bg-blue-600 text-white p-4 rounded-xl mb-8 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl shadow-blue-600/20">
+          <div className="flex items-center gap-3">
+            <div className="bg-white/20 p-2 rounded-lg"><Zap size={20} className="text-amber-300 fill-amber-300"/></div>
+            <div>
+              <p className="font-bold">Limite do Plano Free atingido (1 empresa).</p>
+              <p className="text-xs text-blue-100 opacity-90">Assine o plano Consultor para cadastrar empresas ilimitadas e acessar relatórios completos.</p>
+            </div>
+          </div>
+          <Link to="/app/billing" className="bg-white text-blue-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-50 transition-colors shrink-0">
+            Conhecer Planos
+          </Link>
+        </div>
+      )}
 
       {error && (
         <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl mb-8 flex items-center justify-between">
@@ -92,7 +118,6 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* KPI Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         {[
           { label: "Empresas", value: stats.total, icon: Building2, color: "blue" },
@@ -114,10 +139,9 @@ const Dashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* Client List */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center">
-          <h3 className="font-bold text-slate-800 text-lg">Carteira de Clientes Ativos</h3>
+          <h3 className="font-bold text-slate-800 text-lg">Suas Empresas</h3>
           <span className="text-xs font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-full">{companies.length} registros</span>
         </div>
         
@@ -157,20 +181,16 @@ const Dashboard: React.FC = () => {
                     </td>
                     <td className="px-8 py-5">
                       <p className="text-xs font-mono text-slate-600">{company.cnpj}</p>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase">CNPJ REGULAR</span>
                     </td>
                     <td className="px-8 py-5">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-slate-700">{company.sectorsActive || 0}</span>
-                        <span className="text-xs text-slate-400">setores ativos</span>
-                      </div>
-                      <div className="w-24 h-1.5 bg-slate-100 rounded-full mt-1.5 overflow-hidden">
-                         <div className="h-full bg-blue-500 rounded-full" style={{ width: '60%' }}></div>
+                        <span className="text-xs text-slate-400">setores</span>
                       </div>
                     </td>
                     <td className="px-8 py-5 text-right">
-                      <Button variant="ghost" size="sm" onClick={() => navigate('/app/companies')} className="text-blue-600 font-bold group-hover:translate-x-1 transition-transform">
-                        Gerenciar <ArrowRight size={14} className="ml-1.5" />
+                      <Button variant="ghost" size="sm" onClick={() => navigate(`/app/setor/${company.id}`)} className="text-blue-600 font-bold group-hover:translate-x-1 transition-transform">
+                        Detalhes
                       </Button>
                     </td>
                   </tr>

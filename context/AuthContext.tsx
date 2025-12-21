@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserSession } from '../types';
 
@@ -11,6 +12,7 @@ interface AuthContextType {
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   apiCall: (endpoint: string, options?: RequestInit) => Promise<any>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,6 +39,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     setIsLoading(false);
   }, []);
+
+  const refreshUser = async () => {
+    if (!token || token === 'demo-token-jwt') return;
+    try {
+      // Endpoint que retorna o perfil atualizado do banco
+      const data = await apiCall('/api/auth/me'); 
+      if (data && data.user) {
+        setUser(data.user);
+        localStorage.setItem('nrzen_user', JSON.stringify(data.user));
+      }
+    } catch (e) {
+      console.error("Erro ao atualizar dados do usuário", e);
+    }
+  };
 
   const loginDemo = () => {
     const mockUser: UserSession = {
@@ -100,13 +116,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const res = await fetch(endpoint, { ...options, headers });
     if (res.status === 204) return null;
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Erro na requisição');
+    
+    const contentType = res.headers.get("content-type");
+    const data = contentType && contentType.includes("application/json") ? await res.json() : null;
+    
+    if (!res.ok) throw new Error(data?.error || 'Erro na requisição');
     return data;
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, isLoading, login, loginDemo, register, logout, apiCall }}>
+    <AuthContext.Provider value={{ 
+      user, token, isAuthenticated: !!token, isLoading, 
+      login, loginDemo, register, logout, apiCall, refreshUser 
+    }}>
       {children}
     </AuthContext.Provider>
   );

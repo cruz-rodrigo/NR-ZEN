@@ -1,4 +1,5 @@
 
+
 import React, { ReactNode, ErrorInfo, Component } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
@@ -10,6 +11,7 @@ import Dashboard from './pages/Dashboard';
 import Companies from './pages/Companies';
 import Surveys from './pages/Surveys';
 import Settings from './pages/Settings';
+import Billing from './pages/Billing';
 import Onboarding from './pages/Onboarding';
 import SectorDetail from './pages/SectorDetail';
 import Questionnaire from './pages/Questionnaire';
@@ -30,12 +32,8 @@ interface EBState {
   error?: Error;
 }
 
-/**
- * Fixed ErrorBoundary by explicitly using Component from named imports 
- * to ensure correct generic inheritance and visibility of this.props.
- */
-class ErrorBoundary extends Component<EBProps, EBState> {
-  // Initialize state directly as a class property
+// Fix: Use React.Component to ensure props are correctly identified by TypeScript
+class ErrorBoundary extends React.Component<EBProps, EBState> {
   public state: EBState = { hasError: false };
 
   static getDerivedStateFromError(error: Error): EBState {
@@ -69,8 +67,6 @@ class ErrorBoundary extends Component<EBProps, EBState> {
         </div>
       );
     }
-    
-    // Correctly accessing props inherited from Component<EBProps, EBState>
     return this.props.children;
   }
 }
@@ -100,15 +96,20 @@ const App: React.FC = () => {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            
+            {/* Rota de retorno do Stripe */}
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/payment/cancel" element={<PaymentCancel />} />
+            
             <Route path="/app" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
             <Route path="/app/companies" element={<PrivateRoute><Companies /></PrivateRoute>} />
             <Route path="/app/surveys" element={<PrivateRoute><Surveys /></PrivateRoute>} />
             <Route path="/app/reports" element={<PrivateRoute><Reports /></PrivateRoute>} />
             <Route path="/app/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+            <Route path="/app/billing" element={<PrivateRoute><Billing /></PrivateRoute>} />
             <Route path="/app/onboarding" element={<PrivateRoute><Onboarding /></PrivateRoute>} />
             <Route path="/app/setor/:id" element={<PrivateRoute><SectorDetail /></PrivateRoute>} />
+            
             <Route path="/demo" element={<DemoLogin />} />
             <Route path="/questionario" element={<Questionnaire />} />
             <Route path="/questionario/:code" element={<Questionnaire />} />
