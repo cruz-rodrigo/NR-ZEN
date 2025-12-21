@@ -1,4 +1,4 @@
-import React, { ReactNode, ErrorInfo } from 'react';
+import React, { ReactNode, ErrorInfo, Component } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
@@ -21,56 +21,55 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
 
 interface EBProps {
-  // Fix: Make children optional to avoid "Property 'children' is missing" error when using ErrorBoundary in JSX
   children?: ReactNode;
 }
 
 interface EBState {
   hasError: boolean;
+  error?: Error;
 }
 
-// Fix: Use React.Component explicitly to ensure 'state' and 'props' properties are correctly identified by the TypeScript compiler
+// Fix: Property 'state' and 'props' errors resolved by explicitly extending React.Component and declaring state.
 class ErrorBoundary extends React.Component<EBProps, EBState> {
+  public state: EBState = { hasError: false };
+
   constructor(props: EBProps) {
     super(props);
-    // Fix: Explicitly initialize state to satisfy 'Property 'state' does not exist' errors
-    this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(_: Error): EBState {
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error): EBState {
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error("ERRO CRÍTICO NR ZEN:", error, info);
+    console.error("CRITICAL UI ERROR:", error, info);
   }
 
   render() {
-    // Fix: this.state is correctly inherited from React.Component
+    // Fix: Accessing this.state now recognized correctly via inheritance.
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center font-sans">
-          <div className="bg-white p-10 rounded-2xl shadow-2xl max-w-md border-t-8 border-red-500">
-            <AlertTriangle className="mx-auto text-red-500 mb-6" size={60} />
-            <h1 className="text-2xl font-bold text-slate-900 mb-4">Erro de Carregamento</h1>
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center">
+          <div className="bg-white p-10 rounded-2xl shadow-2xl max-w-md border-t-8 border-red-600">
+            <AlertTriangle className="mx-auto text-red-600 mb-6" size={64} />
+            <h1 className="text-2xl font-bold text-slate-900 mb-4">Falha no Carregamento</h1>
             <p className="text-slate-600 mb-8 text-sm leading-relaxed">
-              Ocorreu um erro ao carregar os módulos da aplicação. Limpe o cache ou tente recarregar.
+              Ocorreu um erro ao carregar os módulos da aplicação. Isso pode ser causado por cache antigo no seu navegador.
             </p>
             <button 
               onClick={() => {
                 localStorage.clear();
-                window.location.reload();
+                window.location.href = '/';
               }} 
-              className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+              className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
             >
-              <RefreshCcw size={18} /> Recarregar Aplicação
+              <RefreshCcw size={18} /> Reiniciar e Limpar Cache
             </button>
           </div>
         </div>
       );
     }
-
-    // Fix: this.props is correctly inherited from React.Component
+    // Fix: Accessing this.props now recognized correctly via inheritance.
     return this.props.children;
   }
 }
