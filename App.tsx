@@ -1,4 +1,5 @@
-import React, { ReactNode, ErrorInfo } from 'react';
+
+import React, { ReactNode, ErrorInfo, Component } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
@@ -29,23 +30,24 @@ interface EBState {
   error?: Error;
 }
 
-// Fix: Use React.Component and explicitly define constructor to ensure props are correctly recognized in the type system
+// Fix: Use React.Component explicitly and remove override keywords to resolve inheritance and state/props visibility in TypeScript
 class ErrorBoundary extends React.Component<EBProps, EBState> {
-  constructor(props: EBProps) {
-    super(props);
-    this.state = { hasError: false };
-  }
+  // Initialize state directly as a class property
+  // Fix: Removed 'override' as inheritance resolution might be failing in current compiler context
+  public state: EBState = { hasError: false };
 
   static getDerivedStateFromError(error: Error): EBState {
     return { hasError: true, error };
   }
 
+  // Fix: Removed 'override' as inheritance resolution might be failing in current compiler context
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error("CRITICAL UI ERROR:", error, info);
   }
 
+  // Fix: Removed 'override' as inheritance resolution might be failing in current compiler context
   render() {
-    // Accessing this.state is correctly typed via inheritance from React.Component
+    // Accessing this.state is correctly typed via inheritance from Component
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center">
@@ -68,7 +70,7 @@ class ErrorBoundary extends React.Component<EBProps, EBState> {
         </div>
       );
     }
-    // Fix for line 71: Using this.props.children from correctly inherited React.Component
+    // Using this.props.children from correctly inherited React Component
     return this.props.children;
   }
 }
