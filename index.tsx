@@ -11,6 +11,4 @@ if (rootElement) {
       <App />
     </React.StrictMode>
   );
-} else {
-  console.error("ERRO CRÍTICO: Div 'root' não encontrada.");
 }

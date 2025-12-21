@@ -1,4 +1,4 @@
-import React, { Component, ReactNode, ErrorInfo } from 'react';
+import React, { ReactNode, ErrorInfo } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
@@ -21,6 +21,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
 
 interface EBProps {
+  // Fix: Make children optional to avoid "Property 'children' is missing" error when using ErrorBoundary in JSX
   children?: ReactNode;
 }
 
@@ -28,11 +29,11 @@ interface EBState {
   hasError: boolean;
 }
 
-// Fix: Using React.Component explicitly with a constructor to ensure 'this.props' is correctly typed.
-// This addresses the error where 'props' was not recognized on the ErrorBoundary type.
+// Fix: Use React.Component explicitly to ensure 'state' and 'props' properties are correctly identified by the TypeScript compiler
 class ErrorBoundary extends React.Component<EBProps, EBState> {
   constructor(props: EBProps) {
     super(props);
+    // Fix: Explicitly initialize state to satisfy 'Property 'state' does not exist' errors
     this.state = { hasError: false };
   }
 
@@ -41,18 +42,19 @@ class ErrorBoundary extends React.Component<EBProps, EBState> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error("Erro Crítico NR ZEN:", error, info);
+    console.error("ERRO CRÍTICO NR ZEN:", error, info);
   }
 
   render() {
+    // Fix: this.state is correctly inherited from React.Component
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center font-sans">
           <div className="bg-white p-10 rounded-2xl shadow-2xl max-w-md border-t-8 border-red-500">
             <AlertTriangle className="mx-auto text-red-500 mb-6" size={60} />
-            <h1 className="text-2xl font-bold text-slate-900 mb-4">Falha de Carregamento</h1>
+            <h1 className="text-2xl font-bold text-slate-900 mb-4">Erro de Carregamento</h1>
             <p className="text-slate-600 mb-8 text-sm leading-relaxed">
-              O sistema detectou um conflito de módulos ou arquivo inexistente. Tente recarregar a página para sincronizar os dados.
+              Ocorreu um erro ao carregar os módulos da aplicação. Limpe o cache ou tente recarregar.
             </p>
             <button 
               onClick={() => {
@@ -61,14 +63,14 @@ class ErrorBoundary extends React.Component<EBProps, EBState> {
               }} 
               className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
             >
-              <RefreshCcw size={18} /> Forçar Sincronização
+              <RefreshCcw size={18} /> Recarregar Aplicação
             </button>
           </div>
         </div>
       );
     }
 
-    // Fix: Accessing children from props which is now properly recognized by the React.Component generic
+    // Fix: this.props is correctly inherited from React.Component
     return this.props.children;
   }
 }
