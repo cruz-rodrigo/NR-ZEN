@@ -1,6 +1,4 @@
-
-
-import React, { ReactNode, ErrorInfo, Component } from 'react';
+import React, { ReactNode, ErrorInfo } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
@@ -31,9 +29,12 @@ interface EBState {
   error?: Error;
 }
 
-// Fix: Inherit from Component directly to ensure TypeScript correctly identifies props and state via standard inheritance
-class ErrorBoundary extends Component<EBProps, EBState> {
-  public state: EBState = { hasError: false };
+// Fix: Use React.Component and explicitly define constructor to ensure props are correctly recognized in the type system
+class ErrorBoundary extends React.Component<EBProps, EBState> {
+  constructor(props: EBProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
 
   static getDerivedStateFromError(error: Error): EBState {
     return { hasError: true, error };
@@ -44,7 +45,7 @@ class ErrorBoundary extends Component<EBProps, EBState> {
   }
 
   render() {
-    // Fix: Accessing this.state now recognized correctly via inheritance from Component
+    // Accessing this.state is correctly typed via inheritance from React.Component
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center">
@@ -67,7 +68,7 @@ class ErrorBoundary extends Component<EBProps, EBState> {
         </div>
       );
     }
-    // Fix: line 74 - Accessing this.props now correctly mapped from generic arguments in Component
+    // Fix for line 71: Using this.props.children from correctly inherited React.Component
     return this.props.children;
   }
 }

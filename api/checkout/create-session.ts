@@ -1,65 +1,95 @@
+
 import type { VercelResponse } from '@vercel/node';
 import { requireAuth, AuthedRequest } from '../_authMiddleware.js';
 import { stripe } from '../_stripeClient.js';
 
+/**
+ * Mapeamento de Planos e Price IDs do Stripe (Placeholders)
+ * Em produção, substitua pelos IDs reais (ex: price_123...)
+ */
+const PLANS_ALLOWLIST: Record<string, Record<string, string>> = {
+  'consultant': {
+    'monthly': 'price_placeholder_consultant_monthly',
+    'yearly': 'price_placeholder_consultant_yearly',
+  },
+  'business': {
+    'monthly': 'price_placeholder_business_monthly',
+    'yearly': 'price_placeholder_business_yearly',
+  },
+  'corporate': {
+    'monthly': 'price_placeholder_corporate_monthly',
+    'yearly': 'price_placeholder_corporate_yearly',
+  }
+};
+
+/**
+ * Request: POST /api/checkout/create-session
+ * Body: { "plan": "consultant" | "business" | "corporate", "billingCycle": "monthly" | "yearly" }
+ * Header: Authorization: Bearer <JWT>
+ * 
+ * Response: { "url": "https://checkout.stripe.com/..." }
+ */
 export default requireAuth(async function handler(req: AuthedRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { plan, billingCycle } = req.body;
-  const user = req.user!; 
+  // Validação de Configuração em Produção
+  if (process.env.NODE_ENV === 'production' && !process.env.STRIPE_SECRET_KEY) {
+    console.error("STRIPE_SECRET_KEY não encontrada no ambiente de produção.");
+    return res.status(500).json({ error: "Erro de configuração: Serviço de pagamento indisponível." });
+  }
 
-  // URL base para redirecionamento após o pagamento
-  const SITE_URL = process.env.VERCEL_URL 
-    ? `https://${process.env.VERCEL_URL}/#` 
-    : 'http://localhost:5173/#';
+  const { plan, billingCycle = 'monthly' } = req.body;
+  const user = req.user!; // Injetado pelo middleware requireAuth
+
+  // 1. Validar Plano e Ciclo contra Allowlist
+  const planConfig = PLANS_ALLOWLIST[plan as string];
+  const priceId = planConfig ? planConfig[billingCycle as string] : null;
+
+  if (!priceId) {
+    return res.status(400).json({ 
+      error: 'Plano ou ciclo de faturamento inválido.',
+      received: { plan, billingCycle }
+    });
+  }
+
+  // 2. Determinar URL de retorno (Origin)
+  const protocol = req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+  const host = req.headers.host || 'localhost:5173';
+  const origin = `${protocol}://${host}/#`;
 
   try {
-    // Mapeamento de preços (Valores em centavos)
-    const pricesMock: any = {
-      'consultant': { monthly: 19900, yearly: 199000 },
-      'business': { monthly: 59700, yearly: 597000 },
-      'corporate': { monthly: 89900, yearly: 899000 },
-    };
-    
-    const safePlan = String(plan || 'consultant');
-    const safeCycle = String(billingCycle || 'monthly');
-    const amount = pricesMock[safePlan]?.[safeCycle] || 19900;
-
+    // 3. Criar Sessão de Checkout no Stripe
     const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
       payment_method_types: ['card', 'boleto'],
+      success_url: `${origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/payment/cancel`,
       line_items: [
         {
-          price_data: {
-            currency: 'brl',
-            product_data: {
-              name: `NR ZEN - Plano ${safePlan.charAt(0).toUpperCase() + safePlan.slice(1)}`,
-              description: `Assinatura ${safeCycle === 'monthly' ? 'Mensal' : 'Anual'} da plataforma.`,
-            },
-            unit_amount: amount,
-            recurring: {
-              interval: (safeCycle === 'monthly' ? 'month' : 'year') as 'month' | 'year',
-            },
-          },
+          price: priceId,
           quantity: 1,
         }
       ],
-      mode: 'subscription',
-      success_url: `${SITE_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${SITE_URL}/payment/cancel`,
       customer_email: user.email,
       metadata: {
-        userId: String(user.id),
-        plan: safePlan,
-        billingCycle: safeCycle
+        userId: user.id,
+        planSlug: plan as string,
+        billingCycle: billingCycle as string
       },
     });
 
+    // 4. Retornar apenas a URL da sessão
     return res.status(200).json({ url: session.url });
 
   } catch (err: any) {
     console.error("Stripe Checkout Error:", err);
-    return res.status(500).json({ error: "Erro ao processar checkout. Tente novamente." });
+    
+    // Retorna detalhes apenas em desenvolvimento
+    return res.status(500).json({ 
+      error: "Não foi possível iniciar o processo de checkout.",
+      message: process.env.NODE_ENV === 'development' ? err.message : 'Erro interno no gateway de pagamento.'
+    });
   }
 });
