@@ -30,24 +30,23 @@ interface EBState {
   error?: Error;
 }
 
-// Fix: Use React.Component explicitly and remove override keywords to resolve inheritance and state/props visibility in TypeScript
-class ErrorBoundary extends React.Component<EBProps, EBState> {
+/**
+ * Fixed ErrorBoundary by explicitly using Component from named imports 
+ * to ensure correct generic inheritance and visibility of this.props.
+ */
+class ErrorBoundary extends Component<EBProps, EBState> {
   // Initialize state directly as a class property
-  // Fix: Removed 'override' as inheritance resolution might be failing in current compiler context
   public state: EBState = { hasError: false };
 
   static getDerivedStateFromError(error: Error): EBState {
     return { hasError: true, error };
   }
 
-  // Fix: Removed 'override' as inheritance resolution might be failing in current compiler context
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error("CRITICAL UI ERROR:", error, info);
   }
 
-  // Fix: Removed 'override' as inheritance resolution might be failing in current compiler context
   render() {
-    // Accessing this.state is correctly typed via inheritance from Component
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center">
@@ -70,7 +69,8 @@ class ErrorBoundary extends React.Component<EBProps, EBState> {
         </div>
       );
     }
-    // Using this.props.children from correctly inherited React Component
+    
+    // Correctly accessing props inherited from Component<EBProps, EBState>
     return this.props.children;
   }
 }

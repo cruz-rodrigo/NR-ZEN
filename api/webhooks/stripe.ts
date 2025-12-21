@@ -1,70 +1,100 @@
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { stripe } from '../_stripeClient.js';
-import { supabaseServerClient } from '../_supabaseServer.js';
+import { checkDbConnection } from '../_supabaseServer.js';
 import { Buffer } from 'buffer';
 
+/**
+ * IMPORTANTE: Desativamos o bodyParser do Vercel para poder ler o corpo bruto (Raw Body).
+ * Isso é obrigatório para que a verificação de assinatura do Stripe funcione.
+ */
 export const config = {
   api: {
     bodyParser: false,
   },
 };
 
-const buffer = async (readable: any) => {
+/**
+ * Helper para converter o stream da requisição em um Buffer completo.
+ */
+async function getRawBody(readable: any): Promise<Buffer> {
   const chunks = [];
   for await (const chunk of readable) {
     chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
   }
   return Buffer.concat(chunks);
-};
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).send('Method Not Allowed');
+    return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
-  const signature = req.headers['stripe-signature'] as string;
+  const sig = req.headers['stripe-signature'];
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  if (!sig || !webhookSecret) {
+    console.error("[WEBHOOK ERROR] stripe-signature ou STRIPE_WEBHOOK_SECRET ausentes.");
+    return res.status(400).send('Webhook Error: Missing signature/secret');
+  }
 
   let event;
 
   try {
-    const buf = await buffer(req);
-    
-    if (STRIPE_WEBHOOK_SECRET && signature) {
-      event = stripe.webhooks.constructEvent(buf, signature, STRIPE_WEBHOOK_SECRET);
-    } else {
-      // Fallback para desenvolvimento local sem webhook secret configurado
-      event = JSON.parse(buf.toString());
-      console.warn("⚠️ Webhook executado sem verificação de assinatura (Secret ausente).");
-    }
+    const rawBody = await getRawBody(req);
+    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
   } catch (err: any) {
-    console.error(`⚠️ Webhook signature failed: ${err.message}`);
+    console.error(`[WEBHOOK ERROR] Falha na validação da assinatura: ${err.message}`);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
+  console.log(`[STRIPE WEBHOOK] Evento recebido: ${event.type}`);
+
   try {
+    const supabase = checkDbConnection();
+
     switch (event.type) {
-      case 'checkout.session.completed':
+      case 'checkout.session.completed': {
         const session = event.data.object as any;
+        
+        // Extraímos os metadados injetados no endpoint de checkout
         const userId = session.metadata?.userId;
-        const plan = session.metadata?.plan;
+        const planSlug = session.metadata?.planSlug;
 
-        if (userId && plan && supabaseServerClient) {
-          await supabaseServerClient
-            .from('users')
-            .update({ plan_tier: plan })
-            .eq('id', userId);
-          console.log(`✅ Usuário ${userId} atualizado para o plano ${plan}`);
+        if (!userId || !planSlug) {
+          console.error("[WEBHOOK ERROR] Metadados userId ou planSlug ausentes na sessão.");
+          return res.status(400).json({ error: 'Missing metadata' });
         }
-        break;
 
+        console.log(`[PROVISIONING] Atualizando plano para usuário: ${userId} -> ${planSlug}`);
+
+        // Atualização no Supabase
+        const { error } = await supabase
+          .from('users')
+          .update({ 
+            plan_tier: planSlug,
+            // updated_at: new Date().toISOString() // Descomente se sua tabela tiver esta coluna
+          })
+          .eq('id', userId);
+
+        if (error) {
+          console.error(`[DB ERROR] Falha ao atualizar plano: ${error.message}`);
+          throw error;
+        }
+
+        console.log(`✅ [SUCCESS] Usuário ${userId} agora é ${planSlug}`);
+        break;
+      }
+
+      // Você pode adicionar outros eventos aqui no futuro (ex: invoice.payment_failed)
       default:
-        console.log(`ℹ️ Evento Stripe não tratado: ${event.type}`);
+        console.log(`[STRIPE WEBHOOK] Evento ignorado: ${event.type}`);
     }
 
     return res.status(200).json({ received: true });
+
   } catch (err: any) {
-    console.error(`❌ Erro no processamento do webhook: ${err.message}`);
-    return res.status(500).json({ error: 'Webhook handler failed' });
+    console.error(`[WEBHOOK CRITICAL ERROR] ${err.message}`);
+    return res.status(500).json({ error: 'Webhook processing failed' });
   }
 }
