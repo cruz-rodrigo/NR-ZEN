@@ -1,3 +1,5 @@
+
+
 import React, { ReactNode, ErrorInfo, Component } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
@@ -29,13 +31,9 @@ interface EBState {
   error?: Error;
 }
 
-// Fix: Property 'state' and 'props' errors resolved by explicitly extending React.Component and declaring state.
-class ErrorBoundary extends React.Component<EBProps, EBState> {
+// Fix: Inherit from Component directly to ensure TypeScript correctly identifies props and state via standard inheritance
+class ErrorBoundary extends Component<EBProps, EBState> {
   public state: EBState = { hasError: false };
-
-  constructor(props: EBProps) {
-    super(props);
-  }
 
   static getDerivedStateFromError(error: Error): EBState {
     return { hasError: true, error };
@@ -46,7 +44,7 @@ class ErrorBoundary extends React.Component<EBProps, EBState> {
   }
 
   render() {
-    // Fix: Accessing this.state now recognized correctly via inheritance.
+    // Fix: Accessing this.state now recognized correctly via inheritance from Component
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center">
@@ -69,7 +67,7 @@ class ErrorBoundary extends React.Component<EBProps, EBState> {
         </div>
       );
     }
-    // Fix: Accessing this.props now recognized correctly via inheritance.
+    // Fix: line 74 - Accessing this.props now correctly mapped from generic arguments in Component
     return this.props.children;
   }
 }
