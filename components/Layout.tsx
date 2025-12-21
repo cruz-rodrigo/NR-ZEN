@@ -61,6 +61,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { icon: Settings, label: 'Configurações', path: '/app/settings' },
   ];
 
+  const getTierBadge = (tier?: string) => {
+    switch(tier) {
+      case 'trial': return 'Avaliação';
+      case 'consultant': return 'Consultor';
+      case 'business': return 'Business';
+      default: return 'Visitante';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-row font-sans">
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col fixed h-full z-10 hidden md:flex shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
@@ -97,7 +106,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
              </div>
              <div className="truncate">
                <p className="text-xs font-bold text-slate-800 truncate">{user?.name}</p>
-               <p className="text-[10px] text-blue-600 font-medium capitalize">{user?.plan_tier}</p>
+               <p className="text-[10px] text-blue-600 font-medium capitalize">{getTierBadge(user?.plan_tier)}</p>
              </div>
           </div>
           <button onClick={logout} className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">

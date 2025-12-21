@@ -45,7 +45,6 @@ const Billing: React.FC = () => {
         throw new Error("URL de checkout não retornada pela API.");
       }
     } catch (err: any) {
-      // LOG DE DIAGNÓSTICO NO FRONTEND
       console.group("Billing Error Diagnostic");
       console.error("Payload do Erro:", err);
       console.groupEnd();
@@ -57,10 +56,9 @@ const Billing: React.FC = () => {
 
   const currentPlanLabel = (tier: string) => {
     switch(tier) {
-      case 'free': return 'Plano Gratuito (Trial)';
+      case 'trial': return 'Período de Avaliação (Trial)';
       case 'consultant': return 'Plano Consultor';
       case 'business': return 'Plano Business';
-      case 'enterprise': return 'Plano Enterprise';
       default: return 'Plano Indefinido';
     }
   };
@@ -79,7 +77,7 @@ const Billing: React.FC = () => {
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-white">
             <span className="text-blue-400 text-xs font-bold uppercase tracking-widest bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">Status Atual</span>
-            <h2 className="text-2xl font-bold mt-3">{currentPlanLabel(user?.plan_tier || 'free')}</h2>
+            <h2 className="text-2xl font-bold mt-3">{currentPlanLabel(user?.plan_tier || 'trial')}</h2>
             <p className="text-slate-400 mt-1">Sua conta está ativa e em conformidade.</p>
           </div>
           <div className="flex gap-3">

@@ -1,3 +1,4 @@
+
 export interface Question {
   id: string;
   text: string;
@@ -35,7 +36,7 @@ export interface UserSession {
   id: string;
   name: string;
   email: string;
-  plan_tier: 'free' | 'consultant' | 'business' | 'enterprise';
+  plan_tier: 'trial' | 'consultant' | 'business';
 }
 
 export interface ActionPlanItem {

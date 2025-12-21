@@ -26,7 +26,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const valid = await comparePassword(password, user.password_hash);
       if (!valid) return res.status(401).json({ error: 'E-mail ou senha inválidos.' });
 
-      // O login costuma falhar aqui se o JWT_SECRET estiver ausente
       const token = signJwt({ sub: user.id, email: user.email, plan_tier: user.plan_tier });
       
       const refreshToken = generateRefreshToken();
@@ -70,7 +69,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const password_hash = await hashPassword(password);
       const { data, error } = await supabase
         .from('users')
-        .insert([{ name, email, password_hash, plan_tier: 'free' }])
+        .insert([{ name, email, password_hash, plan_tier: 'trial' }])
         .select('id, email, name')
         .single();
 

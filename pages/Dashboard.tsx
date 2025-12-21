@@ -1,11 +1,9 @@
 
-
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import { useNavigate, Link } from 'react-router-dom';
-// Added Zap to the imports
 import { Building2, Users, AlertTriangle, Activity, Plus, RefreshCcw, Lock, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Company } from '../types';
@@ -19,8 +17,8 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const isFreePlan = user?.plan_tier === 'free';
-  const hasReachedLimit = isFreePlan && stats.total >= 1;
+  const isTrialPlan = user?.plan_tier === 'trial';
+  const hasReachedLimit = isTrialPlan && stats.total >= 1;
 
   const DEMO_STATS = { total: 12, activeSectors: 34, responses: 892, riskHighPercent: 18 };
   const DEMO_COMPANIES: Company[] = [
@@ -93,17 +91,17 @@ const Dashboard: React.FC = () => {
         </div>
       </header>
 
-      {isFreePlan && hasReachedLimit && (
+      {isTrialPlan && hasReachedLimit && (
         <div className="bg-blue-600 text-white p-4 rounded-xl mb-8 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl shadow-blue-600/20">
           <div className="flex items-center gap-3">
             <div className="bg-white/20 p-2 rounded-lg"><Zap size={20} className="text-amber-300 fill-amber-300"/></div>
             <div>
-              <p className="font-bold">Limite do Plano Free atingido (1 empresa).</p>
-              <p className="text-xs text-blue-100 opacity-90">Assine o plano Consultor para cadastrar empresas ilimitadas e acessar relatórios completos.</p>
+              <p className="font-bold">Limite do Período de Avaliação atingido (1 empresa).</p>
+              <p className="text-xs text-blue-100 opacity-90">Assine um plano profissional para cadastrar empresas ilimitadas e acessar relatórios oficiais.</p>
             </div>
           </div>
           <Link to="/app/billing" className="bg-white text-blue-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-50 transition-colors shrink-0">
-            Conhecer Planos
+            Assinar Plano
           </Link>
         </div>
       )}
