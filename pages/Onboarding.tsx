@@ -1,10 +1,10 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Card from '../components/Card';
 import Button from '../components/Button';
-import { Building2, Users, ArrowRight, CheckCircle2, ChevronLeft, AlertCircle, Copy, HelpCircle, Briefcase } from 'lucide-react';
-import { APP_URL } from '../constants';
+import { Building2, Users, ArrowRight, CheckCircle2, ChevronLeft, AlertCircle, Lock, Gem } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Onboarding: React.FC = () => {
@@ -12,292 +12,125 @@ const Onboarding: React.FC = () => {
   const { apiCall } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [errorType, setErrorType] = useState<'LIMIT' | 'API' | null>(null);
   const [apiError, setApiError] = useState('');
 
-  const [formData, setFormData] = useState({
-    name: '',
-    cnpj: '',
-    sectorName: '',
-    employees: ''
-  });
-
-  const [errors, setErrors] = useState({
-    name: '',
-    cnpj: '',
-    sectorName: '',
-    employees: ''
-  });
-
-  const formatCNPJ = (value: string) => {
-    return value
-      .replace(/\D/g, '')
-      .replace(/^(\d{2})(\d)/, '$1.$2')
-      .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
-      .replace(/\.(\d{3})(\d)/, '.$1/$2')
-      .replace(/(\d{4})(\d)/, '$1-$2')
-      .slice(0, 18);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    
-    if (name === 'cnpj') {
-      setFormData({ ...formData, [name]: formatCNPJ(value) });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
-
-    if (errors[name as keyof typeof errors]) {
-      setErrors({ ...errors, [name]: '' });
-    }
-  };
-
-  const validateStep = (currentStep: number) => {
-    let isValid = true;
-    const newErrors = { ...errors };
-
-    if (currentStep === 1) {
-      if (!formData.name.trim()) {
-        newErrors.name = 'A Razão Social é obrigatória.';
-        isValid = false;
-      }
-      if (!formData.cnpj.trim() || formData.cnpj.length < 18) {
-        newErrors.cnpj = 'CNPJ inválido ou incompleto.';
-        isValid = false;
-      }
-    }
-
-    if (currentStep === 2) {
-      if (!formData.sectorName.trim()) {
-        newErrors.sectorName = 'O nome do setor é obrigatório.';
-        isValid = false;
-      }
-      if (!formData.employees || parseInt(formData.employees) < 1) {
-        newErrors.employees = 'Informe ao menos 1 funcionário.';
-        isValid = false;
-      }
-    }
-
-    setErrors(newErrors);
-    return isValid;
-  };
+  const [formData, setFormData] = useState({ name: '', cnpj: '', sectorName: '', employees: '' });
 
   const handleNext = async () => {
-    if (validateStep(step)) {
-      if (step === 2) {
-        setLoading(true);
-        setApiError('');
-        try {
-          await apiCall('/api/companies', {
-            method: 'POST',
-            body: JSON.stringify({
-              name: formData.name,
-              cnpj: formData.cnpj,
-              firstSectorName: formData.sectorName, 
-              employeesCount: formData.employees
-            })
-          });
-          setStep(step + 1);
-        } catch (err: any) {
-          console.error(err);
-          setApiError(err.message || 'Erro ao salvar empresa. Tente novamente.');
-        } finally {
-          setLoading(false);
+    if (step === 2) {
+      setLoading(true);
+      setErrorType(null);
+      try {
+        await apiCall('/api/companies', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: formData.name,
+            cnpj: formData.cnpj,
+            firstSectorName: formData.sectorName, 
+            employeesCount: formData.employees
+          })
+        });
+        setStep(3);
+      } catch (err: any) {
+        if (err.message?.includes('LIMIT_REACHED')) {
+          setErrorType('LIMIT');
+        } else {
+          setErrorType('API');
+          setApiError(err.message || 'Erro inesperado.');
         }
-      } else {
-        setStep(step + 1);
+      } finally {
+        setLoading(false);
       }
+    } else {
+      setStep(step + 1);
     }
-  };
-
-  const handleFinish = () => {
-    navigate('/app');
-  };
-
-  const handleCopyLink = () => {
-    const link = `${APP_URL}/#/questionario/ref-${formData.cnpj.slice(0,3)}-${formData.sectorName.slice(0,3).toLowerCase()}`;
-    navigator.clipboard.writeText(link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto py-8 px-4 md:px-0">
-        <div className="mb-8">
-           <h1 className="text-2xl font-heading font-bold text-slate-800">Nova Empresa</h1>
-           <p className="text-slate-500 text-sm">Passo a passo para configurar um novo cliente.</p>
-        </div>
-
-        <div className="mb-12 px-4">
-           <div className="flex items-center justify-between relative max-w-xl mx-auto">
-             <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 -z-10 rounded-full"></div>
-             <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-blue-600 -z-10 rounded-full transition-all duration-500 ease-in-out" style={{ width: step === 1 ? '0%' : step === 2 ? '50%' : '100%' }}></div>
-
-             {[
-                { num: 1, label: 'Dados Cadastrais', icon: Building2 }, 
-                { num: 2, label: 'Primeiro Setor', icon: Users }, 
-                { num: 3, label: 'Conclusão', icon: CheckCircle2 }
-             ].map((s) => (
-               <div key={s.num} className="flex flex-col items-center bg-[#F8FAFC] px-4 cursor-default">
-                 <div className={`
-                    w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-[3px] transition-all duration-300 relative z-10
-                    ${step >= s.num ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20 scale-110' : 'bg-white border-slate-300 text-slate-400'}
-                 `}>
-                   <s.icon size={20} strokeWidth={2.5} />
+      <div className="max-w-2xl mx-auto py-12">
+        {errorType === 'LIMIT' ? (
+           <div className="animate-fade-in-down">
+              <Card className="text-center p-12 border-t-4 border-t-amber-500 shadow-2xl overflow-hidden relative">
+                 <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                    <Gem size={100} />
                  </div>
-                 <span className={`text-xs font-bold mt-3 uppercase tracking-wider transition-colors duration-300 ${step >= s.num ? 'text-blue-700' : 'text-slate-400'}`}>
-                   {s.label}
-                 </span>
-               </div>
-             ))}
+                 <div className="w-20 h-20 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                    <Lock size={40} />
+                 </div>
+                 <h2 className="text-3xl font-heading font-black text-slate-900 mb-4 tracking-tight">Limite do Trial Atingido</h2>
+                 <p className="text-slate-500 mb-10 leading-relaxed text-lg font-medium">
+                   O plano de avaliação permite apenas **1 empresa e 1 setor**. <br/> 
+                   Profissionalize sua consultoria para gerenciar múltiplos CNPJs e gerar laudos oficiais para seus clientes.
+                 </p>
+                 <div className="flex flex-col sm:flex-row gap-4">
+                   <Button size="lg" fullWidth onClick={() => navigate('/app/billing')} className="h-16 uppercase text-xs font-black tracking-widest shadow-xl shadow-blue-600/20">Escolher Plano Profissional</Button>
+                   <Button variant="secondary" size="lg" fullWidth onClick={() => navigate('/app')} className="h-16 uppercase text-xs font-black tracking-widest">Voltar ao Painel</Button>
+                 </div>
+              </Card>
            </div>
-        </div>
+        ) : (
+          <>
+            <div className="mb-10">
+               <h1 className="text-3xl font-heading font-black text-slate-800 tracking-tight">Configuração de Organização</h1>
+               <p className="text-slate-500 font-medium">Passo {step} de 3 • Estruturando nova coleta</p>
+            </div>
 
-        <Card className="p-0 overflow-hidden border-0 shadow-xl shadow-slate-200/50">
-          <div className="p-8 md:p-10">
-            {apiError && (
-              <div className="mb-6 bg-red-50 text-red-600 p-3 rounded-lg flex items-center gap-2 text-sm">
-                <AlertCircle size={16} /> {apiError}
-              </div>
-            )}
-
-            {step === 1 && (
-              <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-6">
-                <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
-                   <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
-                     <Building2 size={24} />
-                   </div>
-                   <div>
-                     <h2 className="text-xl font-bold text-slate-800">Dados da Organização</h2>
-                     <p className="text-sm text-slate-500">Informe os dados legais da empresa que será avaliada.</p>
-                   </div>
-                </div>
-
-                <div className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Razão Social <span className="text-red-500">*</span></label>
-                    <input 
-                      name="name" value={formData.name} onChange={handleChange} type="text" 
-                      className={`w-full px-4 py-3 bg-slate-50 border rounded-lg outline-none transition-all placeholder:text-slate-400 ${errors.name ? 'border-red-300 bg-red-50' : 'border-slate-200 focus:border-blue-500'}`}
-                      placeholder="Ex: Indústrias Metalúrgicas Beta Ltda" autoFocus
-                    />
-                    {errors.name && <p className="text-xs text-red-500 mt-1.5">{errors.name}</p>}
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">CNPJ <span className="text-red-500">*</span></label>
-                    <input 
-                      name="cnpj" value={formData.cnpj} onChange={handleChange} type="text" maxLength={18}
-                      className={`w-full px-4 py-3 bg-slate-50 border rounded-lg outline-none transition-all font-mono placeholder:font-sans ${errors.cnpj ? 'border-red-300 bg-red-50' : 'border-slate-200 focus:border-blue-500'}`}
-                      placeholder="00.000.000/0001-00" 
-                    />
-                    {errors.cnpj && <p className="text-xs text-red-500 mt-1.5">{errors.cnpj}</p>}
-                  </div>
-                </div>
-                
-                <div className="pt-8 flex justify-end">
-                   <Button onClick={handleNext} size="lg" className="px-8 shadow-lg shadow-blue-600/20">
-                     Continuar <ArrowRight size={18} className="ml-2"/>
-                   </Button>
-                </div>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-6">
-                <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
-                   <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
-                     <Users size={24} />
-                   </div>
-                   <div>
-                     <h2 className="text-xl font-bold text-slate-800">Estrutura Inicial</h2>
-                     <p className="text-sm text-slate-500">Cadastre o primeiro setor ou GHE.</p>
-                   </div>
-                </div>
-
-                <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-5 flex gap-4">
-                  <div className="bg-white p-2 rounded-lg text-blue-600 h-min shadow-sm"><HelpCircle size={20} /></div>
-                  <div className="text-sm text-slate-600 leading-relaxed">
-                    <p className="font-bold text-slate-800 mb-1">Dica de Especialista</p>
-                    <p>Agrupe funcionários que compartilham as mesmas condições de trabalho (GHE).</p>
-                  </div>
-                </div>
-
-                <div className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Nome do Setor / GHE <span className="text-red-500">*</span></label>
-                    <input 
-                      name="sectorName" value={formData.sectorName} onChange={handleChange} type="text" 
-                      className={`w-full px-4 py-3 bg-slate-50 border rounded-lg outline-none ${errors.sectorName ? 'border-red-300 bg-red-50' : 'border-slate-200 focus:border-blue-500'}`}
-                      placeholder="Ex: Operação Logística" autoFocus
-                    />
-                    {errors.sectorName && <p className="text-xs text-red-500 mt-1.5">{errors.sectorName}</p>}
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">População Estimada <span className="text-red-500">*</span></label>
-                    <div className="relative">
-                      <input 
-                        name="employees" value={formData.employees} onChange={handleChange} type="number" min="1"
-                        className={`w-full px-4 py-3 pl-12 bg-slate-50 border rounded-lg outline-none ${errors.employees ? 'border-red-300 bg-red-50' : 'border-slate-200 focus:border-blue-500'}`}
-                        placeholder="0" 
-                      />
-                      <Briefcase size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Card className="p-10 shadow-2xl border-t-4 border-blue-600">
+               {step === 1 && (
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-4 mb-6">
+                       <Building2 className="text-blue-600" />
+                       <h3 className="font-black uppercase text-xs tracking-widest text-slate-400">Identificação Jurídica</h3>
                     </div>
-                     {errors.employees && <p className="text-xs text-red-500 mt-1.5">{errors.employees}</p>}
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">Razão Social</label>
+                      <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all" placeholder="Ex: Indústrias Metalúrgicas Beta" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">CNPJ</label>
+                      <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all font-mono" placeholder="00.000.000/0001-00" value={formData.cnpj} onChange={e => setFormData({...formData, cnpj: e.target.value})} />
+                    </div>
+                    <div className="pt-6 flex justify-end">
+                       <Button onClick={handleNext} className="h-14 px-8 uppercase text-xs font-black tracking-widest">Próximo Passo <ArrowRight size={16} className="ml-3"/></Button>
+                    </div>
                   </div>
-                </div>
+               )}
 
-                <div className="pt-8 flex justify-between gap-4 border-t border-slate-50 mt-4">
-                   <Button variant="ghost" onClick={() => setStep(1)} disabled={loading}>
-                     <ChevronLeft size={18} className="mr-2"/> Voltar
-                   </Button>
-                   <Button onClick={handleNext} size="lg" className="px-8 shadow-lg shadow-blue-600/20" disabled={loading}>
-                     {loading ? 'Salvando...' : 'Finalizar Cadastro'}
-                   </Button>
-                </div>
-              </div>
-            )}
+               {step === 2 && (
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-4 mb-6">
+                       <Users className="text-blue-600" />
+                       <h3 className="font-black uppercase text-xs tracking-widest text-slate-400">Escopo da Coleta</h3>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">Primeiro Setor ou GHE</label>
+                      <input className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all" placeholder="Ex: Logística - Turno 1" value={formData.sectorName} onChange={e => setFormData({...formData, sectorName: e.target.value})} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">Total de Funcionários</label>
+                      <input type="number" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all" placeholder="Quantidade estimada" value={formData.employees} onChange={e => setFormData({...formData, employees: e.target.value})} />
+                    </div>
+                    {errorType === 'API' && <div className="text-red-600 text-sm font-bold flex items-center gap-2 bg-red-50 p-3 rounded-xl border border-red-100 animate-fade-in"><AlertCircle size={14}/> {apiError}</div>}
+                    <div className="pt-6 flex justify-between">
+                       <Button variant="ghost" onClick={() => setStep(1)} disabled={loading} className="font-black text-xs uppercase tracking-widest">Voltar</Button>
+                       <Button onClick={handleNext} disabled={loading} className="h-14 px-8 uppercase text-xs font-black tracking-widest shadow-lg shadow-blue-600/20">{loading ? 'Salvando...' : 'Concluir Cadastro'}</Button>
+                    </div>
+                  </div>
+               )}
 
-            {step === 3 && (
-               <div className="animate-in fade-in zoom-in duration-300 text-center py-4">
-                 <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-md border-4 border-white ring-1 ring-emerald-50">
-                   <CheckCircle2 size={40} />
-                 </div>
-                 
-                 <h2 className="text-2xl font-bold text-slate-800 mb-2">Empresa Cadastrada!</h2>
-                 <p className="text-slate-500 mb-8 max-w-md mx-auto">O ambiente para <strong className="text-slate-800">{formData.name}</strong> foi configurado com sucesso.</p>
-                 
-                 <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 max-w-lg mx-auto mb-8 relative group text-left">
-                   <div className="flex justify-between items-center mb-3">
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Link de Coleta (Simulado)
-                      </p>
-                      <span className="bg-white border border-slate-200 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded">Ativo</span>
-                   </div>
-                   
-                   <div className="flex items-stretch gap-0 border border-slate-300 rounded-lg overflow-hidden bg-white shadow-sm">
-                     <div className="flex-1 px-4 py-3 text-slate-600 font-mono text-sm truncate select-all border-r border-slate-100 flex items-center">
-                       {APP_URL}/#/questionario/ref-{formData.cnpj.slice(0,3)}
-                     </div>
-                     <button onClick={handleCopyLink} className="bg-slate-50 px-5 hover:bg-slate-100 text-slate-600 hover:text-blue-600 flex items-center justify-center">
-                       {copied ? <CheckCircle2 size={20} className="text-emerald-600" /> : <Copy size={20} />}
-                     </button>
-                   </div>
-                 </div>
-
-                 <div className="flex justify-center">
-                   <Button onClick={handleFinish} size="lg" className="px-8 shadow-lg shadow-blue-600/20">
-                     Ir para o Dashboard <ArrowRight size={18} className="ml-2"/>
-                   </Button>
-                 </div>
-               </div>
-            )}
-          </div>
-        </Card>
+               {step === 3 && (
+                  <div className="text-center py-6 animate-fade-in">
+                    <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner"><CheckCircle2 size={40}/></div>
+                    <h2 className="text-2xl font-black text-slate-800 mb-3 tracking-tight">Empresa Cadastrada!</h2>
+                    <p className="text-slate-500 mb-10 font-medium italic">O ambiente de coleta está pronto para receber respostas.</p>
+                    <Button fullWidth onClick={() => navigate('/app')} className="h-16 uppercase text-xs font-black tracking-widest shadow-xl shadow-blue-600/20">Acessar Área de Gestão</Button>
+                  </div>
+               )}
+            </Card>
+          </>
+        )}
       </div>
     </Layout>
   );

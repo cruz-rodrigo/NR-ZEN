@@ -4,7 +4,7 @@ import Layout from '../components/Layout';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import { useNavigate, Link } from 'react-router-dom';
-import { Building2, Users, AlertTriangle, Activity, Plus, RefreshCcw, Lock, Zap } from 'lucide-react';
+import { Building2, Users, AlertTriangle, Activity, Plus, Zap, Lock, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Company } from '../types';
 
@@ -12,26 +12,31 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, apiCall, token } = useAuth();
   
-  const [stats, setStats] = useState({ total: 0, activeSectors: 0, responses: 0, riskHighPercent: 0 });
+  const [stats, setStats] = useState<any>({ 
+    total: 0, 
+    activeSectors: 0, 
+    responses: 0, 
+    riskHighPercent: 0, 
+    limits: { maxCompanies: 1, maxResponses: 3, maxSectors: 1 } 
+  });
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const isTrialPlan = user?.plan_tier === 'trial';
-  const hasReachedLimit = isTrialPlan && stats.total >= 1;
-
-  const DEMO_STATS = { total: 12, activeSectors: 34, responses: 892, riskHighPercent: 18 };
-  const DEMO_COMPANIES: Company[] = [
-    { id: '1', name: "Indústrias Metalúrgicas Beta", cnpj: "12.345.678/0001-99", sectorsCount: 8, sectorsActive: 8, lastCollection: "10/10/2025", status: "active" },
-  ];
+  const isTrial = user?.plan_tier === 'trial';
+  const companyLimitReached = stats.total >= (stats.limits?.maxCompanies || 1);
+  const responseLimitReached = stats.responses >= (stats.limits?.maxResponses || 3);
 
   const fetchData = async () => {
-    setLoading(true);
-    setError(null);
-    
     if (token === 'demo-token-jwt') {
-      setStats(DEMO_STATS);
-      setCompanies(DEMO_COMPANIES);
+      setStats({ 
+        total: 12, 
+        activeSectors: 34, 
+        responses: 892, 
+        riskHighPercent: 18, 
+        limits: { maxCompanies: 999, maxResponses: 999 } 
+      });
+      setCompanies([{ id: '1', name: "Indústrias Metalúrgicas Beta", cnpj: "12.345.678/0001-99", sectorsCount: 8, sectorsActive: 8, status: "active" } as any]);
       setLoading(false);
       return;
     }
@@ -41,163 +46,109 @@ const Dashboard: React.FC = () => {
         apiCall('/api/companies?mode=stats'),
         apiCall('/api/companies')
       ]);
-      
-      setStats(statsData || { total: 0, activeSectors: 0, responses: 0, riskHighPercent: 0 });
+      setStats(statsData);
       setCompanies(companiesData || []);
-    } catch (error: any) {
-      console.error("Erro no Dashboard:", error);
-      setError("Não foi possível sincronizar os dados com o servidor.");
+    } catch (err: any) {
+      setError("Falha na sincronização dos dados.");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [apiCall, token]);
+  useEffect(() => { fetchData(); }, [token]);
 
-  if (loading) {
-    return (
-      <Layout>
-        <div className="h-[60vh] flex flex-col items-center justify-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-slate-500 font-medium animate-pulse">Sincronizando dados...</p>
-        </div>
-      </Layout>
-    );
-  }
+  if (loading) return <Layout><div className="h-full flex items-center justify-center min-h-[60vh] animate-pulse font-bold text-slate-400 uppercase tracking-widest">Sincronizando...</div></Layout>;
 
   return (
     <Layout>
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-heading font-bold text-slate-800 tracking-tight">Painel de Controle</h1>
-          <p className="text-slate-500 mt-1">Bem-vindo, <span className="font-semibold text-slate-700">{user?.name?.split(' ')[0] || 'Consultor'}</span>.</p>
-        </div>
-        <div className="flex items-center gap-3">
-           <Button variant="secondary" size="sm" onClick={fetchData} className="hidden md:flex">
-             <RefreshCcw size={16} className="mr-2"/> Atualizar
-           </Button>
-           
-           {hasReachedLimit ? (
-             <Button variant="dark" size="sm" onClick={() => navigate('/app/billing')} className="bg-slate-800 text-white border-none shadow-lg">
-                <Lock size={16} className="mr-2 text-amber-500"/> Fazer Upgrade
-             </Button>
-           ) : (
-             <Button size="sm" onClick={() => navigate('/app/onboarding')} className="shadow-lg shadow-blue-600/20">
-               <Plus size={16} className="mr-1"/> Nova Empresa
-             </Button>
-           )}
-        </div>
-      </header>
-
-      {isTrialPlan && hasReachedLimit && (
-        <div className="bg-blue-600 text-white p-4 rounded-xl mb-8 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl shadow-blue-600/20">
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 p-2 rounded-lg"><Zap size={20} className="text-amber-300 fill-amber-300"/></div>
-            <div>
-              <p className="font-bold">Limite do Período de Avaliação atingido (1 empresa).</p>
-              <p className="text-xs text-blue-100 opacity-90">Assine um plano profissional para cadastrar empresas ilimitadas e acessar relatórios oficiais.</p>
-            </div>
+      {/* Alerta de Trial / Upgrade */}
+      {isTrial && (
+        <div className={`mb-10 rounded-2xl border p-5 flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-500 shadow-sm ${companyLimitReached || responseLimitReached ? 'bg-amber-50 border-amber-200' : 'bg-blue-50 border-blue-100'}`}>
+          <div className="flex items-center gap-4">
+             <div className={`p-3 rounded-xl shadow-inner ${companyLimitReached || responseLimitReached ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'}`}>
+               {companyLimitReached || responseLimitReached ? <Lock size={20} /> : <Zap size={20} />}
+             </div>
+             <div>
+               <p className={`font-black text-sm uppercase tracking-tight ${companyLimitReached || responseLimitReached ? 'text-amber-900' : 'text-blue-900'}`}>
+                 {companyLimitReached || responseLimitReached ? 'Quota de Avaliação Atingida' : 'Você está em modo Trial'}
+               </p>
+               <p className="text-xs font-medium opacity-60">
+                 {stats.total}/{stats.limits.maxCompanies} Empresa • {stats.activeSectors}/{stats.limits.maxSectors} Setor • {stats.responses}/{stats.limits.maxResponses} Respostas/mês
+               </p>
+             </div>
           </div>
-          <Link to="/app/billing" className="bg-white text-blue-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-50 transition-colors shrink-0">
-            Assinar Plano
+          <Link to="/app/billing" className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all ${companyLimitReached || responseLimitReached ? 'bg-slate-900 text-white hover:scale-105' : 'text-blue-700 bg-white shadow-sm border border-blue-100 hover:bg-blue-50'}`}>
+            {companyLimitReached || responseLimitReached ? 'Fazer Upgrade Agora' : 'Liberar Recursos'} <ChevronRight size={14} />
           </Link>
         </div>
       )}
 
-      {error && (
-        <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <AlertTriangle size={20} className="text-amber-600" />
-            <p className="text-sm font-medium">{error}</p>
-          </div>
-          <button onClick={fetchData} className="text-xs font-bold uppercase tracking-widest hover:underline">Tentar novamente</button>
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h1 className="text-3xl font-heading font-black text-slate-800 tracking-tight">Dashboard</h1>
+          <p className="text-slate-500 mt-1 font-medium">Status da sua carteira de clientes de SST.</p>
         </div>
-      )}
+        <div className="flex items-center gap-3">
+           {companyLimitReached && isTrial ? (
+             <Button variant="dark" onClick={() => navigate('/app/billing')} className="bg-slate-900 border-none shadow-xl">
+                <Lock size={16} className="mr-2 text-amber-500" /> Upgrade Necessário
+             </Button>
+           ) : (
+             <Button onClick={() => navigate('/app/onboarding')}><Plus size={18} className="mr-2"/> Nova Empresa</Button>
+           )}
+        </div>
+      </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      {/* Grid de KPIs */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[
-          { label: "Empresas", value: stats.total, icon: Building2, color: "blue" },
-          { label: "Setores Ativos", value: stats.activeSectors, icon: Users, color: "emerald" },
-          { label: "Amostragem", value: stats.responses, icon: Activity, color: "indigo" },
-          { label: "Risco Crítico", value: `${stats.riskHighPercent}%`, icon: AlertTriangle, color: "red" },
-        ].map((kpi, i) => (
-          <Card key={i} className={`relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-b-4 border-b-${kpi.color}-500`}>
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-1">{kpi.label}</p>
-                <p className="text-3xl font-bold text-slate-800 tracking-tighter">{kpi.value}</p>
-              </div>
-              <div className={`p-3 rounded-xl bg-${kpi.color}-50 text-${kpi.color}-600 group-hover:scale-110 transition-transform`}>
-                <kpi.icon size={24} />
-              </div>
-            </div>
+          { label: "Empresas", value: stats.total, icon: Building2, color: "blue", sub: `Limite: ${stats.limits.maxCompanies}` },
+          { label: "Setores Ativos", value: stats.activeSectors, icon: Users, color: "emerald", sub: `Limite Total: ${stats.limits.maxSectors}` },
+          { label: "Respostas", value: stats.responses, icon: Activity, color: "indigo", sub: `Mês: ${stats.limits.maxResponses}` },
+          { label: "Risco Crítico", value: `${stats.riskHighPercent}%`, icon: AlertTriangle, color: "red", sub: "Média Global" },
+        ].map((k, i) => (
+          <Card key={i} className="group hover:border-blue-500 transition-all border-b-4 border-b-slate-100">
+             <div className="flex justify-between items-start">
+               <div>
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{k.label}</p>
+                 <p className="text-3xl font-black text-slate-800 mt-1">{k.value}</p>
+                 <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">{k.sub}</p>
+               </div>
+               <div className={`p-3 rounded-xl bg-${k.color}-50 text-${k.color}-600 group-hover:scale-110 transition-transform`}>
+                 <k.icon size={22} />
+               </div>
+             </div>
           </Card>
         ))}
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center">
-          <h3 className="font-bold text-slate-800 text-lg">Suas Empresas</h3>
-          <span className="text-xs font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-full">{companies.length} registros</span>
-        </div>
-        
-        <div className="overflow-x-auto">
-          {companies.length === 0 ? (
-            <div className="p-16 text-center">
-              <div className="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Building2 size={32} />
-              </div>
-              <h4 className="text-slate-800 font-bold text-lg">Sua carteira está vazia</h4>
-              <p className="text-slate-500 text-sm max-w-xs mx-auto mt-1 mb-8">Comece cadastrando sua primeira empresa para automatizar os diagnósticos.</p>
-              <Button onClick={() => navigate('/app/onboarding')}>Configurar Primeira Empresa</Button>
-            </div>
-          ) : (
+      <Card padding="p-0" className="overflow-hidden">
+         <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead>
-                <tr className="bg-slate-50/50">
-                  <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Identificação</th>
-                  <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Documentação</th>
-                  <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Operação</th>
-                  <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Ações</th>
+              <thead className="bg-slate-50 border-b border-slate-100">
+                <tr>
+                  <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Organização</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
-                {companies.map((company) => (
-                  <tr key={company.id} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-md group-hover:scale-105 transition-transform">
-                          {company.name.substring(0,1).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-800 text-sm">{company.name}</p>
-                          <p className="text-xs text-slate-400">{company.lastCollection || 'Sem coletas'}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5">
-                      <p className="text-xs font-mono text-slate-600">{company.cnpj}</p>
-                    </td>
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-slate-700">{company.sectorsActive || 0}</span>
-                        <span className="text-xs text-slate-400">setores</span>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5 text-right">
-                      <Button variant="ghost" size="sm" onClick={() => navigate(`/app/setor/${company.id}`)} className="text-blue-600 font-bold group-hover:translate-x-1 transition-transform">
-                        Detalhes
-                      </Button>
+              <tbody className="divide-y divide-slate-50">
+                {companies.map(c => (
+                  <tr key={c.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4 font-bold text-sm text-slate-700">{c.name}</td>
+                    <td className="px-6 py-4 text-right">
+                       <Button variant="ghost" size="sm" onClick={() => navigate('/app/companies')}>Gerenciar</Button>
                     </td>
                   </tr>
                 ))}
+                {companies.length === 0 && (
+                  <tr>
+                    <td colSpan={2} className="py-12 text-center text-slate-400 italic text-sm">Nenhum cliente cadastrado.</td>
+                  </tr>
+                )}
               </tbody>
             </table>
-          )}
-        </div>
-      </div>
+         </div>
+      </Card>
     </Layout>
   );
 };
