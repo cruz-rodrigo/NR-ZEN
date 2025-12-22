@@ -1,13 +1,31 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { checkDbConnection } from '../_supabaseServer.js';
-import { hashPassword, comparePassword, signJwt, generateRefreshToken } from '../_authUtils.js';
+import { hashPassword, comparePassword, signJwt, generateRefreshToken, verifyJwt } from '../_authUtils.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { action } = req.query;
 
   try {
     const supabase = checkDbConnection();
+
+    // --- ME (Get current user data via JWT) ---
+    if (action === 'me') {
+      const authHeader = req.headers.authorization;
+      if (!authHeader?.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
+      
+      const token = authHeader.substring(7);
+      const decoded = verifyJwt(token);
+      
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('id, name, email, plan_tier')
+        .eq('id', decoded.sub)
+        .single();
+
+      if (error || !user) return res.status(404).json({ error: 'User not found' });
+      return res.status(200).json({ user });
+    }
 
     // --- LOGIN ---
     if (action === 'login') {

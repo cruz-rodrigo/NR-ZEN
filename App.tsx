@@ -1,6 +1,4 @@
-
-
-import React, { ReactNode, ErrorInfo, Component } from 'react';
+import React, { ReactNode, ErrorInfo } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage.tsx';
 import Login from './pages/Login.tsx';
@@ -23,23 +21,12 @@ import { PaymentSuccess, PaymentCancel } from './pages/PaymentResult.tsx';
 import { AuthProvider, useAuth } from './context/AuthContext.tsx';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
 
-interface EBProps {
-  children?: ReactNode;
-}
+interface EBProps { children?: ReactNode; }
+interface EBState { hasError: boolean; error?: Error; }
 
-interface EBState {
-  hasError: boolean;
-  error?: Error;
-}
-
-// Fix: Use Component directly with the provided generics to ensure 'props' is correctly inherited and typed.
-class ErrorBoundary extends Component<EBProps, EBState> {
+// Use React.Component explicitly to ensure TypeScript correctly identifies the component structure and 'this.props'
+class ErrorBoundary extends React.Component<EBProps, EBState> {
   public state: EBState = { hasError: false };
-
-  constructor(props: EBProps) {
-    super(props);
-    this.state = { hasError: false };
-  }
 
   static getDerivedStateFromError(error: Error): EBState {
     return { hasError: true, error };
@@ -56,38 +43,21 @@ class ErrorBoundary extends Component<EBProps, EBState> {
           <div className="bg-white p-10 rounded-2xl shadow-2xl max-w-md border-t-8 border-red-600">
             <AlertTriangle className="mx-auto text-red-600 mb-6" size={64} />
             <h1 className="text-2xl font-bold text-slate-900 mb-4">Falha no Carregamento</h1>
-            <p className="text-slate-600 mb-8 text-sm leading-relaxed">
-              Ocorreu um erro ao carregar os módulos da aplicação. Isso pode ser causado por cache antigo no seu navegador.
-            </p>
-            <button 
-              onClick={() => {
-                localStorage.clear();
-                window.location.href = '/';
-              }} 
-              className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
-            >
+            <button onClick={() => { localStorage.clear(); window.location.href = '/'; }} className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
               <RefreshCcw size={18} /> Reiniciar e Limpar Cache
             </button>
           </div>
         </div>
       );
     }
-    // Fix: Accessing 'children' through 'this.props' which is now correctly recognized by inheriting from Component.
+    // Fixed: Properly accessing children from props
     return this.props.children;
   }
 }
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
-  
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent"></div>
-      </div>
-    );
-  }
-
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent"></div></div>;
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
@@ -103,8 +73,11 @@ const App: React.FC = () => {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             
+            {/* Rotas legadas mantidas por segurança, novas rotas adicionadas */}
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/payment/cancel" element={<PaymentCancel />} />
+            <Route path="/billing/success" element={<PaymentSuccess />} />
+            <Route path="/billing/cancel" element={<PaymentCancel />} />
             
             <Route path="/app" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
             <Route path="/app/companies" element={<PrivateRoute><Companies /></PrivateRoute>} />
