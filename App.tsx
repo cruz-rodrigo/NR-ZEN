@@ -1,4 +1,5 @@
 
+
 import React, { ReactNode, ErrorInfo, Component } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage.tsx';
@@ -31,8 +32,8 @@ interface EBState {
   error?: Error;
 }
 
-// Fix: Use React.Component explicitly with the provided generics to ensure 'props' is correctly inherited and typed.
-class ErrorBoundary extends React.Component<EBProps, EBState> {
+// Fix: Use Component directly with the provided generics to ensure 'props' is correctly inherited and typed.
+class ErrorBoundary extends Component<EBProps, EBState> {
   public state: EBState = { hasError: false };
 
   constructor(props: EBProps) {
@@ -71,7 +72,7 @@ class ErrorBoundary extends React.Component<EBProps, EBState> {
         </div>
       );
     }
-    // Fix: Accessing 'children' through 'this.props' which is now correctly recognized by inheriting from React.Component.
+    // Fix: Accessing 'children' through 'this.props' which is now correctly recognized by inheriting from Component.
     return this.props.children;
   }
 }
