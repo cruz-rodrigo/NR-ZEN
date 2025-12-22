@@ -63,51 +63,51 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-row font-sans">
-      <aside className="w-72 bg-white border-r border-slate-100 flex flex-col fixed h-full z-50 hidden lg:flex shadow-[20px_0_40px_rgba(0,0,0,0.01)]">
-        <div className="p-8 border-b border-slate-50 flex items-center justify-center">
+      <aside className="w-80 bg-white border-r border-slate-100 flex flex-col fixed h-full z-50 hidden lg:flex shadow-[20px_0_40px_rgba(0,0,0,0.01)]">
+        <div className="p-10 border-b border-slate-50 flex items-center justify-center">
           <Link to="/" className="group hover:opacity-90 transition-opacity">
-            <Logo />
+            <Logo size="md" />
           </Link>
         </div>
 
-        <nav className="flex-1 overflow-y-auto py-8 px-6 space-y-2">
+        <nav className="flex-1 overflow-y-auto py-10 px-8 space-y-3">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path || (item.path !== '/app' && location.pathname.startsWith(item.path));
             return (
               <Link
                 key={item.label}
                 to={item.path}
-                className={`flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 ${
+                className={`flex items-center gap-5 px-6 py-4.5 rounded-2xl text-base font-bold transition-all duration-300 ${
                   isActive 
                     ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20 translate-x-1' 
                     : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
               >
-                <item.icon size={22} className={isActive ? 'text-white' : 'text-slate-400'} />
+                <item.icon size={24} className={isActive ? 'text-white' : 'text-slate-400'} />
                 {item.label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-6 border-t border-slate-50 space-y-4">
-          <div className="bg-slate-50 rounded-2xl p-4 flex items-center gap-4 border border-slate-100">
-             <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xs font-black shadow-md">
+        <div className="p-8 border-t border-slate-50 space-y-5">
+          <div className="bg-slate-50 rounded-2xl p-5 flex items-center gap-4 border border-slate-100">
+             <div className="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center text-sm font-black shadow-md">
                {user?.name?.substring(0,2).toUpperCase() || 'NR'}
              </div>
              <div className="truncate">
-               <p className="text-xs font-black text-slate-900 truncate tracking-tight">{user?.name}</p>
-               <p className="text-[10px] text-blue-600 font-black uppercase tracking-wider">{getTierBadge(user?.plan_tier)}</p>
+               <p className="text-sm font-black text-slate-900 truncate tracking-tight">{user?.name}</p>
+               <p className="text-xs text-blue-600 font-black uppercase tracking-wider">{getTierBadge(user?.plan_tier)}</p>
              </div>
           </div>
-          <button onClick={logout} className="flex items-center gap-4 w-full px-5 py-3 text-sm font-bold text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-2xl transition-all">
-            <LogOut size={22} />
+          <button onClick={logout} className="flex items-center gap-5 w-full px-6 py-4 text-base font-bold text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-2xl transition-all">
+            <LogOut size={24} />
             Sair da conta
           </button>
         </div>
       </aside>
 
-      <main className="flex-1 lg:ml-72 p-6 lg:p-12 min-h-screen">
+      <main className="flex-1 lg:ml-80 p-6 lg:p-14 min-h-screen">
         {children}
       </main>
     </div>
