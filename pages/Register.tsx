@@ -1,18 +1,25 @@
+
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Logo } from '../components/Layout';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
-import { AlertCircle, ArrowRight } from 'lucide-react';
+import { AlertCircle, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { register, login, apiCall } = useAuth();
   
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
+
+  // Parâmetros de intenção de compra vindos da LP
+  const redirectPlan = searchParams.get('plan');
+  const redirectCycle = searchParams.get('cycle') || 'monthly';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,14 +27,52 @@ const Register: React.FC = () => {
     setLoading(true);
 
     try {
+      // 1. Cria a conta (trial por padrão no backend)
       await register(formData.name, formData.email, formData.password);
-      navigate('/login?success=true');
+      
+      // 2. Faz login automático para obter o token
+      await login(formData.email, formData.password);
+
+      // 3. Se veio de um plano, redireciona para o checkout imediatamente
+      if (redirectPlan) {
+        setRedirecting(true);
+        try {
+          const response = await apiCall('/api/checkout/create-session', {
+            method: 'POST',
+            body: JSON.stringify({ plan: redirectPlan, billingCycle: redirectCycle })
+          });
+          
+          if (response?.url) {
+            window.location.href = response.url;
+            return; // Interrompe para o redirecionamento do browser
+          }
+        } catch (checkoutErr) {
+          console.error("Falha ao disparar checkout pós-registro:", checkoutErr);
+          // Se falhar o checkout, manda para o app (onde ele está em trial)
+          navigate('/app');
+        }
+      } else {
+        // Fluxo normal: Dashboard (Modo Trial)
+        navigate('/app');
+      }
     } catch (err: any) {
       setError(err.message || 'Erro ao criar conta.');
-    } finally {
       setLoading(false);
     }
   };
+
+  if (redirecting) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center font-sans">
+        <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6 animate-bounce">
+          <CheckCircle2 size={32} />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">Conta Criada!</h2>
+        <p className="text-slate-500">Redirecionando para o ambiente de pagamento...</p>
+        <Loader2 className="animate-spin mt-4 text-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans">
@@ -36,8 +81,12 @@ const Register: React.FC = () => {
       </div>
       
       <Card className="w-full max-w-md p-8 shadow-xl border-t-4 border-t-blue-600">
-        <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center">Crie sua conta</h1>
-        <p className="text-slate-500 text-center mb-8">Comece a gerenciar riscos psicossociais hoje.</p>
+        <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center">
+          {redirectPlan ? 'Inicie sua Assinatura' : 'Crie sua conta'}
+        </h1>
+        <p className="text-slate-500 text-center mb-8">
+          {redirectPlan ? 'Sua conta trial será criada e você seguirá para o pagamento.' : 'Comece a gerenciar riscos psicossociais hoje.'}
+        </p>
 
         {error && (
           <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2 border border-red-100 animate-fade-in-down">
@@ -82,7 +131,15 @@ const Register: React.FC = () => {
           </div>
 
           <Button fullWidth size="lg" type="submit" disabled={loading} className="mt-4 shadow-lg shadow-blue-600/20">
-            {loading ? 'Criando conta...' : 'Cadastrar Gratuitamente'}
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="animate-spin" size={18} /> Processando...
+              </span>
+            ) : redirectPlan ? (
+              <span className="flex items-center gap-2">
+                Seguir para Pagamento <ArrowRight size={18} />
+              </span>
+            ) : 'Cadastrar Gratuitamente'}
           </Button>
         </form>
 
@@ -90,6 +147,14 @@ const Register: React.FC = () => {
           Já tem uma conta? <Link to="/login" className="text-blue-600 font-bold hover:underline">Fazer Login</Link>
         </div>
       </Card>
+      
+      {redirectPlan && (
+        <div className="mt-8 bg-blue-50 border border-blue-100 rounded-xl p-4 max-w-md text-center">
+           <p className="text-[11px] text-blue-700 font-medium leading-relaxed">
+             Ao prosseguir, você concorda com nossos termos. Sua assinatura de <strong>{redirectPlan.toUpperCase()}</strong> será processada via Stripe com segurança bancária.
+           </p>
+        </div>
+      )}
     </div>
   );
 };

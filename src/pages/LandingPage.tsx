@@ -21,6 +21,16 @@ const LandingPage: React.FC = () => {
     setActiveFaq(activeFaq === index ? null : index);
   };
 
+  const handleSubscribe = (plan: PlanConfig) => {
+    if (plan.id === 'enterprise' || plan.isCustom) {
+      // Abre WhatsApp para planos customizados
+      window.open('https://wa.me/5511999999999?text=Olá! Gostaria de saber mais sobre o plano Enterprise do NR ZEN.', '_blank');
+      return;
+    }
+    // Inicia fluxo de checkout self-serve
+    navigate(`/checkout/start?plan=${plan.id}&cycle=${billingCycle}`);
+  };
+
   const scrollToSection = (id: string) => {
     setMobileMenuOpen(false);
     const element = document.getElementById(id);
@@ -43,7 +53,7 @@ const LandingPage: React.FC = () => {
     return (
       <div 
         key={plan.id}
-        className={`flex flex-col h-full rounded-3xl transition-all duration-300 ${
+        className={`flex flex-col h-full rounded-3xl transition-all duration-300 relative ${
           plan.popular 
             ? 'bg-gradient-to-b from-blue-600 to-blue-800 text-white shadow-2xl scale-105 z-10 p-1' 
             : plan.id === 'enterprise' 
@@ -94,11 +104,11 @@ const LandingPage: React.FC = () => {
 
           <Button 
             fullWidth 
-            variant={plan.popular ? 'white' : plan.id === 'enterprise' || plan.popular ? 'dark' : 'secondary'} 
-            onClick={() => plan.isCustom ? scrollToSection('contact') : navigate('/register')}
+            variant={plan.popular ? 'white' : (plan.id === 'enterprise' ? 'dark' : 'secondary')} 
+            onClick={() => handleSubscribe(plan)}
             className={`mb-8 ${plan.popular ? 'text-blue-700 font-bold' : ''}`}
           >
-            {plan.isCustom ? 'Falar com Vendas' : `Assinar ${plan.name}`}
+            {plan.isCustom ? 'Falar com Consultor' : `Assinar ${plan.name}`}
           </Button>
 
           <div className={`border-t pt-6 flex-1 ${plan.popular ? 'border-white/10' : 'border-slate-100'}`}>
@@ -140,7 +150,7 @@ const LandingPage: React.FC = () => {
             <Link to="/login" className="text-slate-600 font-bold hover:text-blue-600 text-sm transition-colors px-3 py-2">
               Entrar
             </Link>
-            <Button size="md" onClick={() => navigate('/demo')} className="shadow-lg shadow-blue-600/20">
+            <Button size="md" onClick={() => navigate('/register')} className="shadow-lg shadow-blue-600/20">
               Teste Grátis
             </Button>
           </div>
@@ -156,7 +166,7 @@ const LandingPage: React.FC = () => {
               <button onClick={() => scrollToSection('features')} className="text-left font-medium text-slate-600 py-2 border-b border-slate-50">Funcionalidades</button>
               <button onClick={() => scrollToSection('pricing')} className="text-left font-medium text-slate-600 py-2 border-b border-slate-50">Planos</button>
               <Link to="/login" className="font-bold text-slate-800 py-2">Fazer Login</Link>
-              <Button fullWidth onClick={() => { navigate('/demo'); setMobileMenuOpen(false); }}>
+              <Button fullWidth onClick={() => { navigate('/register'); setMobileMenuOpen(false); }}>
                 Começar Teste Grátis
               </Button>
             </div>
@@ -190,8 +200,8 @@ const LandingPage: React.FC = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
-              <Button size="lg" onClick={() => navigate('/demo')} className="h-14 px-8 text-base shadow-xl shadow-blue-600/20 hover:scale-105 transition-transform">
-                Iniciar Demonstração
+              <Button size="lg" onClick={() => navigate('/register')} className="h-14 px-8 text-base shadow-xl shadow-blue-600/20 hover:scale-105 transition-transform">
+                Começar agora
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
               <Button variant="secondary" size="lg" onClick={() => scrollToSection('how-it-works')} className="h-14 px-8 text-base bg-white/80 backdrop-blur">
@@ -375,7 +385,6 @@ const LandingPage: React.FC = () => {
             {PLANS.map(plan => renderPriceCard(plan))}
           </div>
 
-          {/* Trust Bar */}
           <div className="mt-16 pt-10 border-t border-slate-800 grid md:grid-cols-3 gap-8 text-center">
              <div className="px-4">
                <ShieldCheck className="w-10 h-10 text-blue-500 mx-auto mb-3" />
@@ -392,39 +401,6 @@ const LandingPage: React.FC = () => {
                <h4 className="font-bold text-white mb-1">Suporte Especializado</h4>
                <p className="text-xs text-slate-400">Time composto por Engenheiros de Segurança.</p>
              </div>
-          </div>
-        </div>
-      </section>
-
-      {/* --- FAQ SECTION --- */}
-      <section id="faq" className="py-24 bg-white">
-        <div className="container mx-auto px-6 max-w-3xl">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-heading font-bold text-slate-900">Perguntas Frequentes</h2>
-          </div>
-          
-          <div className="space-y-4">
-            {[
-              { q: "A metodologia é validada pelo Ministério do Trabalho?", a: "Sim. Utilizamos escalas baseadas no modelo demanda-controle e esforço-recompensa, citadas no manual da NR-17 e diretrizes da NR-01." },
-              { q: "Posso colocar a minha logomarca nos relatórios?", a: "Sim! A partir do plano Business, todos os relatórios PDF são gerados com o seu logotipo e identidade visual (White-Label)." },
-              { q: "Como funciona a coleta anônima?", a: "O sistema gera um link único para cada setor da empresa cliente. O trabalhador acessa sem login/senha, garantindo sigilo total das respostas individuais." },
-              { q: "Existe limite de empresas cadastradas?", a: "Não. Você pode cadastrar quantos CNPJs quiser. O limite do plano é apenas sobre o volume total de avaliações (respondentes) no mês." }
-            ].map((item, i) => (
-              <div key={i} className="border border-slate-200 rounded-lg overflow-hidden">
-                <button 
-                  onClick={() => toggleFaq(i)}
-                  className="w-full px-6 py-4 text-left bg-white flex justify-between items-center hover:bg-slate-50 transition-colors"
-                >
-                  <span className="font-bold text-slate-800">{item.q}</span>
-                  {activeFaq === i ? <ChevronUp className="text-blue-600"/> : <ChevronDown className="text-slate-400"/>}
-                </button>
-                {activeFaq === i && (
-                  <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 text-slate-600 text-sm leading-relaxed">
-                    {item.a}
-                  </div>
-                )}
-              </div>
-            ))}
           </div>
         </div>
       </section>
@@ -457,21 +433,10 @@ const LandingPage: React.FC = () => {
                   <li><a href="#" className="hover:text-blue-600">LGPD</a></li>
                 </ul>
               </div>
-              <div>
-                <h4 className="font-bold text-slate-900 mb-3">Contato</h4>
-                <ul className="space-y-2 text-slate-500">
-                  <li>suporte@nrzen.com.br</li>
-                  <li>São Paulo, SP</li>
-                </ul>
-              </div>
             </div>
           </div>
-          
-          <div className="border-t border-slate-200 pt-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center text-xs text-slate-400">
-            <p>&copy; 2025 NR ZEN Tecnologia Ltda. Todos os direitos reservados.</p>
-            <div className="flex gap-4 mt-4 md:mt-0">
-               <span>Feito com segurança para SST.</span>
-            </div>
+          <div className="border-t border-slate-200 pt-8 text-center text-xs text-slate-400">
+            <p>&copy; 2025 NR ZEN Tecnologia Ltda.</p>
           </div>
         </div>
       </footer>

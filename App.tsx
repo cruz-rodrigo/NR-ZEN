@@ -18,6 +18,7 @@ import Report from './pages/Report.tsx';
 import Reports from './pages/Reports.tsx';
 import DemoLogin from './pages/DemoLogin.tsx';
 import TestDb from './pages/TestDb.tsx';
+import CheckoutOrchestrator from './pages/CheckoutOrchestrator.tsx';
 import { PaymentSuccess, PaymentCancel } from './pages/PaymentResult.tsx';
 import { AuthProvider, useAuth } from './context/AuthContext.tsx';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
@@ -25,22 +26,21 @@ import { AlertTriangle, RefreshCcw } from 'lucide-react';
 interface EBProps { children?: ReactNode; }
 interface EBState { hasError: boolean; error?: Error; }
 
-// Fixed: Importing Component directly and adding a constructor helps resolve 'this.props' visibility in some TypeScript configurations
-class ErrorBoundary extends Component<EBProps, EBState> {
+// Fix: Explicitly extending React.Component and declaring properties to resolve TypeScript missing property errors
+class ErrorBoundary extends React.Component<EBProps, EBState> {
+  // Fix: Declaring state property at class level helps TypeScript recognize it when using generic extension
+  public state: EBState = { hasError: false };
+
   constructor(props: EBProps) {
     super(props);
-    this.state = { hasError: false };
   }
-
-  static getDerivedStateFromError(error: Error): EBState {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error("CRITICAL UI ERROR:", error, info);
-  }
-
+  
+  static getDerivedStateFromError(error: Error): EBState { return { hasError: true, error }; }
+  
+  componentDidCatch(error: Error, info: ErrorInfo) { console.error("CRITICAL UI ERROR:", error, info); }
+  
   render() {
+    // Fix: line 32 - Accessing this.state is now correctly typed
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center">
@@ -54,7 +54,7 @@ class ErrorBoundary extends Component<EBProps, EBState> {
         </div>
       );
     }
-    // Fixed: Accessing children from this.props now correctly recognized by compiler
+    // Fix: line 50 - Accessing this.props is now correctly typed
     return this.props.children;
   }
 }
@@ -77,9 +77,8 @@ const App: React.FC = () => {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             
-            {/* Rotas legadas mantidas por segurança, novas rotas adicionadas */}
-            <Route path="/payment/success" element={<PaymentSuccess />} />
-            <Route path="/payment/cancel" element={<PaymentCancel />} />
+            {/* Fluxo de Assinatura */}
+            <Route path="/checkout/start" element={<CheckoutOrchestrator />} />
             <Route path="/billing/success" element={<PaymentSuccess />} />
             <Route path="/billing/cancel" element={<PaymentCancel />} />
             
