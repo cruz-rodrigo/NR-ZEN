@@ -37,10 +37,10 @@ export const PLANS: PlanConfig[] = [
     name: 'Consultor',
     description: 'Para profissionais autônomos iniciando a digitalização.',
     priceMonthly: 199,
-    priceYearly: 1990, // ~165/mês
+    priceYearly: 1990, // R$ 165,83 /mês no anual
     stripe: {
       monthly: 'price_1SguTzGcHKyraESSSiH1iN87',
-      yearly: null // Adicionar quando disponível no Stripe
+      yearly: 'price_1SguTzGcHKyraESSSiH1iN87_YEAR'
     },
     limits: {
       evaluations: 300,
@@ -61,11 +61,11 @@ export const PLANS: PlanConfig[] = [
     name: 'Business',
     description: 'Para consultorias em crescimento com equipe.',
     priceMonthly: 597,
-    priceYearly: 5988, // ~499/mês
+    priceYearly: 5988, // R$ 499 /mês no anual
     popular: true,
     stripe: {
       monthly: 'price_1SgucBGcHKyraESSOCbesRUk',
-      yearly: null
+      yearly: 'price_1SgucBGcHKyraESSOCbesRUk_YEAR'
     },
     limits: {
       evaluations: 1500,
@@ -87,10 +87,10 @@ export const PLANS: PlanConfig[] = [
     name: 'Corporate',
     description: 'Para grandes consultorias com alto volume.',
     priceMonthly: 899,
-    priceYearly: 8988, // ~749/mês
+    priceYearly: 8988, // R$ 749 /mês no anual
     stripe: {
-      monthly: 'price_1SguTzGcHKyraESSSiH1iN87_CORP', // Substituir por ID real do Stripe
-      yearly: null
+      monthly: 'price_corporate_m',
+      yearly: 'price_corporate_y'
     },
     limits: {
       evaluations: 5000,
@@ -138,6 +138,7 @@ export const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-    maximumFractionDigits: 0
+    minimumFractionDigits: value % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2
   }).format(value);
 };
