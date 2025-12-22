@@ -1,25 +1,25 @@
 
-import React, { ReactNode, ErrorInfo } from 'react';
+import React, { ReactNode, ErrorInfo, Component } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import LandingPage from './pages/LandingPage';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import Dashboard from './pages/Dashboard';
-import Companies from './pages/Companies';
-import Surveys from './pages/Surveys';
-import Settings from './pages/Settings';
-import Billing from './pages/Billing';
-import Onboarding from './pages/Onboarding';
-import SectorDetail from './pages/SectorDetail';
-import Questionnaire from './pages/Questionnaire';
-import Report from './pages/Report';
-import Reports from './pages/Reports';
-import DemoLogin from './pages/DemoLogin';
-import TestDb from './pages/TestDb';
-import { PaymentSuccess, PaymentCancel } from './pages/PaymentResult';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import LandingPage from './pages/LandingPage.tsx';
+import Login from './pages/Login.tsx';
+import Register from './pages/Register.tsx';
+import ForgotPassword from './pages/ForgotPassword.tsx';
+import ResetPassword from './pages/ResetPassword.tsx';
+import Dashboard from './pages/Dashboard.tsx';
+import Companies from './pages/Companies.tsx';
+import Surveys from './pages/Surveys.tsx';
+import Settings from './pages/Settings.tsx';
+import Billing from './pages/Billing.tsx';
+import Onboarding from './pages/Onboarding.tsx';
+import SectorDetail from './pages/SectorDetail.tsx';
+import Questionnaire from './pages/Questionnaire.tsx';
+import Report from './pages/Report.tsx';
+import Reports from './pages/Reports.tsx';
+import DemoLogin from './pages/DemoLogin.tsx';
+import TestDb from './pages/TestDb.tsx';
+import { PaymentSuccess, PaymentCancel } from './pages/PaymentResult.tsx';
+import { AuthProvider, useAuth } from './context/AuthContext.tsx';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
 
 interface EBProps {
@@ -31,14 +31,12 @@ interface EBState {
   error?: Error;
 }
 
-// Fix: Use React.Component explicitly and define property types to ensure 'state' and 'props' are correctly recognized by TypeScript
+// Fix: Changed 'extends Component' to 'extends React.Component' to ensure 'this.props' is correctly typed and recognized by TypeScript
 class ErrorBoundary extends React.Component<EBProps, EBState> {
-  // Explicitly defining state property to resolve "Property 'state' does not exist" errors
-  public override state: EBState = { hasError: false };
+  public state: EBState = { hasError: false };
 
   constructor(props: EBProps) {
     super(props);
-    // Fix: Correctly initialize state in the constructor
     this.state = { hasError: false };
   }
 
@@ -51,7 +49,6 @@ class ErrorBoundary extends React.Component<EBProps, EBState> {
   }
 
   render() {
-    // Fix: Accessing 'state' which is now correctly inherited and typed
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center">
@@ -74,7 +71,7 @@ class ErrorBoundary extends React.Component<EBProps, EBState> {
         </div>
       );
     }
-    // Fix: Accessing 'props.children' which is now correctly inherited and typed
+    // Fix: Accessing children from props
     return this.props.children;
   }
 }
@@ -105,7 +102,6 @@ const App: React.FC = () => {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             
-            {/* Rota de retorno do Stripe */}
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/payment/cancel" element={<PaymentCancel />} />
             

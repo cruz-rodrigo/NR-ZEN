@@ -4,20 +4,21 @@ import { requireAuth, AuthedRequest } from '../_authMiddleware.js';
 import { stripe } from '../_stripeClient.js';
 
 /**
- * NR ZEN - Configuração de Planos (Stripe Mode: TEST)
+ * NR ZEN - Configuração de Planos (Sincronizado com src/config/plans.ts)
  */
-const PLANS = {
+const PLANS_MAP = {
   consultant: {
-    priceId: 'price_1SguTzGcHKyraESSSiH1iN87', // NR ZEN – Plano Consultor
-    label: 'Consultor',
+    priceId: 'price_1SguTzGcHKyraESSSiH1iN87',
   },
   business: {
-    priceId: 'price_1SgucBGcHKyraESSOCbesRUk', // NR ZEN – Plano Business
-    label: 'Business',
+    priceId: 'price_1SgucBGcHKyraESSOCbesRUk',
   },
+  corporate: {
+    priceId: 'price_1SguTzGcHKyraESSSiH1iN87_CORP', // ID do Stripe para Corporate
+  }
 } as const;
 
-type PlanSlug = keyof typeof PLANS;
+type PlanSlug = keyof typeof PLANS_MAP;
 
 export default requireAuth(async function handler(req: AuthedRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -30,14 +31,14 @@ export default requireAuth(async function handler(req: AuthedRequest, res: Verce
 
   try {
     // 1. Validação do Plano
-    if (!plan || !PLANS[plan as PlanSlug]) {
+    if (!plan || !PLANS_MAP[plan as PlanSlug]) {
       return res.status(400).json({ 
         error: 'INVALID_PLAN',
-        message: 'O plano selecionado não é válido.'
+        message: 'O plano selecionado não é válido para checkout automático.'
       });
     }
 
-    const selectedPlan = PLANS[plan as PlanSlug];
+    const selectedPlan = PLANS_MAP[plan as PlanSlug];
 
     // 2. Determinar Origin
     const protocol = req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
@@ -61,9 +62,7 @@ export default requireAuth(async function handler(req: AuthedRequest, res: Verce
     return res.status(200).json({ url: session.url });
 
   } catch (err: any) {
-    // DIAGNÓSTICO MELHORADO
     console.error("[checkout] error:", err);
-
     const isDev = process.env.NODE_ENV === "development";
     
     return res.status(500).json({ 

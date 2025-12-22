@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -5,9 +6,10 @@ import {
   Menu, X, Star, ShieldCheck, Zap, HeartHandshake, Unlock, 
   ChevronDown, ChevronUp, Play, Gem
 } from 'lucide-react';
-import Button from '../components/Button';
-import { Logo } from '../components/Layout';
-import { APP_URL } from '../constants';
+import Button from '../components/Button.tsx';
+import { Logo } from '../components/Layout.tsx';
+import { APP_URL } from '../constants.ts';
+import { PLANS, formatCurrency, PlanConfig } from '../config/plans.ts';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -30,6 +32,93 @@ const LandingPage: React.FC = () => {
     }
   };
 
+  const renderPriceCard = (plan: PlanConfig) => {
+    const isYearly = billingCycle === 'yearly';
+    const hasYearlyOption = plan.priceYearly !== null;
+    
+    const displayPrice = isYearly && plan.priceYearly 
+      ? plan.priceYearly / 12 
+      : plan.priceMonthly;
+
+    return (
+      <div 
+        key={plan.id}
+        className={`flex flex-col h-full rounded-3xl transition-all duration-300 ${
+          plan.popular 
+            ? 'bg-gradient-to-b from-blue-600 to-blue-800 text-white shadow-2xl scale-105 z-10 p-1' 
+            : plan.id === 'enterprise' 
+              ? 'bg-[#0B1120] text-white border border-[#1E293B] hover:border-amber-500/40 p-6'
+              : 'bg-white border border-slate-200 hover:border-blue-300 p-6 shadow-sm'
+        }`}
+      >
+        <div className={`${plan.popular ? 'bg-blue-600 rounded-[22px] h-full p-6' : ''}`}>
+          {plan.popular && (
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-amber-400 text-amber-900 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+              Mais Escolhido
+            </div>
+          )}
+
+          <div className="flex justify-between items-start mb-2">
+            <h3 className={`text-lg font-bold tracking-tight ${plan.id === 'enterprise' ? 'group-hover:text-amber-400' : ''}`}>
+              {plan.name}
+            </h3>
+            {plan.id === 'enterprise' && <Gem size={20} className="text-amber-500" />}
+          </div>
+
+          <div className="mb-4 min-h-[80px]">
+            {plan.isCustom ? (
+              <div className="text-3xl font-bold">Sob Medida</div>
+            ) : (
+              <>
+                {isYearly && hasYearlyOption && (
+                   <span className={`text-xs line-through opacity-50 block`}>
+                     {formatCurrency(plan.priceMonthly)}/mês
+                   </span>
+                )}
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-bold">{formatCurrency(displayPrice)}</span>
+                  <span className="text-sm opacity-60">/mês</span>
+                </div>
+                {isYearly && hasYearlyOption && (
+                  <p className="text-[10px] text-emerald-400 font-bold mt-1">
+                    Cobrado {formatCurrency(plan.priceYearly!)}/ano
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+
+          <p className={`text-sm mb-6 italic min-h-[48px] ${plan.popular ? 'text-blue-100' : 'text-slate-500'}`}>
+            {plan.description}
+          </p>
+
+          <Button 
+            fullWidth 
+            variant={plan.popular ? 'white' : plan.id === 'enterprise' || plan.popular ? 'dark' : 'secondary'} 
+            onClick={() => plan.isCustom ? scrollToSection('contact') : navigate('/register')}
+            className={`mb-8 ${plan.popular ? 'text-blue-700 font-bold' : ''}`}
+          >
+            {plan.isCustom ? 'Falar com Vendas' : `Assinar ${plan.name}`}
+          </Button>
+
+          <div className={`border-t pt-6 flex-1 ${plan.popular ? 'border-white/10' : 'border-slate-100'}`}>
+            <p className={`text-[10px] font-black uppercase tracking-widest mb-4 opacity-50`}>
+              Recursos Inclusos
+            </p>
+            <ul className="space-y-3 text-sm">
+              {plan.features.map((feat, i) => (
+                <li key={i} className="flex gap-2 items-start">
+                  <CheckCircle2 size={16} className={`${plan.popular ? 'text-blue-200' : 'text-blue-500'} shrink-0 mt-0.5`} />
+                  <span className={plan.popular ? 'text-blue-50' : 'text-slate-600'}>{feat}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
       
@@ -40,7 +129,6 @@ const LandingPage: React.FC = () => {
             <Logo size="lg" />
           </Link>
           
-          {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8 font-medium text-sm text-slate-600">
             <button onClick={() => scrollToSection('features')} className="hover:text-blue-600 transition-colors">Funcionalidades</button>
             <button onClick={() => scrollToSection('how-it-works')} className="hover:text-blue-600 transition-colors">Como Funciona</button>
@@ -48,7 +136,6 @@ const LandingPage: React.FC = () => {
             <button onClick={() => scrollToSection('faq')} className="hover:text-blue-600 transition-colors">Dúvidas</button>
           </nav>
 
-          {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-4">
             <Link to="/login" className="text-slate-600 font-bold hover:text-blue-600 text-sm transition-colors px-3 py-2">
               Entrar
@@ -58,13 +145,11 @@ const LandingPage: React.FC = () => {
             </Button>
           </div>
 
-          {/* Mobile Menu Toggle */}
           <button className="md:hidden text-slate-700 p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
 
-        {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-white border-t border-slate-100 absolute w-full shadow-xl animate-fade-in-down">
             <div className="flex flex-col p-6 gap-4">
@@ -81,15 +166,12 @@ const LandingPage: React.FC = () => {
 
       {/* --- HERO SECTION --- */}
       <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
-        {/* Background Gradients */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-[1400px] pointer-events-none -z-10">
            <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-100/50 rounded-full blur-[100px]"></div>
            <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-indigo-100/50 rounded-full blur-[100px]"></div>
         </div>
 
         <div className="container mx-auto px-6 flex flex-col lg:flex-row items-center gap-16">
-          
-          {/* Hero Text */}
           <div className="lg:w-1/2 text-center lg:text-left space-y-8 animate-fade-in-down">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider">
               <Star size={12} className="fill-blue-600" />
@@ -124,13 +206,11 @@ const LandingPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Hero Visual (Interactive Mockup) */}
           <div className="lg:w-1/2 w-full perspective-1000">
             <div className="relative transform lg:rotate-y-[-5deg] lg:rotate-x-[5deg] transition-all duration-500 hover:rotate-0 hover:scale-[1.02]">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur-2xl opacity-20 transform translate-y-10"></div>
               
               <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/60 overflow-hidden relative z-10">
-                {/* Mockup Header */}
                 <div className="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center gap-2">
                   <div className="flex gap-1.5">
                     <div className="w-3 h-3 rounded-full bg-red-400/80"></div>
@@ -142,7 +222,6 @@ const LandingPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Mockup Body */}
                 <div className="p-6 md:p-8 bg-slate-50/50">
                    <div className="flex justify-between items-center mb-8">
                      <div>
@@ -254,7 +333,6 @@ const LandingPage: React.FC = () => {
 
       {/* --- PRICING SECTION --- */}
       <section id="pricing" className="py-24 bg-slate-900 text-white relative overflow-hidden">
-        {/* Decorative blobs */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-30">
            <div className="absolute top-[10%] left-[20%] w-96 h-96 bg-blue-600 rounded-full blur-[120px]"></div>
            <div className="absolute bottom-[10%] right-[20%] w-96 h-96 bg-indigo-600 rounded-full blur-[120px]"></div>
@@ -264,10 +342,9 @@ const LandingPage: React.FC = () => {
           <div className="text-center max-w-3xl mx-auto mb-12">
             <h2 className="text-3xl lg:text-4xl font-heading font-bold mb-6">Planos flexíveis para sua consultoria</h2>
             <p className="text-slate-400 text-lg mb-8">
-              Comece pequeno e cresça conforme sua carteira de clientes aumenta. Sem fidelidade.
+              Pague pelo volume de avaliações e cresça conforme sua carteira de clientes aumenta.
             </p>
 
-            {/* HIGH VISIBILITY TOGGLE SWITCH */}
             <div className="flex items-center justify-center gap-6 mt-8 mb-4">
               <span className={`text-base font-bold tracking-wide transition-colors ${billingCycle === 'monthly' ? 'text-white' : 'text-slate-500'}`}>
                 Mensal
@@ -279,10 +356,7 @@ const LandingPage: React.FC = () => {
                 role="switch"
                 aria-checked={billingCycle === 'yearly'}
               >
-                {/* Track Background */}
                 <div className={`absolute inset-1 rounded-full transition-colors duration-300 ${billingCycle === 'yearly' ? 'bg-blue-900/50' : 'bg-transparent'}`}></div>
-                
-                {/* Knob */}
                 <div className={`w-7 h-7 bg-blue-500 rounded-full shadow-lg transform transition-transform duration-300 flex items-center justify-center ${billingCycle === 'yearly' ? 'translate-x-10 bg-emerald-400' : 'translate-x-0'}`}>
                    {billingCycle === 'yearly' && <span className="block w-2 h-2 bg-white rounded-full"></span>}
                 </div>
@@ -297,101 +371,8 @@ const LandingPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch">
-            
-            {/* PLANO CONSULTOR */}
-            <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-2xl p-6 flex flex-col hover:border-slate-600 transition-colors">
-              <h3 className="text-lg font-bold text-white mb-2">Consultor</h3>
-              <div className="mb-4">
-                <span className="text-3xl font-bold text-white">R$ {billingCycle === 'monthly' ? '199' : '165'}</span>
-                <span className="text-slate-400 text-sm">/mês</span>
-              </div>
-              <p className="text-sm text-slate-400 mb-6 min-h-[40px]">Para profissionais autônomos iniciando a digitalização.</p>
-              <Button fullWidth variant="secondary" onClick={() => navigate('/register')} className="mb-6">Começar Agora</Button>
-              
-              <ul className="space-y-3 text-sm text-slate-300 flex-1">
-                <li className="flex gap-2"><CheckCircle2 size={16} className="text-blue-500 shrink-0"/> Até 300 avaliações/mês</li>
-                <li className="flex gap-2"><CheckCircle2 size={16} className="text-blue-500 shrink-0"/> 1 Usuário Admin</li>
-                <li className="flex gap-2"><CheckCircle2 size={16} className="text-blue-500 shrink-0"/> Relatórios Padrão</li>
-              </ul>
-            </div>
-
-            {/* PLANO BUSINESS (DESTACADO) */}
-            <div className="bg-gradient-to-b from-blue-600 to-blue-800 rounded-2xl p-1 shadow-2xl relative transform md:-translate-y-4 z-10 flex flex-col">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-amber-400 text-amber-900 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
-                Mais Popular
-              </div>
-              <div className="bg-blue-600 rounded-xl p-6 flex-1 flex flex-col">
-                <h3 className="text-lg font-bold text-white mb-2">Business</h3>
-                <div className="mb-4">
-                  <span className="text-4xl font-bold text-white">R$ {billingCycle === 'monthly' ? '597' : '499'}</span>
-                  <span className="text-blue-200 text-sm">/mês</span>
-                </div>
-                <p className="text-sm text-blue-100 mb-6 min-h-[40px]">Para consultorias em crescimento com equipe.</p>
-                <Button fullWidth variant="white" onClick={() => navigate('/register')} className="mb-6 shadow-xl font-bold text-blue-700">
-                  Assinar Business
-                </Button>
-                
-                <ul className="space-y-3 text-sm text-white flex-1">
-                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-amber-300 shrink-0"/> Até 1.500 avaliações/mês</li>
-                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-amber-300 shrink-0"/> 3 Usuários Admin</li>
-                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-amber-300 shrink-0"/> Relatórios White-Label</li>
-                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-amber-300 shrink-0"/> Suporte Prioritário</li>
-                </ul>
-              </div>
-            </div>
-
-            {/* PLANO CORPORATE */}
-            <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-2xl p-6 flex flex-col hover:border-slate-600 transition-colors">
-              <h3 className="text-lg font-bold text-white mb-2">Corporate</h3>
-              <div className="mb-4">
-                <span className="text-3xl font-bold text-white">R$ {billingCycle === 'monthly' ? '899' : '749'}</span>
-                <span className="text-slate-400 text-sm">/mês</span>
-              </div>
-              <p className="text-sm text-slate-400 mb-6 min-h-[40px]">Para grandes consultorias com alto volume.</p>
-              <Button fullWidth variant="secondary" onClick={() => navigate('/register')} className="mb-6">Assinar Corporate</Button>
-              
-              <ul className="space-y-3 text-sm text-slate-300 flex-1">
-                <li className="flex gap-2"><CheckCircle2 size={16} className="text-blue-500 shrink-0"/> Até 5.000 avaliações/mês</li>
-                <li className="flex gap-2"><CheckCircle2 size={16} className="text-blue-500 shrink-0"/> 10 Usuários Admin</li>
-                <li className="flex gap-2"><CheckCircle2 size={16} className="text-blue-500 shrink-0"/> Onboarding Assistido</li>
-                <li className="flex gap-2"><CheckCircle2 size={16} className="text-blue-500 shrink-0"/> API de Integração</li>
-              </ul>
-            </div>
-
-            {/* PLANO ENTERPRISE - RESTORED PREMIUM LOOK */}
-            <div className="bg-[#0B1120] rounded-3xl p-6 border border-[#1E293B] hover:border-amber-500/40 transition-all hover:shadow-2xl hover:shadow-amber-900/10 flex flex-col group h-full relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#0B1120] via-amber-500/60 to-[#0B1120]"></div>
-              
-              <div className="flex justify-between items-start mb-2">
-                 <h3 className="text-lg font-bold text-white tracking-tight group-hover:text-amber-400 transition-colors">Enterprise</h3>
-                 <Gem size={20} className="text-amber-500" />
-              </div>
-              
-              <div className="mb-4">
-                 <div className="text-3xl font-bold text-white">Custom</div>
-                 <p className="text-[10px] text-amber-500/80 font-medium mt-1 tracking-widest uppercase">Solução Sob Medida</p>
-              </div>
-
-              <p className="text-sm text-slate-300 mb-6 italic min-h-[40px]">Para grandes empresas, assessorias, franquias e SESMT Corporativo.</p>
-              
-              {/* BUTTON FIX: Use variant="dark" with amber accent */}
-              <Button fullWidth variant="dark" onClick={() => scrollToSection('contact')} className="hover:border-amber-500/50 hover:text-amber-400 mb-6 transition-all group-hover:bg-slate-800">
-                Falar com Vendas
-              </Button>
-
-              <div className="border-t border-slate-800 pt-6 flex-1">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 group-hover:text-amber-500/50 transition-colors">Exclusivo Enterprise</p>
-                <ul className="space-y-3 text-sm text-slate-300">
-                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-amber-500 flex-shrink-0"/> Volume Ilimitado</li>
-                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-amber-500 flex-shrink-0"/> Instância Dedicada</li>
-                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-amber-500 flex-shrink-0"/> Integração SSO & SAML</li>
-                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-amber-500 flex-shrink-0"/> Contrato Personalizado</li>
-                  <li className="flex gap-2"><CheckCircle2 size={16} className="text-amber-500 flex-shrink-0"/> SLA Garantido</li>
-                </ul>
-              </div>
-            </div>
-
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
+            {PLANS.map(plan => renderPriceCard(plan))}
           </div>
 
           {/* Trust Bar */}

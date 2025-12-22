@@ -1,33 +1,18 @@
 
 import React, { useState } from 'react';
-import Layout from '../components/Layout';
-import Card from '../components/Card';
-import Button from '../components/Button';
-import { useAuth } from '../context/AuthContext';
+import Layout from '../components/Layout.tsx';
+import Card from '../components/Card.tsx';
+import Button from '../components/Button.tsx';
+import { useAuth } from '../context/AuthContext.tsx';
 import { CheckCircle2, CreditCard, ShieldCheck, Zap, Loader2, AlertCircle } from 'lucide-react';
+import { PLANS, formatCurrency, PlanConfig } from '../src/config/plans.ts';
 
 const Billing: React.FC = () => {
   const { user, apiCall } = useAuth();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const plans = [
-    {
-      id: 'consultant',
-      name: 'Consultor',
-      price: 'R$ 199',
-      features: ['Até 300 avaliações/mês', 'CNPJs Ilimitados', 'Relatórios PDF Padrão', 'Suporte por E-mail'],
-      color: 'blue'
-    },
-    {
-      id: 'business',
-      name: 'Business',
-      price: 'R$ 597',
-      features: ['Até 1.500 avaliações/mês', 'Relatórios White-Label', 'Gestão de Acessos', 'Suporte Prioritário'],
-      color: 'indigo',
-      popular: true
-    }
-  ];
+  const selfServicePlans = PLANS.filter(p => !p.isCustom && p.id !== 'enterprise');
 
   const handleSubscribe = async (planId: string) => {
     setLoadingPlan(planId);
@@ -54,13 +39,12 @@ const Billing: React.FC = () => {
     }
   };
 
-  const currentPlanLabel = (tier: string) => {
-    switch(tier) {
-      case 'trial': return 'Período de Avaliação (Trial)';
-      case 'consultant': return 'Plano Consultor';
-      case 'business': return 'Plano Business';
-      default: return 'Plano Indefinido';
-    }
+  const currentPlanLabel = (tier?: string) => {
+    if (!tier) return 'Plano Indefinido';
+    if (tier === 'trial') return 'Período de Avaliação (Trial)';
+    
+    const plan = PLANS.find(p => p.id === tier);
+    return plan ? `Plano ${plan.name}` : 'Plano Indefinido';
   };
 
   return (
@@ -77,7 +61,7 @@ const Billing: React.FC = () => {
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-white">
             <span className="text-blue-400 text-xs font-bold uppercase tracking-widest bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">Status Atual</span>
-            <h2 className="text-2xl font-bold mt-3">{currentPlanLabel(user?.plan_tier || 'trial')}</h2>
+            <h2 className="text-2xl font-bold mt-3">{currentPlanLabel(user?.plan_tier)}</h2>
             <p className="text-slate-400 mt-1">Sua conta está ativa e em conformidade.</p>
           </div>
           <div className="flex gap-3">
@@ -95,8 +79,8 @@ const Billing: React.FC = () => {
         </div>
       )}
 
-      <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-        {plans.map((plan) => {
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        {selfServicePlans.map((plan) => {
           const isCurrent = user?.plan_tier === plan.id;
           const isLoading = loadingPlan === plan.id;
 
@@ -114,7 +98,7 @@ const Billing: React.FC = () => {
               <div className="mb-8">
                 <h3 className="text-xl font-bold text-slate-800">{plan.name}</h3>
                 <div className="mt-4 flex items-baseline gap-1">
-                  <span className="text-4xl font-black text-slate-900">{plan.price}</span>
+                  <span className="text-4xl font-black text-slate-900">{formatCurrency(plan.priceMonthly)}</span>
                   <span className="text-slate-500 text-sm">/mês</span>
                 </div>
               </div>
