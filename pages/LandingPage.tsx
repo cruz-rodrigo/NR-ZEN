@@ -2,23 +2,30 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  CheckCircle2, ArrowRight, BarChart3, Users, FileCheck, 
-  Menu, X, Star, ShieldCheck, Zap, Play, Gem
+  CheckCircle2, ArrowRight, BarChart3, Lock, Users, FileCheck, 
+  Menu, X, Star, ShieldCheck, Zap, HeartHandshake, Unlock, 
+  Play, Gem
 } from 'lucide-react';
-import Button from '../components/Button.tsx';
-import { Logo } from '../components/Layout.tsx';
-import { PLANS, formatCurrency, PlanConfig } from '../src/config/plans.ts';
+/* Fix: Correcting imports to point to root components and constants */
+import Button from '../components/Button';
+import { Logo } from '../components/Layout';
+import { APP_URL } from '../constants';
+/* Fix: Importing plans from src/config as they don't exist in root config */
+import { PLANS, formatCurrency, PlanConfig } from '../src/config/plans';
 
-/**
- * NR ZEN Marketing Landing Page
- * Handles product visualization, pricing cycles, and primary conversion funnels.
- */
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
-  // Fixed: scroll logic for landing page navigation
+  const handleSubscribe = (plan: PlanConfig) => {
+    if (plan.id === 'enterprise' || plan.isCustom) {
+      window.open('https://wa.me/5511999999999?text=Olá! Gostaria de saber mais sobre o plano Enterprise do NR ZEN.', '_blank');
+      return;
+    }
+    navigate(`/checkout/start?plan=${plan.id}&cycle=${billingCycle}`);
+  };
+
   const scrollToSection = (id: string) => {
     setMobileMenuOpen(false);
     const element = document.getElementById(id);
@@ -30,16 +37,10 @@ const LandingPage: React.FC = () => {
     }
   };
 
-  const handleSubscribe = (plan: PlanConfig) => {
-    if (plan.id === 'enterprise' || plan.isCustom) {
-      window.open('https://wa.me/5511999999999?text=Olá! Gostaria de saber mais sobre o plano Enterprise do NR ZEN.', '_blank');
-      return;
-    }
-    navigate(`/checkout/start?plan=${plan.id}&cycle=${billingCycle}`);
-  };
-
   const renderPriceCard = (plan: PlanConfig) => {
     const isYearly = billingCycle === 'yearly';
+    const hasYearlyOption = plan.priceYearly !== null;
+    
     const displayPrice = isYearly && plan.priceYearly 
       ? plan.priceYearly / 12 
       : plan.priceMonthly;
@@ -73,10 +74,22 @@ const LandingPage: React.FC = () => {
             {plan.isCustom ? (
               <div className="text-3xl font-bold">Sob Medida</div>
             ) : (
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold">{formatCurrency(displayPrice)}</span>
-                <span className="text-sm opacity-60">/mês</span>
-              </div>
+              <>
+                {isYearly && hasYearlyOption && (
+                   <span className={`text-xs line-through opacity-50 block`}>
+                     {formatCurrency(plan.priceMonthly)}/mês
+                   </span>
+                )}
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-bold">{formatCurrency(displayPrice)}</span>
+                  <span className="text-sm opacity-60">/mês</span>
+                </div>
+                {isYearly && hasYearlyOption && (
+                  <p className="text-[10px] text-emerald-400 font-bold mt-1">
+                    Cobrado {formatCurrency(plan.priceYearly!)}/ano
+                  </p>
+                )}
+              </>
             )}
           </div>
 
@@ -94,6 +107,9 @@ const LandingPage: React.FC = () => {
           </Button>
 
           <div className={`border-t pt-6 flex-1 ${plan.popular ? 'border-white/10' : 'border-slate-100'}`}>
+            <p className={`text-[10px] font-black uppercase tracking-widest mb-4 opacity-50`}>
+              Recursos Inclusos
+            </p>
             <ul className="space-y-3 text-sm">
               {plan.features.map((feat, i) => (
                 <li key={i} className="flex gap-2 items-start">
@@ -109,82 +125,137 @@ const LandingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900 selection:bg-blue-100">
-      <header className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+    <div className="min-h-screen bg-white font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+      <header className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all duration-300">
         <div className="container mx-auto px-6 h-20 flex items-center justify-between">
-          <Link to="/" onClick={() => window.scrollTo(0,0)}>
+          <Link to="/" onClick={() => window.scrollTo(0,0)} className="hover:opacity-80 transition-opacity">
             <Logo size="lg" />
           </Link>
           
           <nav className="hidden md:flex items-center gap-8 font-medium text-sm text-slate-600">
-            <button onClick={() => scrollToSection('features')} className="hover:text-blue-600">Funcionalidades</button>
-            <button onClick={() => scrollToSection('how-it-works')} className="hover:text-blue-600">Como Funciona</button>
-            <button onClick={() => scrollToSection('pricing')} className="hover:text-blue-600">Planos</button>
+            <button onClick={() => scrollToSection('features')} className="hover:text-blue-600 transition-colors">Funcionalidades</button>
+            <button onClick={() => scrollToSection('how-it-works')} className="hover:text-blue-600 transition-colors">Como Funciona</button>
+            <button onClick={() => scrollToSection('pricing')} className="hover:text-blue-600 transition-colors">Planos</button>
           </nav>
 
           <div className="hidden md:flex items-center gap-4">
-            <Link to="/login" className="text-slate-600 font-bold text-sm px-3">Entrar</Link>
-            <Button size="md" onClick={() => navigate('/teste-gratis')}>Teste Grátis</Button>
+            <Link to="/login" className="text-slate-600 font-bold hover:text-blue-600 text-sm transition-colors px-3 py-2">
+              Entrar
+            </Link>
+            {/* Fix: Added navigate call for 'Teste Grátis' route */}
+            <Button size="md" onClick={() => navigate('/teste-gratis')} className="shadow-lg shadow-blue-600/20">
+              Teste Grátis
+            </Button>
           </div>
 
-          <button className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          <button className="md:hidden text-slate-700 p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
+
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-white border-t border-slate-100 absolute w-full shadow-xl animate-fade-in-down">
+            <div className="flex flex-col p-6 gap-4">
+              <button onClick={() => scrollToSection('features')} className="text-left font-medium text-slate-600 py-2 border-b border-slate-50">Funcionalidades</button>
+              <button onClick={() => scrollToSection('pricing')} className="text-left font-medium text-slate-600 py-2 border-b border-slate-50">Planos</button>
+              <Link to="/login" className="font-bold text-slate-800 py-2">Fazer Login</Link>
+              <Button fullWidth onClick={() => { navigate('/register'); setMobileMenuOpen(false); }}>
+                Começar Teste Grátis
+              </Button>
+            </div>
+          </div>
+        )}
       </header>
 
-      <section className="relative pt-48 pb-32">
-        <div className="container mx-auto px-6 text-center lg:text-left flex flex-col lg:flex-row items-center gap-16">
-          <div className="lg:w-1/2 space-y-8">
-            <h1 className="text-6xl font-heading font-extrabold text-slate-900 leading-[1.1]">
+      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-[1400px] pointer-events-none -z-10">
+           <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-100/50 rounded-full blur-[100px]"></div>
+           <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-indigo-100/50 rounded-full blur-[100px]"></div>
+        </div>
+
+        <div className="container mx-auto px-6 flex flex-col lg:flex-row items-center gap-16">
+          <div className="lg:w-1/2 text-center lg:text-left space-y-8 animate-fade-in-down">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider">
+              <Star size={12} className="fill-blue-600" />
+              Nova NR-01 & NR-17
+            </div>
+            
+            <h1 className="text-5xl lg:text-6xl font-heading font-extrabold text-slate-900 leading-[1.1] tracking-tight">
               Gestão de Riscos Psicossociais <br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Simples e Automática.</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+                Simples e Automática.
+              </span>
             </h1>
-            <p className="text-lg text-slate-500 max-w-xl">Plataforma para consultorias de SST realizarem diagnósticos psicossociais e gerarem relatórios para o PGR/eSocial.</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button size="lg" onClick={() => navigate('/teste-gratis')}>Começar agora <ArrowRight className="ml-2 w-5 h-5" /></Button>
-              <Button variant="secondary" size="lg" onClick={() => scrollToSection('how-it-works')}><Play size={18} className="mr-2" /> Ver Demo</Button>
+            
+            <p className="text-lg text-slate-500 leading-relaxed max-w-xl mx-auto lg:mx-0">
+              A plataforma completa para consultorias de SST realizarem diagnósticos psicossociais, gerarem relatórios técnicos e planos de ação em conformidade com o eSocial.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
+              {/* Fix: Added navigate call for 'Começar agora' route and using ArrowRight icon */}
+              <Button size="lg" onClick={() => navigate('/teste-gratis')} className="h-14 px-8 text-base shadow-xl shadow-blue-600/20 hover:scale-105 transition-transform">
+                Começar agora
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+              <Button variant="secondary" size="lg" onClick={() => scrollToSection('how-it-works')} className="h-14 px-8 text-base bg-white/80 backdrop-blur">
+                <Play size={18} className="mr-2 fill-slate-700" />
+                Ver como funciona
+              </Button>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="features" className="py-24 bg-slate-50 text-center">
-        <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-bold mb-12">Recursos</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { icon: Users, title: "Coleta Segura", desc: "Anonimato garantido em conformidade com LGPD." },
-              { icon: BarChart3, title: "Análise Realtime", desc: "Geração instantânea de scores de risco." },
-              { icon: FileCheck, title: "Relatórios PGR", desc: "PDFs técnicos prontos para entrega oficial." }
-            ].map((f, i) => (
-              <div key={i} className="bg-white p-8 rounded-2xl border border-slate-200">
-                <f.icon className="text-blue-600 mb-4 mx-auto" size={32} />
-                <h3 className="text-xl font-bold mb-2">{f.title}</h3>
-                <p className="text-slate-500 text-sm">{f.desc}</p>
-              </div>
-            ))}
-          </div>
+      <section id="features" className="py-24 bg-slate-50">
+        <div className="container mx-auto px-6 text-center">
+            <h2 className="text-3xl font-bold text-slate-900 mb-12">Principais Funcionalidades</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+                {[
+                    { icon: Users, title: "Coleta Anônima", desc: "Garanta a sinceridade com coletas seguras." },
+                    { icon: BarChart3, title: "Análise em Tempo Real", desc: "Veja os resultados logo após o envio." },
+                    { icon: FileCheck, title: "Relatórios de Conformidade", desc: "PDFs prontos para o PGR." }
+                ].map((f, i) => (
+                    <div key={i} className="p-6 bg-white rounded-xl shadow-sm border border-slate-100">
+                        <f.icon className="mx-auto text-blue-600 mb-4" size={32} />
+                        <h3 className="font-bold text-lg mb-2">{f.title}</h3>
+                        <p className="text-slate-500 text-sm">{f.desc}</p>
+                    </div>
+                ))}
+            </div>
         </div>
       </section>
 
-      <section id="pricing" className="py-24 bg-slate-900 text-white">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-8">Planos e Preços</h2>
-            <div className="flex justify-center gap-6">
-              <button onClick={() => setBillingCycle('monthly')} className={billingCycle === 'monthly' ? 'text-blue-400 font-bold' : 'text-slate-500'}>Mensal</button>
-              <button onClick={() => setBillingCycle('yearly')} className={billingCycle === 'yearly' ? 'text-blue-400 font-bold' : 'text-slate-500'}>Anual (-17%)</button>
+      <section id="pricing" className="py-24 bg-slate-900 text-white relative overflow-hidden">
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl lg:text-4xl font-heading font-bold mb-6">Planos flexíveis para sua consultoria</h2>
+            <div className="flex items-center justify-center gap-6 mt-8 mb-4">
+              <span className={`text-base font-bold tracking-wide transition-colors ${billingCycle === 'monthly' ? 'text-white' : 'text-slate-500'}`}>Mensal</span>
+              <button 
+                onClick={() => setBillingCycle(prev => prev === 'monthly' ? 'yearly' : 'monthly')}
+                className="w-20 h-10 bg-slate-800 rounded-full p-1 relative transition-all duration-300 border-2 border-slate-600"
+              >
+                <div className={`w-7 h-7 bg-blue-500 rounded-full shadow-lg transform transition-transform duration-300 ${billingCycle === 'yearly' ? 'translate-x-10 bg-emerald-400' : 'translate-x-0'}`}></div>
+              </button>
+              <span className={`text-base font-bold tracking-wide transition-colors flex items-center gap-2 ${billingCycle === 'yearly' ? 'text-white' : 'text-slate-500'}`}>
+                Anual <span className="bg-emerald-500 text-white text-[10px] px-2 py-1 rounded">-17% OFF</span>
+              </span>
             </div>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
             {PLANS.map(plan => renderPriceCard(plan))}
           </div>
         </div>
       </section>
+
+      <footer className="bg-slate-50 border-t border-slate-200 py-12">
+        <div className="container mx-auto px-6 text-center">
+            <Logo size="md" className="mx-auto mb-4 opacity-50 grayscale" />
+            <p className="text-xs text-slate-400">&copy; 2025 NR ZEN Tecnologia Ltda.</p>
+        </div>
+      </footer>
     </div>
   );
 };
 
-// Fixed: Default export to satisfy App.tsx import requirements
 export default LandingPage;

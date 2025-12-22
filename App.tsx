@@ -24,10 +24,6 @@ import TestDb from './pages/TestDb.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
 import { MockProvider } from './context/MockContext.tsx';
 
-/**
- * Root Application Component
- * Configures the global state providers and application routing structure.
- */
 const App: React.FC = () => {
   return (
     <AuthProvider>
@@ -61,7 +57,6 @@ const App: React.FC = () => {
             <Route path="/questionario/:code" element={<Questionnaire />} />
             <Route path="/test-db" element={<TestDb />} />
 
-            {/* Fallback to Home */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>
@@ -70,5 +65,4 @@ const App: React.FC = () => {
   );
 };
 
-// Fixed: Explicit default export to resolve import errors in index.tsx
 export default App;
