@@ -35,9 +35,9 @@ export const PLANS: PlanConfig[] = [
   {
     id: 'consultant',
     name: 'Consultor',
-    description: 'Para profissionais autônomos iniciando a digitalização.',
+    description: 'Para profissionais autônomos que precisam gerar relatórios oficiais.',
     priceMonthly: 199,
-    priceYearly: 1990, // R$ 165,83 /mês no anual
+    priceYearly: 1990, 
     stripe: {
       monthly: 'price_1SguTzGcHKyraESSSiH1iN87',
       yearly: 'price_1SguTzGcHKyraESSSiH1iN87_YEAR'
@@ -50,18 +50,18 @@ export const PLANS: PlanConfig[] = [
       api: false
     },
     features: [
-      'Até 300 avaliações/mês',
-      'CNPJs Ilimitados',
-      'Relatórios PDF Padrão',
-      'Suporte por E-mail'
+      'Até 300 avaliações por mês',
+      'Cadastro ilimitado de CNPJs',
+      'Relatório PDF padrão NR-17',
+      'Suporte humano por E-mail'
     ]
   },
   {
     id: 'business',
     name: 'Business',
-    description: 'Para consultorias em crescimento com equipe.',
+    description: 'Para consultorias com equipe que gerenciam o PGR de vários clientes.',
     priceMonthly: 597,
-    priceYearly: 5988, // R$ 499 /mês no anual
+    priceYearly: 5988, 
     popular: true,
     stripe: {
       monthly: 'price_1SgucBGcHKyraESSOCbesRUk',
@@ -75,19 +75,19 @@ export const PLANS: PlanConfig[] = [
       api: false
     },
     features: [
-      'Até 1.500 avaliações/mês',
-      'Relatórios White-Label',
-      'Painel eSocial/NR-01',
-      'Gestão de Acessos',
-      'Suporte Prioritário'
+      'Até 1.500 avaliações por mês',
+      'Painel de exportação para eSocial',
+      'Relatórios com o seu Logotipo',
+      'Gestão de equipe (3 usuários)',
+      'Suporte prioritário via WhatsApp'
     ]
   },
   {
     id: 'corporate',
     name: 'Corporate',
-    description: 'Para grandes consultorias com alto volume.',
+    description: 'Para grandes consultorias com alto volume de coleta e análises.',
     priceMonthly: 899,
-    priceYearly: 8988, // R$ 749 /mês no anual
+    priceYearly: 8988, 
     stripe: {
       monthly: 'price_corporate_m',
       yearly: 'price_corporate_y'
@@ -100,16 +100,17 @@ export const PLANS: PlanConfig[] = [
       api: true
     },
     features: [
-      'Até 5.000 avaliações/mês',
-      'Onboarding Assistido',
-      'API de Integração',
-      'Treinamento de Equipe'
+      'Até 5.000 avaliações por mês',
+      'Treinamento para seus técnicos',
+      'Integração com outros sistemas',
+      'Ajuda na primeira configuração',
+      'Atendimento por telefone'
     ]
   },
   {
     id: 'enterprise',
     name: 'Enterprise',
-    description: 'Solução sob medida para grandes corporações e SESMT.',
+    description: 'Solução sob medida para grandes indústrias e departamentos de SESMT.',
     priceMonthly: 0,
     priceYearly: null,
     isCustom: true,
@@ -125,11 +126,11 @@ export const PLANS: PlanConfig[] = [
       api: true
     },
     features: [
-      'Volume Ilimitado',
-      'Instância Dedicada',
-      'Integração SSO & SAML',
-      'SLA Garantido',
-      'Contrato Personalizado'
+      'Avaliações e usuários ilimitados',
+      'Banco de dados exclusivo',
+      'Login com e-mail da empresa',
+      'Garantia de disponibilidade',
+      'Contrato e faturamento mensal'
     ]
   }
 ];
@@ -138,7 +139,7 @@ export const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-    minimumFractionDigits: value % 1 === 0 ? 0 : 2,
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(value);
 };
