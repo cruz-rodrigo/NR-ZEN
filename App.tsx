@@ -1,4 +1,5 @@
-import React, { ReactNode, ErrorInfo } from 'react';
+
+import React, { Component, ReactNode, ErrorInfo } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage.tsx';
 import Login from './pages/Login.tsx';
@@ -24,9 +25,12 @@ import { AlertTriangle, RefreshCcw } from 'lucide-react';
 interface EBProps { children?: ReactNode; }
 interface EBState { hasError: boolean; error?: Error; }
 
-// Use React.Component explicitly to ensure TypeScript correctly identifies the component structure and 'this.props'
-class ErrorBoundary extends React.Component<EBProps, EBState> {
-  public state: EBState = { hasError: false };
+// Fixed: Importing Component directly and adding a constructor helps resolve 'this.props' visibility in some TypeScript configurations
+class ErrorBoundary extends Component<EBProps, EBState> {
+  constructor(props: EBProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
 
   static getDerivedStateFromError(error: Error): EBState {
     return { hasError: true, error };
@@ -50,7 +54,7 @@ class ErrorBoundary extends React.Component<EBProps, EBState> {
         </div>
       );
     }
-    // Fixed: Properly accessing children from props
+    // Fixed: Accessing children from this.props now correctly recognized by compiler
     return this.props.children;
   }
 }

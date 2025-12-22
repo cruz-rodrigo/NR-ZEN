@@ -4,12 +4,13 @@ import Layout from '../components/Layout.tsx';
 import Card from '../components/Card.tsx';
 import Button from '../components/Button.tsx';
 import { useAuth } from '../context/AuthContext.tsx';
-import { CheckCircle2, CreditCard, ShieldCheck, Zap, Loader2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, CreditCard, ShieldCheck, Zap, Loader2, AlertCircle, ExternalLink } from 'lucide-react';
 import { PLANS, formatCurrency, PlanConfig } from '../src/config/plans.ts';
 
 const Billing: React.FC = () => {
   const { user, apiCall } = useAuth();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [loadingPortal, setLoadingPortal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const selfServicePlans = PLANS.filter(p => !p.isCustom && p.id !== 'enterprise');
@@ -17,32 +18,39 @@ const Billing: React.FC = () => {
   const handleSubscribe = async (planId: string) => {
     setLoadingPlan(planId);
     setError(null);
-    
     try {
       const response = await apiCall('/api/checkout/create-session', {
         method: 'POST',
         body: JSON.stringify({ plan: planId })
       });
-      
+      if (response?.url) window.location.href = response.url;
+    } catch (err: any) {
+      setError("Erro ao iniciar checkout. Tente novamente.");
+      setLoadingPlan(null);
+    }
+  };
+
+  const handleOpenPortal = async () => {
+    setLoadingPortal(true);
+    setError(null);
+    try {
+      const response = await apiCall('/api/stripe/portal', {
+        method: 'POST'
+      });
       if (response?.url) {
         window.location.href = response.url;
       } else {
-        throw new Error("URL de checkout não retornada pela API.");
+        throw new Error("URL do portal não retornada.");
       }
     } catch (err: any) {
-      console.group("Billing Error Diagnostic");
-      console.error("Payload do Erro:", err);
-      console.groupEnd();
-
-      setError("Não foi possível iniciar o processo de checkout. Verifique sua conexão ou tente novamente mais tarde.");
-      setLoadingPlan(null);
+      setError("Não foi possível acessar o portal de gestão. Tente novamente.");
+      setLoadingPortal(false);
     }
   };
 
   const currentPlanLabel = (tier?: string) => {
     if (!tier) return 'Plano Indefinido';
     if (tier === 'trial') return 'Período de Avaliação (Trial)';
-    
     const plan = PLANS.find(p => p.id === tier);
     return plan ? `Plano ${plan.name}` : 'Plano Indefinido';
   };
@@ -59,14 +67,25 @@ const Billing: React.FC = () => {
            <ShieldCheck size={120} className="text-white" />
         </div>
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="text-white">
+          <div className="text-white text-center md:text-left">
             <span className="text-blue-400 text-xs font-bold uppercase tracking-widest bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">Status Atual</span>
             <h2 className="text-2xl font-bold mt-3">{currentPlanLabel(user?.plan_tier)}</h2>
             <p className="text-slate-400 mt-1">Sua conta está ativa e em conformidade.</p>
           </div>
           <div className="flex gap-3">
-             <Button variant="glass" onClick={() => window.open('https://billing.stripe.com/p/login/test_your_link_here', '_blank')}>
-                <CreditCard size={18} className="mr-2"/> Histórico de Faturas
+             <Button 
+               variant="glass" 
+               onClick={handleOpenPortal} 
+               disabled={loadingPortal}
+               className="min-w-[200px]"
+             >
+                {loadingPortal ? (
+                  <Loader2 size={18} className="animate-spin mr-2"/>
+                ) : (
+                  <CreditCard size={18} className="mr-2"/>
+                )}
+                Gestão & Faturas
+                {!loadingPortal && <ExternalLink size={14} className="ml-2 opacity-50" />}
              </Button>
           </div>
         </div>
