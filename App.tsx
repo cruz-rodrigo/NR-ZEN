@@ -1,107 +1,74 @@
 
-import React, { Component, ReactNode, ErrorInfo } from 'react';
+import React from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage.tsx';
 import Login from './pages/Login.tsx';
 import Register from './pages/Register.tsx';
+import FreeTest from './pages/FreeTest.tsx';
 import ForgotPassword from './pages/ForgotPassword.tsx';
 import ResetPassword from './pages/ResetPassword.tsx';
 import Dashboard from './pages/Dashboard.tsx';
 import Companies from './pages/Companies.tsx';
 import Surveys from './pages/Surveys.tsx';
+import Reports from './pages/Reports.tsx';
 import Settings from './pages/Settings.tsx';
 import Billing from './pages/Billing.tsx';
-import Onboarding from './pages/Onboarding.tsx';
 import SectorDetail from './pages/SectorDetail.tsx';
-import Questionnaire from './pages/Questionnaire.tsx';
 import Report from './pages/Report.tsx';
-import Reports from './pages/Reports.tsx';
 import DemoLogin from './pages/DemoLogin.tsx';
-import TestDb from './pages/TestDb.tsx';
+import Onboarding from './pages/Onboarding.tsx';
+import Questionnaire from './pages/Questionnaire.tsx';
 import CheckoutOrchestrator from './pages/CheckoutOrchestrator.tsx';
 import { PaymentSuccess, PaymentCancel } from './pages/PaymentResult.tsx';
-import { AuthProvider, useAuth } from './context/AuthContext.tsx';
-import { AlertTriangle, RefreshCcw } from 'lucide-react';
+import TestDb from './pages/TestDb.tsx';
+import { AuthProvider } from './context/AuthContext.tsx';
+import { MockProvider } from './context/MockContext.tsx';
 
-interface EBProps { children?: ReactNode; }
-interface EBState { hasError: boolean; error?: Error; }
-
-// Fix: Explicitly extending React.Component and declaring properties to resolve TypeScript missing property errors
-class ErrorBoundary extends React.Component<EBProps, EBState> {
-  // Fix: Declaring state property at class level helps TypeScript recognize it when using generic extension
-  public state: EBState = { hasError: false };
-
-  constructor(props: EBProps) {
-    super(props);
-  }
-  
-  static getDerivedStateFromError(error: Error): EBState { return { hasError: true, error }; }
-  
-  componentDidCatch(error: Error, info: ErrorInfo) { console.error("CRITICAL UI ERROR:", error, info); }
-  
-  render() {
-    // Fix: line 32 - Accessing this.state is now correctly typed
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center">
-          <div className="bg-white p-10 rounded-2xl shadow-2xl max-w-md border-t-8 border-red-600">
-            <AlertTriangle className="mx-auto text-red-600 mb-6" size={64} />
-            <h1 className="text-2xl font-bold text-slate-900 mb-4">Falha no Carregamento</h1>
-            <button onClick={() => { localStorage.clear(); window.location.href = '/'; }} className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
-              <RefreshCcw size={18} /> Reiniciar e Limpar Cache
-            </button>
-          </div>
-        </div>
-      );
-    }
-    // Fix: line 50 - Accessing this.props is now correctly typed
-    return this.props.children;
-  }
-}
-
-const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent"></div></div>;
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
-};
-
+/**
+ * Root Application Component
+ * Configures the global state providers and application routing structure.
+ */
 const App: React.FC = () => {
   return (
-    <ErrorBoundary>
-      <AuthProvider>
+    <AuthProvider>
+      <MockProvider>
         <Router>
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/demo" element={<DemoLogin />} />
+            <Route path="/teste-gratis" element={<FreeTest />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            
-            {/* Fluxo de Assinatura */}
             <Route path="/checkout/start" element={<CheckoutOrchestrator />} />
-            <Route path="/billing/success" element={<PaymentSuccess />} />
-            <Route path="/billing/cancel" element={<PaymentCancel />} />
             
-            <Route path="/app" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-            <Route path="/app/companies" element={<PrivateRoute><Companies /></PrivateRoute>} />
-            <Route path="/app/surveys" element={<PrivateRoute><Surveys /></PrivateRoute>} />
-            <Route path="/app/reports" element={<PrivateRoute><Reports /></PrivateRoute>} />
-            <Route path="/app/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
-            <Route path="/app/billing" element={<PrivateRoute><Billing /></PrivateRoute>} />
-            <Route path="/app/onboarding" element={<PrivateRoute><Onboarding /></PrivateRoute>} />
-            <Route path="/app/setor/:id" element={<PrivateRoute><SectorDetail /></PrivateRoute>} />
+            {/* Authenticated Dashboard Routes */}
+            <Route path="/app" element={<Dashboard />} />
+            <Route path="/app/companies" element={<Companies />} />
+            <Route path="/app/surveys" element={<Surveys />} />
+            <Route path="/app/reports" element={<Reports />} />
+            <Route path="/app/settings" element={<Settings />} />
+            <Route path="/app/billing" element={<Billing />} />
+            <Route path="/app/billing/success" element={<PaymentSuccess />} />
+            <Route path="/app/billing/cancel" element={<PaymentCancel />} />
+            <Route path="/app/setor/:id" element={<SectorDetail />} />
+            <Route path="/app/onboarding" element={<Onboarding />} />
             
-            <Route path="/demo" element={<DemoLogin />} />
+            {/* Document and Survey Views */}
+            <Route path="/relatorio" element={<Report />} />
             <Route path="/questionario" element={<Questionnaire />} />
             <Route path="/questionario/:code" element={<Questionnaire />} />
-            <Route path="/relatorio" element={<Report />} />
             <Route path="/test-db" element={<TestDb />} />
+
+            {/* Fallback to Home */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>
-      </AuthProvider>
-    </ErrorBoundary>
+      </MockProvider>
+    </AuthProvider>
   );
 };
 
+// Fixed: Explicit default export to resolve import errors in index.tsx
 export default App;
