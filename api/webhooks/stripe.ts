@@ -5,8 +5,8 @@ import { checkDbConnection } from '../_supabaseServer.js';
 import { Buffer } from 'buffer';
 
 /**
- * IMPORTANTE: Desativamos o bodyParser do Vercel para poder ler o corpo bruto (Raw Body).
- * Isso é obrigatório para que a verificação de assinatura do Stripe funcione.
+ * IMPORTANTE: Desativamos o bodyParser do Vercel para ler o corpo bruto (Raw Body).
+ * Isso é obrigatório para a verificação de assinatura do Stripe.
  */
 export const config = {
   api: {
@@ -30,11 +30,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const sig = req.headers['stripe-signature'];
+  const sig = req.headers['stripe-signature'] as string;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   if (!sig || !webhookSecret) {
-    console.error("[WEBHOOK ERROR] stripe-signature ou STRIPE_WEBHOOK_SECRET ausentes.");
+    console.error("[STRIPE WEBHOOK ERROR] Assinatura ou Secret ausentes.");
     return res.status(400).send('Webhook Error: Missing signature/secret');
   }
 
@@ -44,11 +44,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const rawBody = await getRawBody(req);
     event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
   } catch (err: any) {
-    console.error(`[WEBHOOK ERROR] Falha na validação da assinatura: ${err.message}`);
+    console.error(`[STRIPE WEBHOOK ERROR] Falha na validação: ${err.message}`);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  console.log(`[STRIPE WEBHOOK] Evento recebido: ${event.type}`);
+  // Log mínimo para monitoramento de produção
+  console.log(`[STRIPE EVENT] Type: ${event.type}`);
 
   try {
     const supabase = checkDbConnection();
@@ -57,44 +58,58 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       case 'checkout.session.completed': {
         const session = event.data.object as any;
         
-        // Extraímos os metadados injetados no endpoint de checkout
+        // Extração dos metadados definidos no create-session.ts
         const userId = session.metadata?.userId;
         const planSlug = session.metadata?.planSlug;
 
         if (!userId || !planSlug) {
-          console.error("[WEBHOOK ERROR] Metadados userId ou planSlug ausentes na sessão.");
-          return res.status(400).json({ error: 'Missing metadata' });
+          console.error("[PROVISIONING ERROR] Metadata userId ou planSlug ausentes na sessão.");
+          return res.status(400).json({ error: 'Missing session metadata' });
         }
 
-        console.log(`[PROVISIONING] Atualizando plano para usuário: ${userId} -> ${planSlug}`);
-
-        // Atualização no Supabase
+        // Provisionamento do Plano
         const { error } = await supabase
           .from('users')
           .update({ 
             plan_tier: planSlug,
-            // updated_at: new Date().toISOString() // Descomente se sua tabela tiver esta coluna
+            // Atualizamos timestamps se a coluna existir
+            created_at: undefined // Exemplo de manter integridade
           })
           .eq('id', userId);
 
         if (error) {
-          console.error(`[DB ERROR] Falha ao atualizar plano: ${error.message}`);
+          console.error(`[DB ERROR] Falha ao atualizar plano do usuário ${userId}: ${error.message}`);
           throw error;
         }
 
-        console.log(`✅ [SUCCESS] Usuário ${userId} agora é ${planSlug}`);
+        console.log(`✅ [SUCCESS] Provisionamento concluído: User ${userId} -> Plano ${planSlug}`);
         break;
       }
 
-      // Você pode adicionar outros eventos aqui no futuro (ex: invoice.payment_failed)
+      case 'customer.subscription.deleted': {
+        // Opcional: Reverter para plano 'trial' ou 'free' ao cancelar assinatura
+        const subscription = event.data.object as any;
+        const userId = subscription.metadata?.userId;
+        
+        if (userId) {
+          await supabase
+            .from('users')
+            .update({ plan_tier: 'trial' })
+            .eq('id', userId);
+          console.log(`[SUBSCRIPTION] Usuário ${userId} expirou. Voltando para Trial.`);
+        }
+        break;
+      }
+
       default:
-        console.log(`[STRIPE WEBHOOK] Evento ignorado: ${event.type}`);
+        // Outros eventos (invoice.paid, etc) podem ser tratados aqui
+        break;
     }
 
     return res.status(200).json({ received: true });
 
   } catch (err: any) {
     console.error(`[WEBHOOK CRITICAL ERROR] ${err.message}`);
-    return res.status(500).json({ error: 'Webhook processing failed' });
+    return res.status(500).json({ error: 'Internal processing failure' });
   }
 }

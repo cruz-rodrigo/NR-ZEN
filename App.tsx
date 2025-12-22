@@ -31,8 +31,8 @@ interface EBState {
   error?: Error;
 }
 
-// Fix: Extending directly from 'Component' instead of 'React.Component' to resolve property access issues with TypeScript in this environment
-class ErrorBoundary extends Component<EBProps, EBState> {
+// Fix: Use React.Component explicitly with the provided generics to ensure 'props' is correctly inherited and typed.
+class ErrorBoundary extends React.Component<EBProps, EBState> {
   public state: EBState = { hasError: false };
 
   constructor(props: EBProps) {
@@ -71,7 +71,7 @@ class ErrorBoundary extends Component<EBProps, EBState> {
         </div>
       );
     }
-    // Fix: 'this.props.children' is now correctly recognized as existing on the class instance
+    // Fix: Accessing 'children' through 'this.props' which is now correctly recognized by inheriting from React.Component.
     return this.props.children;
   }
 }
