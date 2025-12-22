@@ -36,8 +36,8 @@ const LandingPage: React.FC = () => {
 
   const renderPriceCard = (plan: PlanConfig) => {
     const isYearly = billingCycle === 'yearly';
-    // Arredondamento para evitar dízimas (Ex: 165.83333 -> 165.83)
-    const displayPrice = isYearly && plan.priceYearly ? Number((plan.priceYearly / 12).toFixed(2)) : plan.priceMonthly;
+    // Cálculo preciso arredondando para evitar dízimas periódicas como 165.83333333333
+    const displayPrice = isYearly && plan.priceYearly ? (plan.priceYearly / 12) : plan.priceMonthly;
 
     return (
       <div 
@@ -70,13 +70,13 @@ const LandingPage: React.FC = () => {
                 <div className="flex items-baseline gap-2">
                   <span className={`text-lg font-bold opacity-60`}>R$</span>
                   <span className="text-5xl md:text-6xl font-heading font-black tracking-tighter">
-                    {displayPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    {formatCurrency(displayPrice).replace('R$', '').trim()}
                   </span>
                   <span className="text-sm font-bold opacity-60">/mês</span>
                 </div>
                 {isYearly && plan.priceYearly && (
                   <span className="text-[11px] font-black uppercase tracking-widest mt-3 text-emerald-400">
-                    Faturado anualmente: {formatCurrency(plan.priceYearly)}
+                    Faturado anualmente
                   </span>
                 )}
               </div>
@@ -93,7 +93,7 @@ const LandingPage: React.FC = () => {
             onClick={() => plan.isCustom || plan.id === 'enterprise' ? window.open(WHATSAPP_LINK, '_blank') : navigate('/register')}
             className={`h-16 text-sm font-black uppercase tracking-[0.15em] ${plan.popular ? 'text-blue-600 shadow-2xl' : ''}`}
           >
-            {plan.isCustom || plan.id === 'enterprise' ? 'Falar com Consultor' : `Começar agora`}
+            {plan.isCustom || plan.id === 'enterprise' ? 'Falar com Comercial' : `Assinar Agora`}
           </Button>
 
           <div className={`mt-12 pt-10 border-t ${plan.popular ? 'border-white/10' : 'border-slate-800'}`}>
@@ -143,7 +143,7 @@ const LandingPage: React.FC = () => {
           <div className="lg:w-[55%] text-center lg:text-left space-y-12 animate-fade-in-down">
             <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-[10px] font-black uppercase tracking-[0.25em]">
               <TrendingUp size={16} />
-              SST Inteligente 2025
+              Liderança em SST 2026
             </div>
             
             <h1 className="text-6xl lg:text-[92px] font-heading font-black text-slate-900 leading-[0.9] tracking-[-0.05em]">
@@ -153,7 +153,7 @@ const LandingPage: React.FC = () => {
             </h1>
             
             <p className="text-xl md:text-2xl text-slate-500 leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium">
-              Gere relatórios técnicos da <strong>NR-17 e NR-01</strong> em segundos. Automatize a coleta de dados e foque na consultoria estratégica.
+              Gere relatórios técnicos da <strong>NR-17 e NR-01</strong> em segundos. Automatize a coleta de dados e foque na estratégia consultiva.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start pt-6">
@@ -182,18 +182,18 @@ const LandingPage: React.FC = () => {
                    <div className="flex justify-between items-end">
                       <div>
                         <h4 className="text-2xl font-heading font-black text-slate-900">Dashboard Executivo</h4>
-                        <p className="text-[11px] text-slate-400 font-black uppercase tracking-[0.2em] mt-2">Visão Geral da Carteira</p>
+                        <p className="text-[11px] text-slate-400 font-black uppercase tracking-[0.2em] mt-2">Gestão de Carteira 2026</p>
                       </div>
                       <BarChart3 className="text-blue-600" size={40} />
                    </div>
                    <div className="grid grid-cols-2 gap-8">
                       <div className="bg-blue-50 rounded-[32px] p-8 border border-blue-100">
                         <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] block mb-2">Empresas</span>
-                        <span className="text-6xl font-heading font-black text-blue-900">18</span>
+                        <span className="text-6xl font-heading font-black text-blue-900">24</span>
                       </div>
                       <div className="bg-indigo-50 rounded-[32px] p-8 border border-indigo-100">
                         <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] block mb-2">Trabalhadores</span>
-                        <span className="text-6xl font-heading font-black text-indigo-900">487</span>
+                        <span className="text-6xl font-heading font-black text-indigo-900">892</span>
                       </div>
                    </div>
                 </div>
@@ -208,10 +208,10 @@ const LandingPage: React.FC = () => {
         <div className="container mx-auto px-8 relative z-10">
           <div className="text-center max-w-4xl mx-auto mb-32 space-y-8">
             <h2 className="text-5xl lg:text-7xl font-heading font-black tracking-tight leading-tight">
-              Investimento para sua <br/> consultoria crescer.
+              Investimento para sua <br/> consultoria decolar em 2026.
             </h2>
             <p className="text-slate-400 text-xl md:text-2xl font-medium max-w-2xl mx-auto">
-              Pague apenas pelo volume de avaliações mensais. Escolha o plano que melhor se adapta à sua escala atual.
+              Planos baseados no volume de avaliações. Escolha o que melhor se adapta à sua estrutura atual.
             </p>
             
             <div className="flex justify-center items-center gap-10 pt-12">
@@ -225,7 +225,7 @@ const LandingPage: React.FC = () => {
               <div className="flex flex-col items-start">
                 <span className={`text-xs font-black uppercase tracking-[0.3em] transition-all ${billingCycle === 'yearly' ? 'text-white' : 'text-slate-600'}`}>Anual</span>
                 <span className="bg-emerald-500/20 text-emerald-400 text-[9px] px-2 py-0.5 rounded-full border border-emerald-500/30 font-black mt-1 uppercase tracking-widest">
-                  Economize 17%
+                  2 MESES GRÁTIS
                 </span>
               </div>
             </div>
@@ -237,9 +237,9 @@ const LandingPage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-16 mt-40 border-t border-slate-900 pt-24 max-w-6xl mx-auto">
              {[
-               { icon: ShieldCheck, title: "Garantia de Preço", desc: "Seu preço é fixo vitalício, mesmo com futuros aumentos de tabela." },
-               { icon: Lock, title: "Liberdade Total", desc: "Sem fidelidade. Cancele sua assinatura a qualquer momento sem burocracia." },
-               { icon: Users, title: "Suporte Técnico", desc: "Dúvidas sobre a metodologia? Nossos engenheiros estão prontos para ajudar." }
+               { icon: ShieldCheck, title: "Preço Protegido", desc: "Sua mensalidade nunca sofre aumentos enquanto mantiver a assinatura ativa." },
+               { icon: Lock, title: "Sem Contratos de Gaveta", desc: "Liberdade total para cancelar. Não exigimos fidelidade ou multas rescisórias." },
+               { icon: Users, title: "Consultoria Técnica", desc: "Suporte especializado feito por Engenheiros de Segurança e Psicólogos." }
              ].map((item, i) => (
                <div key={i} className="text-center space-y-6">
                   <div className="w-14 h-14 bg-slate-900 text-blue-500 rounded-full flex items-center justify-center mx-auto border border-slate-800">
@@ -253,10 +253,11 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
+      {/* Footer */}
       <footer className="py-24 bg-white border-t border-slate-100">
         <div className="container mx-auto px-8 flex flex-col md:flex-row justify-between items-center gap-12">
           <Logo size="md" />
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">© 2025 NR ZEN • Tecnologia para SST. CNPJ 55.119.808/3464-1</p>
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">© 2026 NR ZEN • Tecnologia para SST. CNPJ 55.119.808/3464-1</p>
         </div>
       </footer>
     </div>

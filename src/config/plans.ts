@@ -35,7 +35,7 @@ export const PLANS: PlanConfig[] = [
   {
     id: 'consultant',
     name: 'Consultor',
-    description: 'Para profissionais autônomos que precisam gerar relatórios oficiais.',
+    description: 'Ideal para profissionais autônomos que precisam de laudos técnicos rápidos.',
     priceMonthly: 199,
     priceYearly: 1990, 
     stripe: {
@@ -51,15 +51,15 @@ export const PLANS: PlanConfig[] = [
     },
     features: [
       'Até 300 avaliações por mês',
-      'Cadastro ilimitado de CNPJs',
-      'Relatório PDF padrão NR-17',
-      'Suporte humano por E-mail'
+      'Cadastro de CNPJs ilimitado',
+      'Relatório PDF oficial NR-17',
+      'Atendimento via E-mail'
     ]
   },
   {
     id: 'business',
     name: 'Business',
-    description: 'Para consultorias com equipe que gerenciam o PGR de vários clientes.',
+    description: 'Para consultorias que gerenciam vários clientes e possuem equipe.',
     priceMonthly: 597,
     priceYearly: 5988, 
     popular: true,
@@ -76,8 +76,8 @@ export const PLANS: PlanConfig[] = [
     },
     features: [
       'Até 1.500 avaliações por mês',
-      'Painel de exportação para eSocial',
-      'Relatórios com o seu Logotipo',
+      'Logotipo da sua marca nos laudos',
+      'Envio de dados para o eSocial',
       'Gestão de equipe (3 usuários)',
       'Suporte prioritário via WhatsApp'
     ]
@@ -85,7 +85,7 @@ export const PLANS: PlanConfig[] = [
   {
     id: 'corporate',
     name: 'Corporate',
-    description: 'Para grandes consultorias com alto volume de coleta e análises.',
+    description: 'Para grandes operações de SST com alto volume de coletas.',
     priceMonthly: 899,
     priceYearly: 8988, 
     stripe: {
@@ -101,16 +101,16 @@ export const PLANS: PlanConfig[] = [
     },
     features: [
       'Até 5.000 avaliações por mês',
-      'Treinamento para seus técnicos',
-      'Integração com outros sistemas',
-      'Ajuda na primeira configuração',
-      'Atendimento por telefone'
+      'Ajudamos na primeira configuração',
+      'Conexão com outros softwares (API)',
+      'Acesso Seguro (Login via Empresa)',
+      'Treinamento para seus técnicos'
     ]
   },
   {
     id: 'enterprise',
     name: 'Enterprise',
-    description: 'Solução sob medida para grandes indústrias e departamentos de SESMT.',
+    description: 'Soluções personalizadas para indústrias e departamentos de SESMT.',
     priceMonthly: 0,
     priceYearly: null,
     isCustom: true,
@@ -127,19 +127,21 @@ export const PLANS: PlanConfig[] = [
     },
     features: [
       'Avaliações e usuários ilimitados',
-      'Banco de dados exclusivo',
-      'Login com e-mail da empresa',
-      'Garantia de disponibilidade',
-      'Contrato e faturamento mensal'
+      'Contrato e faturamento mensal',
+      'Servidor de dados exclusivo',
+      'Segurança de dados avançada',
+      'Gestor de conta dedicado'
     ]
   }
 ];
 
 export const formatCurrency = (value: number) => {
+  // Garantia de arredondamento correto para 2 casas antes de formatar
+  const roundedValue = Math.round((value + Number.EPSILON) * 100) / 100;
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
-  }).format(value);
+  }).format(roundedValue);
 };
