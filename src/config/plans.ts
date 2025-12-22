@@ -35,7 +35,7 @@ export const PLANS: PlanConfig[] = [
   {
     id: 'consultant',
     name: 'Consultor',
-    description: 'Ideal para profissionais autônomos que precisam de laudos técnicos rápidos.',
+    description: 'Ideal para profissionais que precisam de laudos oficiais rápidos.',
     priceMonthly: 199,
     priceYearly: 1990, 
     stripe: {
@@ -110,7 +110,7 @@ export const PLANS: PlanConfig[] = [
   {
     id: 'enterprise',
     name: 'Enterprise',
-    description: 'Soluções personalizadas para indústrias e departamentos de SESMT.',
+    description: 'Soluções sob medida para indústrias e departamentos de SESMT.',
     priceMonthly: 0,
     priceYearly: null,
     isCustom: true,
@@ -136,12 +136,12 @@ export const PLANS: PlanConfig[] = [
 ];
 
 export const formatCurrency = (value: number) => {
-  // Garantia de arredondamento correto para 2 casas antes de formatar
-  const roundedValue = Math.round((value + Number.EPSILON) * 100) / 100;
+  // Arredondamento explícito para evitar problemas de float do JS
+  const rounded = Number((Math.round(value * 100) / 100).toFixed(2));
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
-  }).format(roundedValue);
+  }).format(rounded);
 };

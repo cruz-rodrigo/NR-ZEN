@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   CheckCircle2, ArrowRight, BarChart3, Users, FileCheck, 
-  Menu, X, Star, Gem, MessageCircle, TrendingUp, ShieldCheck, Lock
+  Menu, X, Gem, MessageCircle, TrendingUp, ShieldCheck, Lock
 } from 'lucide-react';
 import Button from '../components/Button.tsx';
 import { Logo } from '../components/Layout.tsx';
@@ -36,54 +36,54 @@ const LandingPage: React.FC = () => {
 
   const renderPriceCard = (plan: PlanConfig) => {
     const isYearly = billingCycle === 'yearly';
-    // Cálculo preciso arredondando para evitar dízimas periódicas como 165.83333333333
+    // Cálculo rigoroso do preço mensal do anual
     const displayPrice = isYearly && plan.priceYearly ? (plan.priceYearly / 12) : plan.priceMonthly;
 
     return (
       <div 
         key={plan.id} 
-        className={`flex flex-col h-full rounded-[48px] transition-all duration-700 relative group ${
+        className={`flex flex-col h-full rounded-[40px] transition-all duration-500 relative group ${
           plan.popular 
-            ? 'bg-blue-600 text-white shadow-[0_40px_80px_-15px_rgba(37,99,235,0.4)] scale-105 z-10 p-1' 
-            : 'bg-slate-900 border border-slate-800 shadow-xl hover:border-blue-500/30'
+            ? 'bg-blue-600 text-white shadow-[0_30px_60px_-10px_rgba(37,99,235,0.3)] scale-100 lg:scale-105 z-10 p-1' 
+            : 'bg-slate-900 border border-slate-800 shadow-xl'
         }`}
       >
-        <div className={plan.popular ? 'bg-blue-600 rounded-[46px] h-full p-10 flex flex-col' : 'p-10 h-full flex flex-col'}>
+        <div className={plan.popular ? 'bg-blue-600 rounded-[38px] h-full p-8 lg:p-10 flex flex-col' : 'p-8 lg:p-10 h-full flex flex-col'}>
           {plan.popular && (
-            <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-amber-400 text-amber-950 text-[11px] font-black px-6 py-2 rounded-full uppercase tracking-[0.2em] shadow-2xl">
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-400 text-amber-950 text-[10px] font-black px-5 py-1.5 rounded-full uppercase tracking-widest shadow-xl">
               Mais Escolhido
             </div>
           )}
 
-          <div className="flex justify-between items-start mb-8">
-            <h3 className="text-2xl font-heading font-black tracking-tight">
+          <div className="flex justify-between items-start mb-6">
+            <h3 className="text-xl font-heading font-black tracking-tight uppercase opacity-90">
               {plan.name}
             </h3>
-            {plan.id === 'enterprise' && <Gem size={24} className="text-amber-500" />}
+            {plan.id === 'enterprise' && <Gem size={20} className="text-amber-500" />}
           </div>
 
-          <div className="mb-8 min-h-[90px] flex flex-col justify-center">
+          <div className="mb-8 min-h-[80px] flex flex-col justify-center">
             {plan.isCustom ? (
-              <div className="text-4xl font-heading font-black">Sob Medida</div>
+              <div className="text-3xl font-heading font-black">Sob Medida</div>
             ) : (
               <div className="flex flex-col">
                 <div className="flex items-baseline gap-2">
-                  <span className={`text-lg font-bold opacity-60`}>R$</span>
-                  <span className="text-5xl md:text-6xl font-heading font-black tracking-tighter">
+                  <span className={`text-sm font-bold opacity-60`}>R$</span>
+                  <span className="text-4xl lg:text-5xl font-heading font-black tracking-tighter">
                     {formatCurrency(displayPrice).replace('R$', '').trim()}
                   </span>
                   <span className="text-sm font-bold opacity-60">/mês</span>
                 </div>
                 {isYearly && plan.priceYearly && (
-                  <span className="text-[11px] font-black uppercase tracking-widest mt-3 text-emerald-400">
-                    Faturado anualmente
+                  <span className="text-[10px] font-black uppercase tracking-widest mt-3 text-emerald-400">
+                    Contrato Anual
                   </span>
                 )}
               </div>
             )}
           </div>
 
-          <p className={`text-sm mb-12 leading-relaxed font-medium min-h-[50px] ${plan.popular ? 'text-blue-100' : 'text-slate-400'}`}>
+          <p className={`text-xs mb-8 leading-relaxed font-medium min-h-[40px] ${plan.popular ? 'text-blue-100' : 'text-slate-400'}`}>
             {plan.description}
           </p>
 
@@ -91,18 +91,17 @@ const LandingPage: React.FC = () => {
             fullWidth 
             variant={plan.popular ? 'white' : 'glass'} 
             onClick={() => plan.isCustom || plan.id === 'enterprise' ? window.open(WHATSAPP_LINK, '_blank') : navigate('/register')}
-            className={`h-16 text-sm font-black uppercase tracking-[0.15em] ${plan.popular ? 'text-blue-600 shadow-2xl' : ''}`}
+            className={`h-14 text-xs font-black uppercase tracking-[0.1em] ${plan.popular ? 'text-blue-600' : ''}`}
           >
             {plan.isCustom || plan.id === 'enterprise' ? 'Falar com Comercial' : `Assinar Agora`}
           </Button>
 
-          <div className={`mt-12 pt-10 border-t ${plan.popular ? 'border-white/10' : 'border-slate-800'}`}>
-             <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-8 opacity-40">O que está incluso</p>
-             <ul className="space-y-5">
+          <div className={`mt-8 pt-8 border-t ${plan.popular ? 'border-white/10' : 'border-slate-800'}`}>
+             <ul className="space-y-4">
               {plan.features.map((feat, i) => (
-                <li key={i} className="flex gap-4 items-start">
-                  <CheckCircle2 size={20} className={`${plan.popular ? 'text-white' : 'text-blue-500'} shrink-0`} />
-                  <span className={`text-[14px] leading-tight font-bold ${plan.popular ? 'text-white' : 'text-slate-300'}`}>{feat}</span>
+                <li key={i} className="flex gap-3 items-start">
+                  <CheckCircle2 size={16} className={`${plan.popular ? 'text-white' : 'text-blue-500'} shrink-0 mt-0.5`} />
+                  <span className={`text-[13px] leading-snug font-bold ${plan.popular ? 'text-white' : 'text-slate-300'}`}>{feat}</span>
                 </li>
               ))}
             </ul>
@@ -116,84 +115,104 @@ const LandingPage: React.FC = () => {
     <div className="min-h-screen bg-white font-sans text-slate-900 selection:bg-blue-100 overflow-x-hidden">
       
       {/* Header */}
-      <header className={`fixed top-0 w-full z-50 transition-all duration-500 ${isScrolled ? 'bg-white/95 backdrop-blur-xl shadow-md h-20' : 'bg-transparent h-28'}`}>
-        <div className="container mx-auto px-8 h-full flex items-center justify-between">
+      <header className={`fixed top-0 w-full z-50 transition-all duration-500 ${isScrolled ? 'bg-white/95 backdrop-blur-xl shadow-md h-16' : 'bg-transparent h-24'}`}>
+        <div className="container mx-auto px-6 h-full flex items-center justify-between">
           <Link to="/" onClick={() => window.scrollTo(0,0)}>
-            <Logo size={isScrolled ? "md" : "lg"} />
+            <Logo size={isScrolled ? "sm" : "md"} />
           </Link>
           
-          <nav className="hidden lg:flex items-center gap-12 font-black text-[11px] uppercase tracking-[0.2em] text-slate-500">
+          <nav className="hidden lg:flex items-center gap-10 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500">
             <button onClick={() => scrollToSection('features')} className="hover:text-blue-600 transition-colors">Funcionalidades</button>
             <button onClick={() => scrollToSection('pricing')} className="hover:text-blue-600 transition-colors">Planos</button>
             <button onClick={() => scrollToSection('contact')} className="hover:text-blue-600 transition-colors">Contato</button>
           </nav>
 
-          <div className="hidden md:flex items-center gap-8">
-            <Link to="/login" className="text-slate-600 font-black text-[11px] uppercase tracking-[0.2em] hover:text-blue-600">Entrar</Link>
-            <Button size="md" onClick={() => navigate('/teste-gratis')} className="px-10 h-14 shadow-2xl shadow-blue-600/20 uppercase text-[11px] font-black tracking-[0.2em]">
+          <div className="hidden md:flex items-center gap-6">
+            <Link to="/login" className="text-slate-600 font-black text-[10px] uppercase tracking-[0.2em] hover:text-blue-600">Entrar</Link>
+            <Button size="sm" onClick={() => navigate('/teste-gratis')} className="px-8 h-12 uppercase text-[10px] font-black tracking-[0.15em]">
               Teste Grátis
             </Button>
           </div>
+
+          <button className="lg:hidden p-2 text-slate-900" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
         </div>
+        
+        {/* Mobile Nav */}
+        {mobileMenuOpen && (
+          <div className="absolute top-0 left-0 w-full bg-white h-screen z-[60] p-10 animate-fade-in flex flex-col">
+            <div className="flex justify-between items-center mb-16">
+              <Logo />
+              <button onClick={() => setMobileMenuOpen(false)}><X size={32} /></button>
+            </div>
+            <nav className="flex flex-col gap-8 text-2xl font-black uppercase tracking-widest text-slate-900">
+              <button onClick={() => scrollToSection('features')} className="text-left">Funcionalidades</button>
+              <button onClick={() => scrollToSection('pricing')} className="text-left">Planos</button>
+              <Link to="/login">Entrar</Link>
+              <Button size="lg" onClick={() => navigate('/teste-gratis')} className="mt-4">Começar Agora</Button>
+            </nav>
+          </div>
+        )}
       </header>
 
       {/* Hero Section */}
-      <section className="relative pt-48 lg:pt-64 pb-32 overflow-hidden bg-slate-50/30">
-        <div className="container mx-auto px-8 flex flex-col lg:flex-row items-center gap-24">
-          <div className="lg:w-[55%] text-center lg:text-left space-y-12 animate-fade-in-down">
-            <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-[10px] font-black uppercase tracking-[0.25em]">
-              <TrendingUp size={16} />
-              Liderança em SST 2026
+      <section className="relative pt-32 lg:pt-56 pb-20 overflow-hidden bg-slate-50/50">
+        <div className="container mx-auto px-6 flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
+          <div className="lg:w-[50%] text-center lg:text-left space-y-10">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-[9px] font-black uppercase tracking-[0.2em]">
+              <TrendingUp size={14} />
+              Inteligência de Riscos Ocupacionais
             </div>
             
-            <h1 className="text-6xl lg:text-[92px] font-heading font-black text-slate-900 leading-[0.9] tracking-[-0.05em]">
+            <h1 className="text-4xl md:text-5xl lg:text-[72px] font-heading font-black text-slate-900 leading-[1.05] tracking-[-0.04em]">
               Riscos <br/>
               Psicossociais <br/>
               <span className="text-blue-600">Automáticos.</span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-slate-500 leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium">
-              Gere relatórios técnicos da <strong>NR-17 e NR-01</strong> em segundos. Automatize a coleta de dados e foque na estratégia consultiva.
+            <p className="text-lg md:text-xl text-slate-500 leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium">
+              A plataforma definitiva para automatizar diagnósticos da <strong>NR-17 e NR-01</strong>. Transforme dados em relatórios técnicos em segundos.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start pt-6">
-              <Button size="lg" onClick={() => navigate('/teste-gratis')} className="h-24 px-16 text-2xl shadow-[0_30px_60px_-15px_rgba(37,99,235,0.4)] hover:scale-105 active:scale-95 transition-all font-black">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
+              <Button size="lg" onClick={() => navigate('/teste-gratis')} className="h-20 px-12 text-xl shadow-xl hover:scale-105 active:scale-95 transition-all font-black">
                 Iniciar Demo
-                <ArrowRight className="ml-4 w-8 h-8" />
+                <ArrowRight className="ml-3 w-6 h-6" />
               </Button>
-              <Button variant="secondary" size="lg" onClick={() => scrollToSection('features')} className="h-24 px-16 text-2xl bg-white border-2 border-slate-200 font-black">
-                Recursos
+              <Button variant="secondary" size="lg" onClick={() => scrollToSection('features')} className="h-20 px-12 text-xl bg-white border-2 border-slate-200 font-black">
+                Ver Recursos
               </Button>
             </div>
           </div>
 
-          <div className="lg:w-[45%] w-full">
-            <div className="relative group perspective-1000">
-              <div className="bg-white rounded-[60px] shadow-[0_100px_150px_-40px_rgba(0,0,0,0.2)] border-[16px] border-white overflow-hidden transition-all duration-1000 transform group-hover:rotate-y-[-4deg] group-hover:rotate-x-[2deg]">
-                <div className="bg-slate-50 border-b border-slate-100 p-6 flex justify-between items-center">
-                  <div className="flex gap-2">
-                    <div className="w-3.5 h-3.5 rounded-full bg-red-400"></div>
-                    <div className="w-3.5 h-3.5 rounded-full bg-amber-400"></div>
-                    <div className="w-3.5 h-3.5 rounded-full bg-emerald-400"></div>
+          <div className="lg:w-[50%] w-full">
+            <div className="relative">
+              <div className="bg-white rounded-[40px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] border-[8px] border-white overflow-hidden transition-all duration-1000">
+                <div className="bg-slate-50 border-b border-slate-100 p-5 flex justify-between items-center">
+                  <div className="flex gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-400/30"></div>
+                    <div className="w-3 h-3 rounded-full bg-amber-400/30"></div>
+                    <div className="w-3 h-3 rounded-full bg-emerald-400/30"></div>
                   </div>
-                  <div className="text-[10px] font-black text-slate-300 tracking-[0.2em] uppercase">app.nrzen.com.br</div>
+                  <div className="text-[9px] font-black text-slate-300 tracking-[0.2em] uppercase">app.nrzen.com.br</div>
                 </div>
-                <div className="p-12 space-y-12">
-                   <div className="flex justify-between items-end">
+                <div className="p-8 lg:p-12 space-y-10">
+                   <div className="flex justify-between items-center">
                       <div>
-                        <h4 className="text-2xl font-heading font-black text-slate-900">Dashboard Executivo</h4>
-                        <p className="text-[11px] text-slate-400 font-black uppercase tracking-[0.2em] mt-2">Gestão de Carteira 2026</p>
+                        <h4 className="text-xl font-heading font-black text-slate-900">Dashboard Executivo</h4>
+                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] mt-1">SST Intelligence</p>
                       </div>
-                      <BarChart3 className="text-blue-600" size={40} />
+                      <BarChart3 className="text-blue-600" size={32} />
                    </div>
-                   <div className="grid grid-cols-2 gap-8">
-                      <div className="bg-blue-50 rounded-[32px] p-8 border border-blue-100">
-                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] block mb-2">Empresas</span>
-                        <span className="text-6xl font-heading font-black text-blue-900">24</span>
+                   <div className="grid grid-cols-2 gap-6">
+                      <div className="bg-blue-50 rounded-[24px] p-6 border border-blue-100/50">
+                        <span className="text-[9px] font-black text-blue-600 uppercase tracking-[0.2em] block mb-2">Empresas</span>
+                        <span className="text-4xl font-heading font-black text-blue-900">24</span>
                       </div>
-                      <div className="bg-indigo-50 rounded-[32px] p-8 border border-indigo-100">
-                        <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] block mb-2">Trabalhadores</span>
-                        <span className="text-6xl font-heading font-black text-indigo-900">892</span>
+                      <div className="bg-indigo-50 rounded-[24px] p-6 border border-indigo-100/50">
+                        <span className="text-[9px] font-black text-indigo-600 uppercase tracking-[0.2em] block mb-2">Monitorados</span>
+                        <span className="text-4xl font-heading font-black text-indigo-900">892</span>
                       </div>
                    </div>
                 </div>
@@ -204,49 +223,49 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-48 bg-slate-950 text-white relative overflow-hidden">
-        <div className="container mx-auto px-8 relative z-10">
-          <div className="text-center max-w-4xl mx-auto mb-32 space-y-8">
-            <h2 className="text-5xl lg:text-7xl font-heading font-black tracking-tight leading-tight">
-              Investimento para sua <br/> consultoria decolar em 2026.
+      <section id="pricing" className="py-24 lg:py-40 bg-slate-950 text-white relative overflow-hidden">
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-20 space-y-6">
+            <h2 className="text-3xl md:text-4xl lg:text-6xl font-heading font-black tracking-tight leading-tight">
+              Investimento para <br className="hidden md:block" /> sua consultoria crescer.
             </h2>
-            <p className="text-slate-400 text-xl md:text-2xl font-medium max-w-2xl mx-auto">
-              Planos baseados no volume de avaliações. Escolha o que melhor se adapta à sua estrutura atual.
+            <p className="text-slate-400 text-lg lg:text-xl font-medium max-w-xl mx-auto opacity-80">
+              Escolha o plano baseado no seu volume mensal de avaliações. Altere a qualquer momento.
             </p>
             
-            <div className="flex justify-center items-center gap-10 pt-12">
-              <span className={`text-xs font-black uppercase tracking-[0.3em] transition-all ${billingCycle === 'monthly' ? 'text-white' : 'text-slate-600'}`}>Mensal</span>
+            <div className="flex justify-center items-center gap-8 pt-8">
+              <span className={`text-[10px] font-black uppercase tracking-[0.25em] transition-all ${billingCycle === 'monthly' ? 'text-white' : 'text-slate-600'}`}>Mensal</span>
               <button 
                 onClick={() => setBillingCycle(c => c === 'monthly' ? 'yearly' : 'monthly')}
-                className="w-24 h-12 bg-slate-900 rounded-full relative p-2 transition-all border border-slate-800 shadow-inner group"
+                className="w-16 h-8 bg-slate-900 rounded-full relative p-1 transition-all border border-slate-800"
               >
-                <div className={`w-8 h-8 bg-blue-600 rounded-full transition-all duration-500 shadow-[0_0_30px_rgba(37,99,235,0.8)] ${billingCycle === 'yearly' ? 'translate-x-12 bg-emerald-400' : 'translate-x-0'}`}></div>
+                <div className={`w-6 h-6 bg-blue-600 rounded-full transition-all duration-300 shadow-[0_0_20px_rgba(37,99,235,0.5)] ${billingCycle === 'yearly' ? 'translate-x-8 bg-emerald-400' : 'translate-x-0'}`}></div>
               </button>
               <div className="flex flex-col items-start">
-                <span className={`text-xs font-black uppercase tracking-[0.3em] transition-all ${billingCycle === 'yearly' ? 'text-white' : 'text-slate-600'}`}>Anual</span>
-                <span className="bg-emerald-500/20 text-emerald-400 text-[9px] px-2 py-0.5 rounded-full border border-emerald-500/30 font-black mt-1 uppercase tracking-widest">
-                  2 MESES GRÁTIS
+                <span className={`text-[10px] font-black uppercase tracking-[0.25em] transition-all ${billingCycle === 'yearly' ? 'text-white' : 'text-slate-600'}`}>Anual</span>
+                <span className="bg-emerald-500/20 text-emerald-400 text-[8px] px-2 py-0.5 rounded-full border border-emerald-500/30 font-black mt-1 uppercase tracking-widest">
+                  2 Meses Grátis
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 items-stretch max-w-7xl mx-auto">
             {PLANS.map(plan => renderPriceCard(plan))}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-16 mt-40 border-t border-slate-900 pt-24 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mt-32 border-t border-slate-900 pt-20 max-w-5xl mx-auto">
              {[
-               { icon: ShieldCheck, title: "Preço Protegido", desc: "Sua mensalidade nunca sofre aumentos enquanto mantiver a assinatura ativa." },
-               { icon: Lock, title: "Sem Contratos de Gaveta", desc: "Liberdade total para cancelar. Não exigimos fidelidade ou multas rescisórias." },
-               { icon: Users, title: "Consultoria Técnica", desc: "Suporte especializado feito por Engenheiros de Segurança e Psicólogos." }
+               { icon: ShieldCheck, title: "Preço Vitalício", desc: "Sua mensalidade nunca sofrerá reajustes enquanto o plano estiver ativo." },
+               { icon: Lock, title: "Sem Fidelidade", desc: "Cancele a qualquer momento direto pelo painel. Simples e transparente." },
+               { icon: Users, title: "Time Técnico", desc: "Suporte especializado direto com Engenheiros de Segurança do Trabalho." }
              ].map((item, i) => (
-               <div key={i} className="text-center space-y-6">
-                  <div className="w-14 h-14 bg-slate-900 text-blue-500 rounded-full flex items-center justify-center mx-auto border border-slate-800">
-                    <item.icon size={24} />
+               <div key={i} className="text-center space-y-4 px-4">
+                  <div className="w-12 h-12 bg-slate-900 text-blue-500 rounded-2xl flex items-center justify-center mx-auto border border-slate-800">
+                    <item.icon size={22} />
                   </div>
-                  <h4 className="text-xl font-heading font-black uppercase tracking-widest text-blue-500">{item.title}</h4>
-                  <p className="text-sm text-slate-500 leading-relaxed font-medium">{item.desc}</p>
+                  <h4 className="text-sm font-heading font-black uppercase tracking-widest text-blue-500">{item.title}</h4>
+                  <p className="text-[13px] text-slate-500 leading-relaxed font-medium">{item.desc}</p>
                </div>
              ))}
           </div>
@@ -254,10 +273,14 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-24 bg-white border-t border-slate-100">
-        <div className="container mx-auto px-8 flex flex-col md:flex-row justify-between items-center gap-12">
+      <footer className="py-20 bg-white border-t border-slate-100">
+        <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-10">
           <Logo size="md" />
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">© 2026 NR ZEN • Tecnologia para SST. CNPJ 55.119.808/3464-1</p>
+          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.2em] text-center md:text-right">
+            © NR ZEN • TECNOLOGIA PARA SST <br className="md:hidden" /> 
+            <span className="hidden md:inline ml-4 opacity-50">|</span> 
+            <span className="ml-4 uppercase">CNPJ 55.119.808/3464-1</span>
+          </p>
         </div>
       </footer>
     </div>
