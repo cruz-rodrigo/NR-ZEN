@@ -47,13 +47,13 @@ export const PLAN_LIMITS: Record<PlanTier, PlanLimits> = {
   },
   business: {
     maxCompanies: 50,
-    maxSectorsTotal: 9999, // Praticamente ilimitado
+    maxSectorsTotal: 9999, // Ilimitado na prática
     maxResponsesPerMonth: 1500,
     whiteLabel: true,
     support: 'whatsapp'
   },
   corporate: {
-    maxCompanies: 9999, // Ilimitado
+    maxCompanies: 9999, // Empresas Ilimitadas
     maxSectorsTotal: 9999,
     maxResponsesPerMonth: 5000,
     whiteLabel: true,

@@ -29,14 +29,8 @@ const Dashboard: React.FC = () => {
 
   const fetchData = async () => {
     if (token === 'demo-token-jwt') {
-      setStats({ 
-        total: 12, 
-        activeSectors: 34, 
-        responses: 892, 
-        riskHighPercent: 18, 
-        limits: { maxCompanies: 999, maxResponses: 999 } 
-      });
-      setCompanies([{ id: '1', name: "Indústrias Metalúrgicas Beta", cnpj: "12.345.678/0001-99", sectorsCount: 8, sectorsActive: 8, status: "active" } as any]);
+      setStats({ total: 12, activeSectors: 34, responses: 892, riskHighPercent: 18, limits: { maxCompanies: 999, maxResponses: 999 } });
+      setCompanies([{ id: '1', name: "Metalúrgica Beta", cnpj: "12.345.678/0001-99", sectorsCount: 8, sectorsActive: 8, status: "active" } as any]);
       setLoading(false);
       return;
     }
@@ -49,7 +43,7 @@ const Dashboard: React.FC = () => {
       setStats(statsData);
       setCompanies(companiesData || []);
     } catch (err: any) {
-      setError("Falha na sincronização dos dados.");
+      setError("Falha na sincronização.");
     } finally {
       setLoading(false);
     }
@@ -61,7 +55,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <Layout>
-      {/* Alerta de Trial / Upgrade */}
+      {/* Barra de Quotas para Plano Trial */}
       {isTrial && (
         <div className={`mb-10 rounded-2xl border p-5 flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-500 shadow-sm ${companyLimitReached || responseLimitReached ? 'bg-amber-50 border-amber-200' : 'bg-blue-50 border-blue-100'}`}>
           <div className="flex items-center gap-4">
@@ -70,23 +64,23 @@ const Dashboard: React.FC = () => {
              </div>
              <div>
                <p className={`font-black text-sm uppercase tracking-tight ${companyLimitReached || responseLimitReached ? 'text-amber-900' : 'text-blue-900'}`}>
-                 {companyLimitReached || responseLimitReached ? 'Quota de Avaliação Atingida' : 'Você está em modo Trial'}
+                 {companyLimitReached || responseLimitReached ? 'Limite do Plano Atingido' : 'Você está em modo Trial'}
                </p>
                <p className="text-xs font-medium opacity-60">
-                 {stats.total}/{stats.limits.maxCompanies} Empresa • {stats.activeSectors}/{stats.limits.maxSectors} Setor • {stats.responses}/{stats.limits.maxResponses} Respostas/mês
+                 {stats.total}/{stats.limits.maxCompanies} Empresa • {stats.responses}/{stats.limits.maxResponses} Respostas este mês
                </p>
              </div>
           </div>
-          <Link to="/app/billing" className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all ${companyLimitReached || responseLimitReached ? 'bg-slate-900 text-white hover:scale-105' : 'text-blue-700 bg-white shadow-sm border border-blue-100 hover:bg-blue-50'}`}>
-            {companyLimitReached || responseLimitReached ? 'Fazer Upgrade Agora' : 'Liberar Recursos'} <ChevronRight size={14} />
+          <Link to="/app/billing" className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all ${companyLimitReached || responseLimitReached ? 'bg-slate-900 text-white hover:scale-105 shadow-xl' : 'text-blue-700 bg-white shadow-sm border border-blue-100 hover:bg-blue-50'}`}>
+            {companyLimitReached || responseLimitReached ? 'Liberar Acesso Total' : 'Ver Planos'} <ChevronRight size={14} />
           </Link>
         </div>
       )}
 
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-heading font-black text-slate-800 tracking-tight">Dashboard</h1>
-          <p className="text-slate-500 mt-1 font-medium">Status da sua carteira de clientes de SST.</p>
+          <h1 className="text-3xl font-heading font-black text-slate-800 tracking-tight">Painel Operacional</h1>
+          <p className="text-slate-500 mt-1 font-medium italic">Visão consolidada da sua carteira SST.</p>
         </div>
         <div className="flex items-center gap-3">
            {companyLimitReached && isTrial ? (
@@ -102,10 +96,10 @@ const Dashboard: React.FC = () => {
       {/* Grid de KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[
-          { label: "Empresas", value: stats.total, icon: Building2, color: "blue", sub: `Limite: ${stats.limits.maxCompanies}` },
-          { label: "Setores Ativos", value: stats.activeSectors, icon: Users, color: "emerald", sub: `Limite Total: ${stats.limits.maxSectors}` },
-          { label: "Respostas", value: stats.responses, icon: Activity, color: "indigo", sub: `Mês: ${stats.limits.maxResponses}` },
-          { label: "Risco Crítico", value: `${stats.riskHighPercent}%`, icon: AlertTriangle, color: "red", sub: "Média Global" },
+          { label: "Clientes", value: stats.total, icon: Building2, color: "blue", sub: isTrial ? `Limite: ${stats.limits.maxCompanies}` : "Ativos" },
+          { label: "Setores", value: stats.activeSectors, icon: Users, color: "emerald", sub: isTrial ? "1 Unidade" : "Monitorados" },
+          { label: "Respostas", value: stats.responses, icon: Activity, color: "indigo", sub: isTrial ? `/ ${stats.limits.maxResponses} mês` : "Acumuladas" },
+          { label: "Riscos", value: `${stats.riskHighPercent}%`, icon: AlertTriangle, color: "red", sub: "Criticidade" },
         ].map((k, i) => (
           <Card key={i} className="group hover:border-blue-500 transition-all border-b-4 border-b-slate-100">
              <div className="flex justify-between items-start">
@@ -128,7 +122,7 @@ const Dashboard: React.FC = () => {
               <thead className="bg-slate-50 border-b border-slate-100">
                 <tr>
                   <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Organização</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Ações</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Controle</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -142,7 +136,7 @@ const Dashboard: React.FC = () => {
                 ))}
                 {companies.length === 0 && (
                   <tr>
-                    <td colSpan={2} className="py-12 text-center text-slate-400 italic text-sm">Nenhum cliente cadastrado.</td>
+                    <td colSpan={2} className="py-12 text-center text-slate-400 italic text-sm font-medium">Nenhuma empresa no inventário.</td>
                   </tr>
                 )}
               </tbody>

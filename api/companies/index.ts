@@ -69,7 +69,7 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
       if ((currentCompanies || 0) >= limits.maxCompanies) {
         return res.status(403).json({ 
           error: 'LIMIT_REACHED', 
-          message: `Seu plano atingiu o limite de ${limits.maxCompanies} empresa(s). Faça o upgrade para cadastrar novos clientes.` 
+          message: `Seu plano atingiu o limite de ${limits.maxCompanies} empresa(s).` 
         });
       }
 
@@ -81,7 +81,7 @@ async function handler(req: AuthedRequest, res: VercelResponse) {
       if ((currentSectors || 0) >= limits.maxSectorsTotal) {
          return res.status(403).json({ 
            error: 'LIMIT_REACHED', 
-           message: `Limite de setores do plano atingido (${limits.maxSectorsTotal}). Remova um setor antigo ou faça o upgrade.` 
+           message: `Limite de setores do plano atingido (${limits.maxSectorsTotal}).` 
          });
       }
 

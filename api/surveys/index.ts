@@ -51,7 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { data: owner } = await supabase.from('users').select('plan_tier').eq('id', ownerId).single();
       const limits = getPlanLimits(owner?.plan_tier || 'trial');
 
-      // 2. Contar respostas recebidas no mês corrente para este usuário
+      // 2. Contar respostas recebidas no mês corrente para este consultor
       const firstDay = new Date();
       firstDay.setDate(1);
       firstDay.setHours(0,0,0,0);
@@ -71,7 +71,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       if ((count || 0) >= limits.maxResponsesPerMonth) {
         return res.status(402).json({ 
-          error: 'QUOTA_EXCEEDED', 
+          error: 'TRIAL_LIMIT_REACHED', 
           message: `Este ambiente atingiu o limite de coletas mensais do plano (${limits.maxResponsesPerMonth}).` 
         });
       }
