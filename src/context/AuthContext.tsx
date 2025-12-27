@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserSession } from '../types';
 
@@ -11,6 +12,7 @@ interface AuthContextType {
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   apiCall: (endpoint: string, options?: RequestInit) => Promise<any>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,6 +41,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     setIsLoading(false);
   }, []);
+
+  /**
+   * Atualiza os dados do usuário atual consultando o backend.
+   * Essencial após checkouts de sucesso para atualizar o plan_tier.
+   */
+  const refreshUser = async () => {
+    if (!token || token === 'demo-token-jwt') return;
+    try {
+      const data = await apiCall('/api/auth?action=me');
+      if (data && data.user) {
+        setUser(data.user);
+        localStorage.setItem('nrzen_user', JSON.stringify(data.user));
+      }
+    } catch (e) {
+      console.error("Erro ao atualizar dados do usuário", e);
+    }
+  };
 
   const loginDemo = () => {
     const mockUser: UserSession = {
@@ -181,15 +200,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Token Expired / Invalid
       if (res.status === 401) {
-        console.log("Token expired, attempting refresh...");
         const newToken = await handleRefresh();
         
         if (newToken) {
-          console.log("Refresh successful, retrying request...");
           currentToken = newToken;
           res = await performRequest(newToken);
         } else {
-          console.warn("Refresh failed, logging out.");
           logout();
           throw new Error("Sessão expirada");
         }
@@ -222,7 +238,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       loginDemo,
       register, 
       logout,
-      apiCall 
+      apiCall,
+      refreshUser
     }}>
       {children}
     </AuthContext.Provider>
