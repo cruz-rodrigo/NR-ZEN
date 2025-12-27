@@ -5,11 +5,12 @@ import { Logo } from '../components/Layout';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
-import { AlertCircle, CheckCircle2, Lock, ArrowRight, Zap, CreditCard } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ArrowRight, CreditCard } from 'lucide-react';
+import { getPendingCheckout } from '../lib/pendingCheckout';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, loginDemo } = useAuth();
+  const { login } = useAuth();
   const [searchParams] = useSearchParams();
   
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -17,9 +18,12 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Contexto de compra vindo da Landing Page ou do Orquestrador
-  const planSlug = searchParams.get('plan');
-  const cycle = searchParams.get('cycle') || 'monthly';
+  // Intenção de compra vinda da URL ou sessionStorage
+  const urlPlan = searchParams.get('plan');
+  const urlCycle = searchParams.get('cycle') || 'monthly';
+  const pending = getPendingCheckout();
+  const activePlan = urlPlan || pending?.plan;
+  const activeCycle = urlCycle || pending?.cycle || 'monthly';
 
   useEffect(() => {
     if (searchParams.get('success')) {
@@ -35,9 +39,9 @@ const Login: React.FC = () => {
     try {
       await login(formData.email, formData.password);
       
-      // Se ele estava no meio de uma compra, volta para o Orquestrador
-      if (planSlug) {
-        navigate(`/checkout/start?plan=${planSlug}&cycle=${cycle}`, { replace: true });
+      // REGRA DE OURO: Se houver intenção de compra, volta para o Orquestrador
+      if (activePlan) {
+        navigate(`/checkout/start?plan=${activePlan}&cycle=${activeCycle}`, { replace: true });
       } else {
         navigate('/app', { replace: true });
       }
@@ -48,11 +52,6 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleDemoLogin = () => {
-    loginDemo();
-    navigate('/app');
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans text-slate-900">
       <div className="mb-8 hover:opacity-80 transition-opacity">
@@ -61,16 +60,16 @@ const Login: React.FC = () => {
       
       <Card className="w-full max-w-md p-8 shadow-xl border-t-4 border-t-blue-600">
         <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center">Acesse sua conta</h1>
-        <p className="text-slate-500 text-center mb-6">Gestão de Riscos Psicossociais</p>
+        <p className="text-slate-500 text-center mb-6">Plataforma de Riscos Psicossociais</p>
 
-        {planSlug && (
+        {activePlan && (
           <div className="mb-6 bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center gap-4 animate-fade-in">
              <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg">
                <CreditCard size={20} />
              </div>
              <div>
-               <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none mb-1">Finalizar Compra</p>
-               <p className="text-sm font-bold text-slate-800">Checkout Pendente</p>
+               <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none mb-1">Assinatura Pendente</p>
+               <p className="text-sm font-bold text-slate-800">Finalize seu pagamento após o login</p>
              </div>
           </div>
         )}
@@ -115,13 +114,13 @@ const Login: React.FC = () => {
           </div>
 
           <Button fullWidth size="lg" type="submit" disabled={loading} className="mt-2 py-3.5 shadow-lg shadow-blue-600/20 uppercase tracking-widest font-black text-xs">
-            {loading ? 'Validando...' : (planSlug ? 'Entrar e Pagar' : 'Entrar na Plataforma')}
+            {loading ? 'Acessando...' : (activePlan ? 'Entrar e Finalizar Compra' : 'Entrar na Plataforma')}
           </Button>
         </form>
 
         <div className="mt-8 pt-6 border-t border-slate-100 text-center text-sm text-slate-500 flex flex-col gap-2">
           <p>Ainda não tem cadastro?</p>
-          <Link to={`/register${planSlug ? `?plan=${planSlug}&cycle=${cycle}` : ''}`} className="text-blue-600 font-bold hover:underline inline-flex items-center justify-center gap-1">
+          <Link to={`/register${activePlan ? `?plan=${activePlan}&cycle=${activeCycle}` : ''}`} className="text-blue-600 font-bold hover:underline inline-flex items-center justify-center gap-1">
             Criar conta e Escolher Plano <ArrowRight size={14} />
           </Link>
         </div>

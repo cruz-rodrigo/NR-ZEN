@@ -6,6 +6,7 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
 import { AlertCircle, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
+import { getPendingCheckout } from '../lib/pendingCheckout';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -17,9 +18,12 @@ const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
-  // Parâmetros de intenção de compra vindos da Landing Page
-  const planSlug = searchParams.get('plan');
-  const cycle = searchParams.get('cycle') || 'monthly';
+  // Intenção de compra vinda da URL ou sessionStorage
+  const urlPlan = searchParams.get('plan');
+  const urlCycle = searchParams.get('cycle') || 'monthly';
+  const pending = getPendingCheckout();
+  const activePlan = urlPlan || pending?.plan;
+  const activeCycle = urlCycle || pending?.cycle || 'monthly';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,19 +31,19 @@ const Register: React.FC = () => {
     setLoading(true);
 
     try {
-      // 1. Cria a conta (O backend as coloca em trial por padrão)
+      // 1. Cria a conta
       await register(formData.name, formData.email, formData.password);
       
-      // 2. Faz login para garantir que temos o Token no contexto da App
+      // 2. Login automático
       await login(formData.email, formData.password);
 
       // 3. REGRA INFALÍVEL: Se ele escolheu um plano, devolve para o Orquestrador.
-      // O Orquestrador agora verá que o usuário está logado e disparará o Stripe.
-      if (planSlug) {
+      // Jamais mandamos para o /app aqui se houver um activePlan.
+      if (activePlan) {
         setRedirecting(true);
-        navigate(`/checkout/start?plan=${planSlug}&cycle=${cycle}`, { replace: true });
+        navigate(`/checkout/start?plan=${activePlan}&cycle=${activeCycle}`, { replace: true });
       } else {
-        // Fluxo normal para quem quer apenas testar
+        // Fluxo normal para quem quer apenas o Trial
         navigate('/app', { replace: true });
       }
     } catch (err: any) {
@@ -54,7 +58,7 @@ const Register: React.FC = () => {
         <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6 animate-bounce shadow-inner">
           <CheckCircle2 size={32} />
         </div>
-        <h2 className="text-2xl font-bold text-slate-800 mb-2">Conta Criada!</h2>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">Conta Criada com Sucesso!</h2>
         <p className="text-slate-500 font-medium">Iniciando ambiente de pagamento seguro...</p>
         <div className="mt-8">
           <Loader2 className="animate-spin text-blue-600 mx-auto" size={32} />
@@ -71,10 +75,10 @@ const Register: React.FC = () => {
       
       <Card className="w-full max-w-md p-8 shadow-xl border-t-4 border-t-blue-600">
         <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center">
-          {planSlug ? 'Inicie sua Assinatura' : 'Crie sua conta'}
+          {activePlan ? 'Inicie sua Assinatura' : 'Crie sua conta'}
         </h1>
         <p className="text-slate-500 text-center mb-8">
-          {planSlug ? 'Sua conta será criada e você seguirá para o pagamento.' : 'Comece a gerenciar riscos psicossociais hoje.'}
+          {activePlan ? 'Crie seu acesso para seguir ao pagamento seguro.' : 'Comece a gerenciar riscos psicossociais hoje.'}
         </p>
 
         {error && (
@@ -122,14 +126,14 @@ const Register: React.FC = () => {
           <Button fullWidth size="lg" type="submit" disabled={loading} className="mt-4 shadow-lg shadow-blue-600/20 py-4 uppercase text-xs font-black tracking-widest">
             {loading ? (
               <Loader2 className="animate-spin" size={20} />
-            ) : planSlug ? (
+            ) : activePlan ? (
               <span className="flex items-center gap-2">Ir para o Pagamento <ArrowRight size={18} /></span>
-            ) : 'Criar minha conta Trial'}
+            ) : 'Criar minha conta Grátis'}
           </Button>
         </form>
 
         <div className="mt-8 text-center text-sm text-slate-500 font-medium pt-6 border-t border-slate-100">
-          Já possui conta? <Link to={`/login${planSlug ? `?plan=${planSlug}&cycle=${cycle}` : ''}`} className="text-blue-600 font-bold hover:underline">Fazer Login</Link>
+          Já possui conta? <Link to={`/login${activePlan ? `?plan=${activePlan}&cycle=${activeCycle}` : ''}`} className="text-blue-600 font-bold hover:underline">Fazer Login</Link>
         </div>
       </Card>
     </div>

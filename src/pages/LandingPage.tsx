@@ -2,9 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  CheckCircle2, ArrowRight, BarChart3, Users, FileCheck, 
-  Menu, X, Star, ShieldCheck, Zap, HeartHandshake, Unlock, 
-  ChevronDown, ChevronUp, Play, Gem, TrendingUp
+  CheckCircle2, ArrowRight, BarChart3, Users, 
+  Menu, X, Star, ShieldCheck, Zap, Gem, TrendingUp
 } from 'lucide-react';
 import Button from '../components/Button.tsx';
 import { Logo } from '../components/Layout.tsx';
@@ -23,7 +22,7 @@ const LandingPage: React.FC = () => {
   }, []);
 
   const handleSubscribe = (planId: string) => {
-    // Redireciona para o orquestrador de checkout
+    // REDIRECIONAMENTO OBRIGATÓRIO: Inicia o funil pelo Orquestrador
     navigate(`/checkout/start?plan=${planId}&cycle=${billingCycle}`);
   };
 
@@ -122,7 +121,6 @@ const LandingPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900 selection:bg-blue-100 overflow-x-hidden">
       
-      {/* --- HEADER --- */}
       <header className={`fixed top-0 w-full z-50 transition-all duration-500 ${isScrolled ? 'bg-white/95 backdrop-blur-md h-20 shadow-md border-b border-slate-100' : 'bg-transparent h-24'}`}>
         <div className="container mx-auto px-10 h-full flex items-center justify-between">
           <Link to="/" className="hover:opacity-80 transition-opacity">
@@ -139,7 +137,7 @@ const LandingPage: React.FC = () => {
               Entrar
             </Link>
             <Button size="md" onClick={() => navigate('/register')} className="shadow-2xl shadow-blue-600/30">
-              Conta (Trial)
+              Teste Grátis
             </Button>
           </div>
 
@@ -149,7 +147,6 @@ const LandingPage: React.FC = () => {
         </div>
       </header>
 
-      {/* --- HERO SECTION --- */}
       <section className="relative pt-48 pb-32 overflow-hidden bg-slate-50/50">
         <div className="container mx-auto px-10 flex flex-col lg:flex-row items-center gap-20">
           <div className="lg:w-1/2 space-y-10 text-center lg:text-left">
@@ -164,7 +161,7 @@ const LandingPage: React.FC = () => {
             </h1>
             
             <p className="text-xl text-slate-500 leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium italic">
-              A plataforma definitiva para consultorias de SST realizarem diagnósticos, gerarem relatórios técnicos e planos de ação automatizados.
+              A plataforma definitiva para automatizar diagnósticos da NR-17 e gerar relatórios técnicos PGR com conformidade total.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start pt-4">
@@ -190,7 +187,7 @@ const LandingPage: React.FC = () => {
                </div>
                <div className="p-12 space-y-10">
                   <div className="flex justify-between items-center">
-                    <h4 className="text-2xl font-black text-slate-900">Visão Geral</h4>
+                    <h4 className="text-2xl font-black text-slate-900">Dashboard Executivo</h4>
                     <BarChart3 className="text-blue-600" size={32} />
                   </div>
                   <div className="grid grid-cols-2 gap-8">
@@ -199,8 +196,8 @@ const LandingPage: React.FC = () => {
                         <span className="text-5xl font-black text-blue-900 tracking-tighter">24</span>
                      </div>
                      <div className="bg-emerald-50 rounded-[32px] p-8 border border-emerald-100">
-                        <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest block mb-2">Adesão</span>
-                        <span className="text-5xl font-black text-emerald-900 tracking-tighter">89%</span>
+                        <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest block mb-2">Monitorados</span>
+                        <span className="text-5xl font-black text-emerald-900 tracking-tighter">892</span>
                      </div>
                   </div>
                </div>
@@ -209,12 +206,11 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* --- PRICING SECTION --- */}
       <section id="pricing" className="py-32 bg-slate-950 text-white relative overflow-hidden">
         <div className="container mx-auto px-10 relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-20 space-y-6">
             <h2 className="text-4xl lg:text-6xl font-heading font-black tracking-tight">Escala para sua <br/> consultoria crescer.</h2>
-            <p className="text-slate-400 text-xl font-medium opacity-80">Pague pelo volume de avaliações e profissionalize sua entrega técnica.</p>
+            <p className="text-slate-400 text-xl font-medium opacity-80">Escolha o plano baseado no seu volume e profissionalize sua entrega técnica.</p>
 
             <div className="flex items-center justify-center gap-8 mt-12">
               <span className={`text-[12px] font-black uppercase tracking-widest transition-colors ${billingCycle === 'monthly' ? 'text-white' : 'text-slate-600'}`}>
@@ -235,7 +231,7 @@ const LandingPage: React.FC = () => {
                   Anual
                 </span>
                 <span className="bg-emerald-500 text-white text-[9px] uppercase font-black px-2 py-0.5 rounded mt-1 animate-pulse tracking-tighter">
-                  Ganhe 2 meses
+                  Economize 20%
                 </span>
               </div>
             </div>
