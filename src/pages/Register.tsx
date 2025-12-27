@@ -18,7 +18,7 @@ const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
-  // Parâmetros vindos da Landing Page
+  // Parâmetros vindos da Landing Page via URL
   const planSlug = searchParams.get('plan');
   const cycle = searchParams.get('cycle') || 'monthly';
   const selectedPlan = planSlug ? PLANS.find(p => p.id === planSlug) : null;
@@ -29,17 +29,19 @@ const Register: React.FC = () => {
     setLoading(true);
 
     try {
-      // 1. Cria a conta
+      // 1. Cria a conta (O backend define como trial por padrão)
       await register(formData.name, formData.email, formData.password);
       
-      // 2. Login automático
+      // 2. Realiza o login para obter o token de autenticação
       await login(formData.email, formData.password);
 
-      // 3. FLUXO CORRIGIDO: Se houver plano, delega para o orquestrador e encerra o fluxo aqui
+      // 3. REGRA DE OURO: Se ele escolheu um plano, volta para o Orquestrador.
+      // O Orquestrador agora tem o token e vai disparar o Stripe.
       if (planSlug) {
         setRedirecting(true);
         navigate(`/checkout/start?plan=${planSlug}&cycle=${cycle}`, { replace: true });
       } else {
+        // Apenas se não houver intenção de compra, vai para o Dashboard Trial
         navigate('/app', { replace: true });
       }
     } catch (err: any) {
@@ -55,7 +57,7 @@ const Register: React.FC = () => {
           <CheckCircle2 size={32} />
         </div>
         <h2 className="text-2xl font-bold text-slate-800 mb-2 tracking-tight">Conta Criada!</h2>
-        <p className="text-slate-500 font-medium">Redirecionando para o ambiente de pagamento...</p>
+        <p className="text-slate-500 font-medium">Iniciando ambiente de pagamento seguro...</p>
         <div className="mt-8">
           <Loader2 className="animate-spin text-blue-600 mx-auto" size={32} />
         </div>
@@ -73,8 +75,10 @@ const Register: React.FC = () => {
         <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center">
           {planSlug ? 'Inicie sua Assinatura' : 'Crie sua conta'}
         </h1>
-        <p className="text-slate-500 text-center mb-8">
-          {planSlug ? `Complete seu cadastro para ativar o plano ${selectedPlan?.name}.` : 'Comece a gerenciar riscos psicossociais hoje.'}
+        <p className="text-slate-500 text-center mb-8 leading-relaxed">
+          {planSlug 
+            ? `Você está a um passo de ativar o plano ${selectedPlan?.name}.` 
+            : 'Comece a gerenciar riscos psicossociais hoje.'}
         </p>
 
         {selectedPlan && (
@@ -127,16 +131,16 @@ const Register: React.FC = () => {
             />
           </div>
 
-          <Button fullWidth size="lg" type="submit" disabled={loading} className="mt-4 shadow-lg shadow-blue-600/20 py-4 uppercase text-xs tracking-widest">
+          <Button fullWidth size="lg" type="submit" disabled={loading} className="mt-4 shadow-lg shadow-blue-600/20 py-4 uppercase text-xs font-black tracking-widest">
             {loading ? (
               <Loader2 className="animate-spin" size={20} />
             ) : planSlug ? (
-              <span className="flex items-center gap-2">Próximo Passo: Pagamento <ArrowRight size={18} /></span>
+              <span className="flex items-center gap-2">Ir para o Pagamento <ArrowRight size={18} /></span>
             ) : 'Criar minha conta Trial'}
           </Button>
         </form>
 
-        <div className="mt-8 text-center text-sm text-slate-500 font-medium">
+        <div className="mt-8 text-center text-sm text-slate-500 font-medium border-t border-slate-100 pt-6">
           Já possui conta? <Link to={`/login${planSlug ? `?plan=${planSlug}&cycle=${cycle}` : ''}`} className="text-blue-600 font-bold hover:underline">Fazer Login</Link>
         </div>
       </Card>

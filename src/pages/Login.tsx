@@ -18,7 +18,7 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Parâmetros de contexto de compra para evitar queda no trial
+  // Contexto de compra vindo da Landing Page ou CheckoutOrchestrator
   const planSlug = searchParams.get('plan');
   const cycle = searchParams.get('cycle') || 'monthly';
   const selectedPlan = planSlug ? PLANS.find(p => p.id === planSlug) : null;
@@ -37,7 +37,7 @@ const Login: React.FC = () => {
     try {
       await login(formData.email, formData.password);
       
-      // FLUXO CORRIGIDO: Se houver intenção de compra, vai direto para o orquestrador
+      // Se houver intenção de compra, volta para o Orquestrador para disparar o Stripe
       if (planSlug) {
         navigate(`/checkout/start?plan=${planSlug}&cycle=${cycle}`, { replace: true });
       } else {
@@ -115,43 +115,15 @@ const Login: React.FC = () => {
           </div>
 
           <Button fullWidth size="lg" type="submit" disabled={loading} className="mt-2 py-3.5 shadow-lg shadow-blue-600/20">
-            {loading ? 'Validando Acesso...' : (planSlug ? 'Login e Continuar' : 'Entrar na Plataforma')}
+            {loading ? 'Validando Acesso...' : (planSlug ? 'Login e Continuar Pagamento' : 'Entrar na Plataforma')}
           </Button>
         </form>
-
-        {((import.meta as any).env?.VITE_ENABLE_OFFLINE_DEMO === 'true') && (
-          <div className="mt-6">
-             <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200"></div>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-slate-400 font-medium">Ou teste sem senha</span>
-                </div>
-             </div>
-
-             <Button 
-               variant="secondary" 
-               fullWidth 
-               size="lg" 
-               onClick={handleDemoLogin}
-               className="mt-6 border-dashed"
-             >
-               <Zap size={16} className="mr-2 text-amber-500" />
-               Acessar Modo Demo (Offline)
-             </Button>
-          </div>
-        )}
 
         <div className="mt-8 pt-6 border-t border-slate-100 text-center text-sm text-slate-500 flex flex-col gap-2">
           <p>Ainda não tem cadastro?</p>
           <Link to={`/register${planSlug ? `?plan=${planSlug}&cycle=${cycle}` : ''}`} className="text-blue-600 font-bold hover:underline inline-flex items-center justify-center gap-1">
             Criar conta e Iniciar Plano <ArrowRight size={14} />
           </Link>
-        </div>
-        
-        <div className="mt-6 flex items-center justify-center gap-2 text-[10px] text-slate-400">
-          <Lock size={10} /> Conexão Segura SSL 256-bit
         </div>
       </Card>
     </div>
