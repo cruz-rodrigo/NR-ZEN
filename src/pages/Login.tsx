@@ -104,7 +104,7 @@ const Login: React.FC = () => {
           <div>
             <div className="flex justify-between mb-1.5">
                <label className="block text-sm font-semibold text-slate-700">Senha</label>
-               <Link to="/forgot-password" size="sm" className="text-xs text-blue-600 hover:underline">Esqueceu?</Link>
+               <Link to="/forgot-password" className="text-xs text-blue-600 hover:underline">Esqueceu?</Link>
             </div>
             <input 
               type="password" 
@@ -121,7 +121,7 @@ const Login: React.FC = () => {
           </Button>
         </form>
 
-        {import.meta.env.VITE_ENABLE_OFFLINE_DEMO === 'true' && (
+        {((import.meta as any).env.VITE_ENABLE_OFFLINE_DEMO === 'true') && (
           <div className="mt-6">
              <div className="relative">
                 <div className="absolute inset-0 flex items-center">

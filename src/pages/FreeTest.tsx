@@ -3,13 +3,13 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Zap, Loader2, ArrowRight, CheckCircle2, BarChart3, 
-  ShieldCheck, Info, FileText, Star 
+  Star 
 } from 'lucide-react';
 import { Logo } from '../components/Layout.tsx';
 import Card from '../components/Card.tsx';
 import Button from '../components/Button.tsx';
 import { QUESTIONNAIRE_DATA } from '../constants.ts';
-import { calculateRisk } from '../lib/riskEngine.ts';
+import { calculateRisk } from '../lib/riskEngine';
 
 type Step = 'cadastro' | 'perguntas' | 'resultado';
 
