@@ -18,7 +18,7 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Parâmetros de contexto de compra
+  // Parâmetros de contexto de compra para evitar queda no trial
   const planSlug = searchParams.get('plan');
   const cycle = searchParams.get('cycle') || 'monthly';
   const selectedPlan = planSlug ? PLANS.find(p => p.id === planSlug) : null;
@@ -37,11 +37,11 @@ const Login: React.FC = () => {
     try {
       await login(formData.email, formData.password);
       
-      // FLUXO CORRIGIDO: Redireciona para o checkout se houver plano no contexto
+      // FLUXO CORRIGIDO: Se houver intenção de compra, vai direto para o orquestrador
       if (planSlug) {
         navigate(`/checkout/start?plan=${planSlug}&cycle=${cycle}`, { replace: true });
       } else {
-        navigate('/app');
+        navigate('/app', { replace: true });
       }
     } catch (err: any) {
       setError(err.message || 'E-mail ou senha incorretos.');
@@ -103,7 +103,7 @@ const Login: React.FC = () => {
           <div>
             <div className="flex justify-between mb-1.5">
                <label className="block text-sm font-semibold text-slate-700">Senha</label>
-               <Link to="/forgot-password" size="sm" className="text-xs text-blue-600 hover:underline">Esqueceu?</Link>
+               <Link to="/forgot-password" className="text-xs text-blue-600 hover:underline">Esqueceu?</Link>
             </div>
             <input 
               type="password" required
@@ -119,11 +119,39 @@ const Login: React.FC = () => {
           </Button>
         </form>
 
+        {((import.meta as any).env?.VITE_ENABLE_OFFLINE_DEMO === 'true') && (
+          <div className="mt-6">
+             <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200"></div>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-slate-400 font-medium">Ou teste sem senha</span>
+                </div>
+             </div>
+
+             <Button 
+               variant="secondary" 
+               fullWidth 
+               size="lg" 
+               onClick={handleDemoLogin}
+               className="mt-6 border-dashed"
+             >
+               <Zap size={16} className="mr-2 text-amber-500" />
+               Acessar Modo Demo (Offline)
+             </Button>
+          </div>
+        )}
+
         <div className="mt-8 pt-6 border-t border-slate-100 text-center text-sm text-slate-500 flex flex-col gap-2">
           <p>Ainda não tem cadastro?</p>
           <Link to={`/register${planSlug ? `?plan=${planSlug}&cycle=${cycle}` : ''}`} className="text-blue-600 font-bold hover:underline inline-flex items-center justify-center gap-1">
             Criar conta e Iniciar Plano <ArrowRight size={14} />
           </Link>
+        </div>
+        
+        <div className="mt-6 flex items-center justify-center gap-2 text-[10px] text-slate-400">
+          <Lock size={10} /> Conexão Segura SSL 256-bit
         </div>
       </Card>
     </div>

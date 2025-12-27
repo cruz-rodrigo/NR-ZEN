@@ -23,17 +23,17 @@ const CheckoutOrchestrator: React.FC = () => {
 
     // Se não tem plano na URL, volta para os preços.
     if (!plan) {
-      navigate('/#pricing');
+      navigate('/#pricing', { replace: true });
       return;
     }
 
-    // Se não está autenticado, manda para o registro/login mantendo o contexto.
+    // Se não está autenticado, manda para o registro mantendo o contexto do plano.
     if (!isAuthenticated) {
       navigate(`/register?plan=${plan}&cycle=${cycle}`, { replace: true });
       return;
     }
 
-    // Se está autenticado e tem o token, dispara o checkout (apenas uma vez)
+    // Se está autenticado e tem o token, dispara o checkout (apenas uma vez para evitar múltiplas sessões)
     if (isAuthenticated && token && !requestFired.current) {
       const startCheckout = async () => {
         requestFired.current = true;
@@ -96,9 +96,9 @@ const CheckoutOrchestrator: React.FC = () => {
                </div>
             </div>
             
-            <h1 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">Redirecionando...</h1>
+            <h1 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">Preparando Pagamento...</h1>
             <p className="text-slate-500 text-sm leading-relaxed mb-10">
-              Estamos gerando sua sessão segura de pagamento no Stripe. <br/> <strong>Não feche esta janela.</strong>
+              Estamos gerando sua sessão segura no Stripe. <br/> <strong>Não feche esta janela.</strong>
             </p>
             
             <div className="flex items-center justify-center gap-3 text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] bg-slate-50 py-4 rounded-[20px] border border-slate-100">

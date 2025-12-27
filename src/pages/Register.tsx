@@ -18,7 +18,7 @@ const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
-  // Parâmetros de contexto vindos da LP
+  // Parâmetros vindos da Landing Page
   const planSlug = searchParams.get('plan');
   const cycle = searchParams.get('cycle') || 'monthly';
   const selectedPlan = planSlug ? PLANS.find(p => p.id === planSlug) : null;
@@ -35,13 +35,12 @@ const Register: React.FC = () => {
       // 2. Login automático
       await login(formData.email, formData.password);
 
-      // 3. FLUXO CORRIGIDO: Se houver plano, força o redirecionamento para o orquestrador
+      // 3. FLUXO CORRIGIDO: Se houver plano, delega para o orquestrador e encerra o fluxo aqui
       if (planSlug) {
         setRedirecting(true);
-        // Usamos replace para não permitir voltar para o registro após o sucesso
         navigate(`/checkout/start?plan=${planSlug}&cycle=${cycle}`, { replace: true });
       } else {
-        navigate('/app');
+        navigate('/app', { replace: true });
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao criar conta.');
