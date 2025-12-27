@@ -27,19 +27,19 @@ const Register: React.FC = () => {
     setLoading(true);
 
     try {
-      // 1. Cria a conta
+      // 1. Cria a conta (O backend as coloca em trial por padrão)
       await register(formData.name, formData.email, formData.password);
       
-      // 2. Faz login automático para gerar o token no sistema
+      // 2. Faz login para garantir que temos o Token no contexto da App
       await login(formData.email, formData.password);
 
-      // 3. REGRA INFALÍVEL: Se ele escolheu um plano, volta para o Orquestrador.
-      // Não tentamos chamar a API do Stripe aqui para evitar conflito de estado do Token.
+      // 3. REGRA INFALÍVEL: Se ele escolheu um plano, devolve para o Orquestrador.
+      // O Orquestrador agora verá que o usuário está logado e disparará o Stripe.
       if (planSlug) {
         setRedirecting(true);
         navigate(`/checkout/start?plan=${planSlug}&cycle=${cycle}`, { replace: true });
       } else {
-        // Fluxo normal para quem não escolheu plano (Trial puro)
+        // Fluxo normal para quem quer apenas testar
         navigate('/app', { replace: true });
       }
     } catch (err: any) {
@@ -54,8 +54,8 @@ const Register: React.FC = () => {
         <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6 animate-bounce shadow-inner">
           <CheckCircle2 size={32} />
         </div>
-        <h2 className="text-2xl font-bold text-slate-800 mb-2">Conta Criada com Sucesso!</h2>
-        <p className="text-slate-500 font-medium">Redirecionando para o pagamento seguro...</p>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">Conta Criada!</h2>
+        <p className="text-slate-500 font-medium">Iniciando ambiente de pagamento seguro...</p>
         <div className="mt-8">
           <Loader2 className="animate-spin text-blue-600 mx-auto" size={32} />
         </div>
@@ -64,7 +64,7 @@ const Register: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans text-slate-900">
       <div className="mb-8">
         <Link to="/"><Logo size="lg" /></Link>
       </div>
@@ -74,11 +74,11 @@ const Register: React.FC = () => {
           {planSlug ? 'Inicie sua Assinatura' : 'Crie sua conta'}
         </h1>
         <p className="text-slate-500 text-center mb-8">
-          {planSlug ? 'Complete seu cadastro para ativar seu plano profissional.' : 'Comece a gerenciar riscos psicossociais hoje.'}
+          {planSlug ? 'Sua conta será criada e você seguirá para o pagamento.' : 'Comece a gerenciar riscos psicossociais hoje.'}
         </p>
 
         {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2 border border-red-100 animate-fade-in-down">
+          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2 border border-red-100 animate-fade-in">
             <AlertCircle size={16} /> {error}
           </div>
         )}
@@ -92,7 +92,7 @@ const Register: React.FC = () => {
               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all"
               value={formData.name}
               onChange={e => setFormData({...formData, name: e.target.value})}
-              placeholder="Ex: Consultoria SST"
+              placeholder="Ex: Consultoria SST Premium"
             />
           </div>
           <div>
@@ -107,7 +107,7 @@ const Register: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Senha de Acesso</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Senha (Mínimo 6 caracteres)</label>
             <input 
               type="password" 
               required
@@ -123,7 +123,7 @@ const Register: React.FC = () => {
             {loading ? (
               <Loader2 className="animate-spin" size={20} />
             ) : planSlug ? (
-              <span className="flex items-center gap-2">Próximo Passo: Pagamento <ArrowRight size={18} /></span>
+              <span className="flex items-center gap-2">Ir para o Pagamento <ArrowRight size={18} /></span>
             ) : 'Criar minha conta Trial'}
           </Button>
         </form>

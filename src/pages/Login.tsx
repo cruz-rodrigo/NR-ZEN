@@ -17,7 +17,7 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Contexto de compra vindo da Landing Page
+  // Contexto de compra vindo da Landing Page ou do Orquestrador
   const planSlug = searchParams.get('plan');
   const cycle = searchParams.get('cycle') || 'monthly';
 
@@ -35,7 +35,7 @@ const Login: React.FC = () => {
     try {
       await login(formData.email, formData.password);
       
-      // Se houver intenção de compra, volta para o Orquestrador
+      // Se ele estava no meio de uma compra, volta para o Orquestrador
       if (planSlug) {
         navigate(`/checkout/start?plan=${planSlug}&cycle=${cycle}`, { replace: true });
       } else {
@@ -54,7 +54,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans text-slate-900">
       <div className="mb-8 hover:opacity-80 transition-opacity">
         <Link to="/"><Logo size="lg" /></Link>
       </div>
@@ -64,25 +64,25 @@ const Login: React.FC = () => {
         <p className="text-slate-500 text-center mb-6">Gestão de Riscos Psicossociais</p>
 
         {planSlug && (
-          <div className="mb-6 bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center gap-4 animate-fade-in-down">
+          <div className="mb-6 bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center gap-4 animate-fade-in">
              <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg">
                <CreditCard size={20} />
              </div>
              <div>
-               <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Finalizar Compra</p>
+               <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none mb-1">Finalizar Compra</p>
                <p className="text-sm font-bold text-slate-800">Checkout Pendente</p>
              </div>
           </div>
         )}
 
         {successMsg && (
-          <div className="bg-emerald-50 text-emerald-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2 border border-emerald-100 animate-fade-in-down">
+          <div className="bg-emerald-50 text-emerald-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2 border border-emerald-100 animate-fade-in">
             <CheckCircle2 size={16} /> {successMsg}
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2 border border-red-100 animate-fade-in-down">
+          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2 border border-red-100 animate-fade-in">
             <AlertCircle size={16} /> {error}
           </div>
         )}
@@ -102,7 +102,7 @@ const Login: React.FC = () => {
           <div>
             <div className="flex justify-between mb-1.5">
                <label className="block text-sm font-semibold text-slate-700">Senha</label>
-               <Link to="/forgot-password" size="sm" className="text-xs text-blue-600 hover:underline">Esqueceu?</Link>
+               <Link to="/forgot-password" title="Esqueceu a senha?" className="text-xs text-blue-600 hover:underline">Esqueceu?</Link>
             </div>
             <input 
               type="password" 
@@ -114,15 +114,15 @@ const Login: React.FC = () => {
             />
           </div>
 
-          <Button fullWidth size="lg" type="submit" disabled={loading} className="mt-2 py-3.5 shadow-lg shadow-blue-600/20">
-            {loading ? 'Validando...' : (planSlug ? 'Login e Continuar Pagamento' : 'Entrar na Plataforma')}
+          <Button fullWidth size="lg" type="submit" disabled={loading} className="mt-2 py-3.5 shadow-lg shadow-blue-600/20 uppercase tracking-widest font-black text-xs">
+            {loading ? 'Validando...' : (planSlug ? 'Entrar e Pagar' : 'Entrar na Plataforma')}
           </Button>
         </form>
 
         <div className="mt-8 pt-6 border-t border-slate-100 text-center text-sm text-slate-500 flex flex-col gap-2">
           <p>Ainda não tem cadastro?</p>
           <Link to={`/register${planSlug ? `?plan=${planSlug}&cycle=${cycle}` : ''}`} className="text-blue-600 font-bold hover:underline inline-flex items-center justify-center gap-1">
-            Criar conta e Iniciar Plano <ArrowRight size={14} />
+            Criar conta e Escolher Plano <ArrowRight size={14} />
           </Link>
         </div>
       </Card>

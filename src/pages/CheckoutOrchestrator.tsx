@@ -2,21 +2,22 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.tsx';
-import { Loader2, ShieldCheck, ArrowRight, AlertCircle, Lock } from 'lucide-react';
+import { Loader2, ShieldCheck, AlertCircle, Lock } from 'lucide-react';
 import { Logo } from '../components/Layout.tsx';
 import Card from '../components/Card.tsx';
 import Button from '../components/Button.tsx';
 
 /**
  * CheckoutOrchestrator
- * Componente mestre do funil de vendas.
+ * Componente central que gerencia o fluxo de vendas.
+ * Ele garante que o usuário esteja logado antes de criar a sessão do Stripe.
  */
 const CheckoutOrchestrator: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isAuthenticated, apiCall, isLoading, token } = useAuth();
   
-  // Impede que múltiplos disparos de API ocorram (React StrictMode fires twice)
+  // Impede disparos duplicados da API (útil no React Strict Mode)
   const requestFired = useRef(false);
   
   const plan = searchParams.get('plan');
@@ -24,22 +25,22 @@ const CheckoutOrchestrator: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // 1. Aguarda o carregamento inicial da auth (do localStorage)
+    // 1. Aguarda o carregamento inicial da autenticação
     if (isLoading) return;
 
-    // 2. Proteção: Se cair aqui sem plano, volta pros preços
+    // 2. Segurança: Se cair aqui sem um plano, volta para os preços na Landing Page
     if (!plan) {
       navigate('/#pricing', { replace: true });
       return;
     }
 
-    // 3. Se NÃO estiver logado, manda pro Registro mantendo o contexto
+    // 3. Se NÃO estiver logado, redireciona para o Registro preservando o contexto do plano
     if (!isAuthenticated) {
       navigate(`/register?plan=${plan}&cycle=${cycle}`, { replace: true });
       return;
     }
 
-    // 4. Se ESTIVER logado e tiver o token pronto, dispara o checkout
+    // 4. Se ESTIVER logado e tiver o token pronto, dispara a criação da sessão do Stripe
     if (isAuthenticated && token && !requestFired.current) {
       const startCheckout = async () => {
         requestFired.current = true;
@@ -50,14 +51,14 @@ const CheckoutOrchestrator: React.FC = () => {
           });
 
           if (response?.url) {
-            // REDIRECIONA PARA O STRIPE FORA DA APP
+            // REDIRECIONAMENTO EXTERNO PARA O STRIPE
             window.location.href = response.url;
           } else {
-            throw new Error("Resposta inválida do servidor de faturamento.");
+            throw new Error("Erro ao gerar link de pagamento seguro.");
           }
         } catch (err: any) {
           console.error("Checkout Execution Error:", err);
-          setError(err.message || "Erro ao conectar com o gateway de pagamentos.");
+          setError(err.message || "Erro ao conectar com o servidor de faturamento.");
           requestFired.current = false; // Permite tentar novamente
         }
       };
@@ -73,7 +74,7 @@ const CheckoutOrchestrator: React.FC = () => {
       </div>
       
       <Card className="max-w-md w-full p-10 shadow-2xl border-t-4 border-blue-600 relative overflow-hidden">
-        {/* Elemento Decorativo */}
+        {/* Elemento Decorativo de Fundo */}
         <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
           <Lock size={120} />
         </div>
@@ -103,21 +104,21 @@ const CheckoutOrchestrator: React.FC = () => {
                </div>
             </div>
             
-            <h1 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">Redirecionando...</h1>
+            <h1 className="text-2xl font-black text-slate-900 mb-3 tracking-tight uppercase">Conectando...</h1>
             <p className="text-slate-500 text-sm leading-relaxed mb-10">
-              Estamos preparando sua sessão segura de pagamento no Stripe para o plano selecionado. <br/> <strong>Não feche esta janela.</strong>
+              Estamos preparando seu checkout seguro no Stripe para o plano selecionado. <br/> <strong>Não feche esta janela.</strong>
             </p>
             
             <div className="flex items-center justify-center gap-3 text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] bg-slate-50 py-4 rounded-[20px] border border-slate-100">
               <ShieldCheck size={16} className="text-emerald-500" />
-              Ambiente Blindado SSL
+              Checkout Blindado SSL
             </div>
           </div>
         )}
       </Card>
       
       <p className="mt-10 text-slate-400 text-[10px] uppercase tracking-[0.25em] font-black opacity-60">
-        Plataforma Segura via Stripe & NR ZEN
+        Plataforma Processada por Stripe & NR ZEN
       </p>
     </div>
   );
