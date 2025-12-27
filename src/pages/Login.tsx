@@ -44,10 +44,15 @@ const Login: React.FC = () => {
         navigate('/app');
       }
     } catch (err: any) {
-      setError(err.message || 'Erro inesperado ao conectar.');
+      setError(err.message || 'E-mail ou senha incorretos.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDemoLogin = () => {
+    loginDemo();
+    navigate('/app');
   };
 
   return (
@@ -115,6 +120,30 @@ const Login: React.FC = () => {
             {loading ? 'Acessando...' : 'Entrar na Plataforma'}
           </Button>
         </form>
+
+        {import.meta.env.VITE_ENABLE_OFFLINE_DEMO === 'true' && (
+          <div className="mt-6">
+             <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200"></div>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-slate-400 font-medium">Ou teste sem senha</span>
+                </div>
+             </div>
+
+             <Button 
+               variant="secondary" 
+               fullWidth 
+               size="lg" 
+               onClick={handleDemoLogin}
+               className="mt-6 border-dashed"
+             >
+               <Zap size={16} className="mr-2 text-amber-500" />
+               Acessar Modo Demo (Offline)
+             </Button>
+          </div>
+        )}
 
         <div className="mt-8 pt-6 border-t border-slate-100 text-center text-sm text-slate-500 flex flex-col gap-2">
           <p>Ainda não tem cadastro?</p>
