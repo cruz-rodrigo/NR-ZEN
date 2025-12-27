@@ -121,7 +121,7 @@ const Login: React.FC = () => {
           </Button>
         </form>
 
-        {((import.meta as any).env.VITE_ENABLE_OFFLINE_DEMO === 'true') && (
+        {((import.meta as any).env?.VITE_ENABLE_OFFLINE_DEMO === 'true') && (
           <div className="mt-6">
              <div className="relative">
                 <div className="absolute inset-0 flex items-center">

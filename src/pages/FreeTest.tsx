@@ -9,7 +9,8 @@ import { Logo } from '../components/Layout.tsx';
 import Card from '../components/Card.tsx';
 import Button from '../components/Button.tsx';
 import { QUESTIONNAIRE_DATA } from '../constants.ts';
-import { calculateRisk } from '../lib/riskEngine';
+// Importação corrigida para subir dois níveis e encontrar a pasta lib na raiz
+import { calculateRisk } from '../../lib/riskEngine';
 
 type Step = 'cadastro' | 'perguntas' | 'resultado';
 
@@ -215,7 +216,7 @@ const FreeTest: React.FC = () => {
                     Crie sua conta e tenha acesso ao questionário completo da NR-17, gere relatórios oficiais em PDF para o PGR e gerencie múltiplos CNPJs em um só lugar.
                  </p>
                  <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                   <Button size="lg" className="h-20 px-12 text-sm font-black uppercase tracking-widest shadow-2xl shadow-blue-600/30 w-full sm:w-auto" onClick={() => navigate('/register')}>
+                   <Button size="lg" className="h-20 px-12 text-sm font-black uppercase tracking-widest shadow-2xl shadow-blue-600/20 w-full sm:w-auto" onClick={() => navigate('/register')}>
                      CRIAR MINHA CONTA
                      <ArrowRight size={20} className="ml-3"/>
                    </Button>
