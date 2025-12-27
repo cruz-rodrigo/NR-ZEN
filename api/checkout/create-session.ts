@@ -2,24 +2,27 @@
 import type { VercelResponse } from '@vercel/node';
 import { requireAuth, AuthedRequest } from '../_authMiddleware.js';
 import { stripe } from '../_stripeClient.js';
-import { PLANS } from '../../src/config/plans.js';
+import { PLANS, BillingCycle } from '../../src/config/plans.js';
 
 export default requireAuth(async function handler(req: AuthedRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { plan: planId, billingCycle = 'monthly' } = req.body;
+  const { plan: planId, billingCycle } = req.body;
   const user = req.user!; 
 
   try {
-    const cycle = (billingCycle === 'yearly' || billingCycle === 'monthly') ? billingCycle : 'monthly';
+    // Correção da tipagem: Garantir que cycle seja estritamente 'monthly' | 'yearly'
+    const cycle: BillingCycle = (billingCycle === 'yearly') ? 'yearly' : 'monthly';
+    
     const planConfig = PLANS.find(p => p.id === planId);
     
     if (!planConfig || planConfig.isCustom) {
       return res.status(400).json({ error: 'INVALID_PLAN', message: 'Este plano requer contato comercial.' });
     }
 
+    // Agora o compilador aceita o índice pois cycle é do tipo BillingCycle
     const selectedPriceId = planConfig.stripe[cycle];
     
     if (!selectedPriceId) {
