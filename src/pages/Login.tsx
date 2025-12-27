@@ -6,7 +6,6 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
 import { AlertCircle, CheckCircle2, Lock, ArrowRight, Zap, CreditCard } from 'lucide-react';
-import { PLANS } from '../config/plans.ts';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -18,10 +17,9 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Contexto de compra vindo da Landing Page ou CheckoutOrchestrator
+  // Contexto de compra vindo da Landing Page
   const planSlug = searchParams.get('plan');
   const cycle = searchParams.get('cycle') || 'monthly';
-  const selectedPlan = planSlug ? PLANS.find(p => p.id === planSlug) : null;
 
   useEffect(() => {
     if (searchParams.get('success')) {
@@ -37,7 +35,7 @@ const Login: React.FC = () => {
     try {
       await login(formData.email, formData.password);
       
-      // Se houver intenção de compra, volta para o Orquestrador para disparar o Stripe
+      // Se houver intenção de compra, volta para o Orquestrador
       if (planSlug) {
         navigate(`/checkout/start?plan=${planSlug}&cycle=${cycle}`, { replace: true });
       } else {
@@ -65,14 +63,14 @@ const Login: React.FC = () => {
         <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center">Acesse sua conta</h1>
         <p className="text-slate-500 text-center mb-6">Gestão de Riscos Psicossociais</p>
 
-        {selectedPlan && (
+        {planSlug && (
           <div className="mb-6 bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center gap-4 animate-fade-in-down">
              <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg">
                <CreditCard size={20} />
              </div>
              <div>
-               <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Checkout Pendente</p>
-               <p className="text-sm font-bold text-slate-800">{selectedPlan.name} • {cycle === 'yearly' ? 'Anual' : 'Mensal'}</p>
+               <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Finalizar Compra</p>
+               <p className="text-sm font-bold text-slate-800">Checkout Pendente</p>
              </div>
           </div>
         )}
@@ -93,7 +91,8 @@ const Login: React.FC = () => {
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5">E-mail</label>
             <input 
-              type="email" required
+              type="email" 
+              required
               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all"
               value={formData.email}
               onChange={e => setFormData({...formData, email: e.target.value.toLowerCase().trim()})}
@@ -103,10 +102,11 @@ const Login: React.FC = () => {
           <div>
             <div className="flex justify-between mb-1.5">
                <label className="block text-sm font-semibold text-slate-700">Senha</label>
-               <Link to="/forgot-password" className="text-xs text-blue-600 hover:underline">Esqueceu?</Link>
+               <Link to="/forgot-password" size="sm" className="text-xs text-blue-600 hover:underline">Esqueceu?</Link>
             </div>
             <input 
-              type="password" required
+              type="password" 
+              required
               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all"
               value={formData.password}
               onChange={e => setFormData({...formData, password: e.target.value})}
@@ -115,7 +115,7 @@ const Login: React.FC = () => {
           </div>
 
           <Button fullWidth size="lg" type="submit" disabled={loading} className="mt-2 py-3.5 shadow-lg shadow-blue-600/20">
-            {loading ? 'Validando Acesso...' : (planSlug ? 'Login e Continuar Pagamento' : 'Entrar na Plataforma')}
+            {loading ? 'Validando...' : (planSlug ? 'Login e Continuar Pagamento' : 'Entrar na Plataforma')}
           </Button>
         </form>
 
