@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import Button from '../components/Button.tsx';
 import { Logo } from '../components/Layout.tsx';
-import { PLANS, formatCurrency, PlanConfig } from '../src/config/plans.ts';
+import { PLANS, formatBRL, PlanConfig, BillingCycle } from '../src/config/plans.ts';
 
 const ContactModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
@@ -26,13 +26,12 @@ const ContactModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 font-sans">
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={onClose} />
       <div className="relative w-full max-w-lg bg-white rounded-[32px] shadow-2xl overflow-hidden animate-fade-in-down border border-slate-100">
         <button onClick={onClose} className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-900 transition-colors">
           <X size={24} />
         </button>
-        
         <div className="p-10">
           {sent ? (
             <div className="text-center py-10 space-y-4">
@@ -77,10 +76,8 @@ const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
   const [isScrolled, setIsScrolled] = useState(false);
-
-  const WHATSAPP_LINK = "https://wa.me/5511980834641?text=Olá! Gostaria de saber mais sobre o NR ZEN.";
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -101,7 +98,8 @@ const LandingPage: React.FC = () => {
 
   const renderPriceCard = (plan: PlanConfig) => {
     const isYearly = billingCycle === 'yearly';
-    const displayPrice = isYearly && plan.priceYearly ? (plan.priceYearly / 12) : plan.priceMonthly;
+    const mainPrice = isYearly && plan.yearlyPriceBRL ? plan.yearlyPriceBRL : plan.monthlyPriceBRL;
+    const subPrice = isYearly && plan.yearlyPriceBRL ? plan.yearlyPriceBRL / 12 : null;
 
     return (
       <div 
@@ -126,7 +124,7 @@ const LandingPage: React.FC = () => {
             {plan.id === 'enterprise' && <Gem size={18} className="text-amber-500" />}
           </div>
 
-          <div className="mb-6 min-h-[60px] flex flex-col justify-center">
+          <div className="mb-6 min-h-[70px] flex flex-col justify-center">
             {plan.isCustom ? (
               <div className="text-2xl font-heading font-black">Sob Medida</div>
             ) : (
@@ -134,10 +132,20 @@ const LandingPage: React.FC = () => {
                 <div className="flex items-baseline gap-1">
                   <span className="text-sm font-bold opacity-60">R$</span>
                   <span className="text-4xl font-heading font-black tracking-tighter">
-                    {formatCurrency(displayPrice).replace('R$', '').trim()}
+                    {mainPrice.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </span>
-                  <span className="text-xs font-bold opacity-60">/mês</span>
+                  <span className="text-xs font-bold opacity-60">/{isYearly ? 'ano' : 'mês'}</span>
                 </div>
+                {isYearly && subPrice && (
+                  <p className="text-[10px] font-black uppercase tracking-widest mt-2 text-emerald-400">
+                    Equivalente a {formatBRL(subPrice)}/mês
+                  </p>
+                )}
+                {!isYearly && (
+                  <p className="text-[10px] font-black uppercase tracking-widest mt-2 opacity-40">
+                    Faturamento Mensal
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -149,10 +157,12 @@ const LandingPage: React.FC = () => {
           <Button 
             fullWidth 
             variant={plan.popular ? 'white' : 'glass'} 
-            onClick={() => plan.isCustom || plan.id === 'enterprise' ? window.open(WHATSAPP_LINK, '_blank') : navigate('/register')}
+            onClick={() => plan.isCustom || plan.id === 'enterprise' 
+              ? window.open("https://wa.me/5511980834641?text=Olá! Gostaria de saber mais sobre o plano Enterprise.", '_blank') 
+              : navigate(`/checkout/start?plan=${plan.id}&cycle=${billingCycle}`)}
             className={`h-12 text-[10px] font-black uppercase tracking-[0.1em] ${plan.popular ? 'text-blue-600' : ''}`}
           >
-            Assinar Agora
+            {plan.isCustom ? 'Falar com Consultor' : 'Assinar Agora'}
           </Button>
 
           <div className={`mt-8 pt-8 border-t ${plan.popular ? 'border-white/10' : 'border-slate-800'}`}>
@@ -172,55 +182,30 @@ const LandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900 selection:bg-blue-100 overflow-x-hidden">
-      
       <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
 
-      {/* Header - AJUSTE PRECISO DO MENU DESKTOP */}
       <header className={`fixed top-0 w-full z-50 transition-all duration-500 ${isScrolled ? 'bg-white/95 backdrop-blur-xl shadow-md h-20' : 'bg-transparent h-24'}`}>
         <div className="container mx-auto px-10 h-full flex items-center justify-between">
           <Link to="/">
             <Logo size={isScrolled ? "md" : "lg"} />
           </Link>
-          
-          {/* Menu Desktop: 13px + font-black + uppercase */}
           <nav className="hidden lg:flex items-center gap-12 font-heading font-black text-[13px] uppercase tracking-[0.2em] text-slate-900">
             <button onClick={() => navigate('/teste-gratis')} className="hover:text-blue-600 transition-colors">Funcionalidades</button>
             <button onClick={() => scrollToSection('pricing')} className="hover:text-blue-600 transition-colors">Planos</button>
             <button onClick={() => setIsContactOpen(true)} className="hover:text-blue-600 transition-colors">Contato</button>
           </nav>
-
           <div className="hidden lg:flex items-center gap-10">
             <Link to="/login" className="text-slate-900 font-heading font-black text-[13px] uppercase tracking-[0.2em] hover:text-blue-600 transition-colors">Entrar</Link>
-            <Button size="md" onClick={() => navigate('/teste-gratis')} className="px-10 h-14 uppercase text-[12px] font-black tracking-[0.2em] shadow-xl shadow-blue-600/30">
+            <Button size="md" onClick={() => navigate('/register')} className="px-10 h-14 uppercase text-[12px] font-black tracking-[0.2em] shadow-xl shadow-blue-600/30">
               Teste Grátis
             </Button>
           </div>
-
           <button className="lg:hidden p-2 text-slate-900" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             {mobileMenuOpen ? <X size={32} /> : <Menu size={32} />}
           </button>
         </div>
-        
-        {/* Mobile Nav */}
-        {mobileMenuOpen && (
-          <div className="absolute top-0 left-0 w-full bg-white h-screen z-[60] p-10 animate-fade-in flex flex-col shadow-2xl">
-            <div className="flex justify-between items-center mb-16">
-              <Logo size="md" />
-              <button onClick={() => setMobileMenuOpen(false)} className="p-2"><X size={32} /></button>
-            </div>
-            <nav className="flex flex-col gap-8 text-2xl font-heading font-black uppercase tracking-widest text-slate-900">
-              <button onClick={() => { setMobileMenuOpen(false); navigate('/teste-gratis'); }} className="text-left">Funcionalidades</button>
-              <button onClick={() => { setMobileMenuOpen(false); scrollToSection('pricing'); }} className="text-left">Planos</button>
-              <button onClick={() => { setMobileMenuOpen(false); setIsContactOpen(true); }} className="text-left">Contato</button>
-              <div className="h-px bg-slate-100 my-4" />
-              <Link to="/login">Entrar</Link>
-              <Button size="lg" onClick={() => navigate('/teste-gratis')} className="mt-4 h-16 text-base font-black tracking-widest">Começar Agora</Button>
-            </nav>
-          </div>
-        )}
       </header>
 
-      {/* Hero Section - Escalas Revertidas para o Normal */}
       <section className="relative pt-40 lg:pt-56 pb-20 overflow-hidden bg-slate-50/50">
         <div className="container mx-auto px-6 flex flex-col lg:flex-row items-center gap-16">
           <div className="lg:w-[50%] text-center lg:text-left space-y-8">
@@ -228,28 +213,23 @@ const LandingPage: React.FC = () => {
               <TrendingUp size={12} />
               Inteligência de Riscos Ocupacionais
             </div>
-            
             <h1 className="text-5xl md:text-6xl lg:text-[72px] font-heading font-black text-slate-900 leading-[1.05] tracking-tight">
               Riscos <br/>
               Psicossociais <br/>
               <span className="text-blue-600">Automáticos.</span>
             </h1>
-            
             <p className="text-lg text-slate-500 leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium">
               A plataforma definitiva para automatizar diagnósticos da <strong>NR-17 e NR-01</strong>. Transforme dados em relatórios técnicos em segundos.
             </p>
-            
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
               <Button size="lg" onClick={() => navigate('/teste-gratis')} className="h-16 px-10 text-lg shadow-xl font-black">
-                Iniciar Demo
-                <ArrowRight className="ml-2 w-5 h-5" />
+                Iniciar Demo <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
               <Button variant="secondary" size="lg" onClick={() => scrollToSection('pricing')} className="h-16 px-10 text-lg bg-white border-2 border-slate-200 font-black">
                 Ver Recursos
               </Button>
             </div>
           </div>
-
           <div className="lg:w-[50%] w-full">
             <div className="relative group">
               <div className="bg-white rounded-[40px] shadow-2xl border-[12px] border-white overflow-hidden transition-all duration-700 hover:scale-[1.02]">
@@ -286,12 +266,25 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Outras seções como Pricing, Footer... */}
       <section id="pricing" className="py-24 lg:py-32 bg-slate-950 text-white relative overflow-hidden">
         <div className="container mx-auto px-6 relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-            <h2 className="text-3xl md:text-5xl font-heading font-black tracking-tight">Escala para sua consultoria.</h2>
-            <p className="text-slate-400 text-lg font-medium opacity-80">Escolha o plano baseado no seu volume mensal de avaliações.</p>
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-6">
+            <h2 className="text-3xl md:text-5xl font-heading font-black tracking-tight leading-tight">Escala para sua <br/> consultoria crescer.</h2>
+            <p className="text-slate-400 text-lg font-medium opacity-80">Escolha o plano baseado no seu volume mensal de avaliações. Altere a qualquer momento sem burocracia.</p>
+            
+            <div className="flex justify-center items-center gap-6 pt-6">
+              <span className={`text-[10px] font-black uppercase tracking-widest ${billingCycle === 'monthly' ? 'text-white' : 'text-slate-500'}`}>Mensal</span>
+              <button 
+                onClick={() => setBillingCycle(c => c === 'monthly' ? 'yearly' : 'monthly')}
+                className="w-14 h-7 bg-slate-900 rounded-full relative p-1 transition-all border border-slate-800"
+              >
+                <div className={`w-5 h-5 bg-blue-600 rounded-full transition-all duration-300 ${billingCycle === 'yearly' ? 'translate-x-7 bg-emerald-400' : 'translate-x-0'}`}></div>
+              </button>
+              <div className="flex flex-col items-start">
+                <span className={`text-[10px] font-black uppercase tracking-widest ${billingCycle === 'yearly' ? 'text-white' : 'text-slate-500'}`}>Anual</span>
+                <span className="text-[8px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-black mt-1 uppercase tracking-tighter">Ganhe 2 meses</span>
+              </div>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch max-w-7xl mx-auto">
             {PLANS.map(plan => renderPriceCard(plan))}

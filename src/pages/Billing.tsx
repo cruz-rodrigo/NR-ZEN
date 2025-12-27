@@ -5,7 +5,8 @@ import Card from '../components/Card.tsx';
 import Button from '../components/Button.tsx';
 import { useAuth } from '../context/AuthContext.tsx';
 import { CheckCircle2, CreditCard, ShieldCheck, Zap, Loader2, AlertCircle, ExternalLink } from 'lucide-react';
-import { PLANS, formatCurrency, PlanConfig } from '../config/plans.ts';
+/* Fix: Import formatBRL instead of formatCurrency */
+import { PLANS, formatBRL, PlanConfig } from '../config/plans.ts';
 
 const Billing: React.FC = () => {
   const { user, apiCall } = useAuth();
@@ -122,7 +123,8 @@ const Billing: React.FC = () => {
           const isCurrent = user?.plan_tier === plan.id;
           const isLoading = loadingPlan === plan.id;
           const isYearly = billingCycle === 'yearly';
-          const price = isYearly ? (plan.priceYearly! / 12) : plan.priceMonthly;
+          /* Fix: Change priceYearly to yearlyPriceBRL and priceMonthly to monthlyPriceBRL */
+          const price = isYearly ? (plan.yearlyPriceBRL! / 12) : plan.monthlyPriceBRL;
 
           return (
             <Card 
@@ -147,7 +149,8 @@ const Billing: React.FC = () => {
                   </div>
                   {isYearly && (
                     <p className="text-[10px] font-black text-emerald-500 uppercase mt-2 tracking-widest">
-                      Total: {formatCurrency(plan.priceYearly!)}/ano
+                      {/* Fix: Use formatBRL instead of formatCurrency and yearlyPriceBRL instead of priceYearly */}
+                      Total: {formatBRL(plan.yearlyPriceBRL!)}/ano
                     </p>
                   )}
                 </div>

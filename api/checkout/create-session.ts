@@ -11,27 +11,29 @@ export default requireAuth(async function handler(req: AuthedRequest, res: Verce
 
   const { plan: planId, billingCycle = 'monthly' } = req.body;
   const user = req.user!; 
-  const userId = user.id;
 
   try {
-    if (!['monthly', 'yearly'].includes(billingCycle)) {
-      return res.status(400).json({ 
-        error: 'INVALID_CYCLE',
-        message: 'Ciclo de faturamento inválido.'
-      });
+    const cycle = (billingCycle === 'yearly' || billingCycle === 'monthly') ? billingCycle : 'monthly';
+    const planConfig = PLANS.find(p => p.id === planId);
+    
+    if (!planConfig || planConfig.isCustom) {
+      return res.status(400).json({ error: 'INVALID_PLAN', message: 'Este plano requer contato comercial.' });
     }
 
-    const planConfig = PLANS.find(p => p.id === planId);
-    if (!planConfig) return res.status(400).json({ error: 'INVALID_PLAN' });
-
-    const priceId = planConfig.stripe[billingCycle as 'monthly' | 'yearly'];
-    if (!priceId) return res.status(400).json({ error: 'CYCLE_UNAVAILABLE' });
+    const selectedPriceId = planConfig.stripe[cycle];
+    
+    if (!selectedPriceId) {
+      return res.status(400).json({ 
+        error: 'BILLING_CYCLE_UNAVAILABLE', 
+        message: 'Ciclo de faturamento não disponível para este plano.' 
+      });
+    }
 
     const protocol = req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
     const host = req.headers.host || 'localhost:5173';
     const origin = `${protocol}://${host}`;
 
-    // URLs atualizadas para as novas rotas solicitadas
+    // HashRouter compatibility URLs
     const successUrl = `${origin}/#/billing/success?session_id={CHECKOUT_SESSION_ID}&old_tier=${user.plan_tier}`;
     const cancelUrl = `${origin}/#/billing/cancel`;
 
@@ -41,13 +43,18 @@ export default requireAuth(async function handler(req: AuthedRequest, res: Verce
       customer_email: user.email,
       success_url: successUrl,
       cancel_url: cancelUrl,
-      line_items: [{ price: priceId, quantity: 1 }],
-      metadata: { userId, planSlug: planId },
+      line_items: [{ price: selectedPriceId, quantity: 1 }],
+      metadata: { 
+        userId: user.id, 
+        planSlug: planId,
+        billingCycle: cycle
+      },
     });
 
     return res.status(200).json({ url: session.url });
 
   } catch (err: any) {
+    console.error('[Stripe Session Error]', err);
     return res.status(500).json({ error: "CHECKOUT_ERROR", detail: err.message });
   }
 });

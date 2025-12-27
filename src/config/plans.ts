@@ -1,83 +1,36 @@
 
 /**
- * NR ZEN - Configuração Central de Planos e Limites (SSOT)
+ * NR ZEN - Configuração Central de Planos e Preços (SSOT)
  */
 
 export type PlanTier = 'trial' | 'consultant' | 'business' | 'corporate' | 'enterprise';
-
-export interface PlanLimits {
-  maxCompanies: number;
-  maxSectorsTotal: number;
-  maxResponsesPerMonth: number;
-  whiteLabel: boolean;
-  support: 'email' | 'whatsapp' | 'priority';
-}
-
-export interface StripeIds {
-  monthly: string | null;
-  yearly: string | null;
-}
+export type BillingCycle = 'monthly' | 'yearly';
 
 export interface PlanConfig {
   id: PlanTier;
   name: string;
   description: string;
-  priceMonthly: number;
-  priceYearly: number | null;
-  isCustom?: boolean;
-  popular?: boolean;
-  stripe: StripeIds;
+  monthlyPriceBRL: number;
+  yearlyPriceBRL: number | null;
+  stripe: {
+    monthly: string | null;
+    yearly: string | null;
+  };
   features: string[];
+  popular?: boolean;
+  isCustom?: boolean;
 }
-
-export const PLAN_LIMITS: Record<PlanTier, PlanLimits> = {
-  trial: {
-    maxCompanies: 1,
-    maxSectorsTotal: 1,
-    maxResponsesPerMonth: 3,
-    whiteLabel: false,
-    support: 'email'
-  },
-  consultant: {
-    maxCompanies: 10,
-    maxSectorsTotal: 50,
-    maxResponsesPerMonth: 300,
-    whiteLabel: false,
-    support: 'email'
-  },
-  business: {
-    maxCompanies: 50,
-    maxSectorsTotal: 9999, // Ilimitado na prática
-    maxResponsesPerMonth: 1500,
-    whiteLabel: true,
-    support: 'whatsapp'
-  },
-  corporate: {
-    maxCompanies: 9999, // Empresas Ilimitadas
-    maxSectorsTotal: 9999,
-    maxResponsesPerMonth: 5000,
-    whiteLabel: true,
-    support: 'priority'
-  },
-  enterprise: {
-    maxCompanies: 99999,
-    maxSectorsTotal: 99999,
-    maxResponsesPerMonth: 999999,
-    whiteLabel: true,
-    support: 'priority'
-  }
-};
 
 export const PLANS: PlanConfig[] = [
   {
     id: 'consultant',
     name: 'Consultor',
     description: 'Ideal para profissionais autônomos que precisam de laudos oficiais.',
-    priceMonthly: 199,
-    priceYearly: 1990, 
+    monthlyPriceBRL: 199,
+    yearlyPriceBRL: 1990, 
     stripe: {
       monthly: 'price_1SguTzGcHKyraESSSiH1iN87',
-      yearly: 'price_1SguTzGcHKyraESSSiH1iN87_YEAR'
+      yearly: 'price_1Sj501GcHKyraESSazqtyEG2'
     },
     features: [
       'Até 10 empresas ativas',
@@ -91,12 +44,12 @@ export const PLANS: PlanConfig[] = [
     id: 'business',
     name: 'Business',
     description: 'Para consultorias que gerenciam vários clientes e possuem equipe.',
-    priceMonthly: 597,
-    priceYearly: 5988, 
+    monthlyPriceBRL: 597,
+    yearlyPriceBRL: 5970, 
     popular: true,
     stripe: {
-      monthly: 'price_1SgucBGcHKyraESSOCbesRUk',
-      yearly: 'price_1SgucBGcHKyraESSOCbesRUk_YEAR'
+      monthly: 'price_1Sj4x4GcHKyraESSgdZ6afXt',
+      yearly: 'price_1Sj4w3GcHKyraESSo5DdFhhQ'
     },
     features: [
       'Até 50 empresas ativas',
@@ -110,11 +63,11 @@ export const PLANS: PlanConfig[] = [
     id: 'corporate',
     name: 'Corporate',
     description: 'Para grandes operações de SST com alto volume de coletas.',
-    priceMonthly: 899,
-    priceYearly: 8988, 
+    monthlyPriceBRL: 899,
+    yearlyPriceBRL: 8990, 
     stripe: {
-      monthly: 'price_corporate_m',
-      yearly: 'price_corporate_y'
+      monthly: 'price_1Sj0pPGcHKyraESSbQclcKU3',
+      yearly: 'price_1Sj4yiGcHKyraESSDshP06i4'
     },
     features: [
       'Empresas Ilimitadas',
@@ -127,8 +80,8 @@ export const PLANS: PlanConfig[] = [
     id: 'enterprise',
     name: 'Enterprise',
     description: 'Soluções sob medida para indústrias e grandes departamentos.',
-    priceMonthly: 0,
-    priceYearly: null,
+    monthlyPriceBRL: 0,
+    yearlyPriceBRL: null,
     isCustom: true,
     stripe: { monthly: null, yearly: null },
     features: [
@@ -140,16 +93,33 @@ export const PLANS: PlanConfig[] = [
   }
 ];
 
-export const formatCurrency = (value: number) => {
-  const rounded = Number((Math.round(value * 100) / 100).toFixed(2));
+export const formatBRL = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
-  }).format(rounded);
+  }).format(value);
 };
 
-export const getPlanLimits = (tier: string = 'trial'): PlanLimits => {
-  return PLAN_LIMITS[tier as PlanTier] || PLAN_LIMITS.trial;
+export const getPlanPrice = (planId: PlanTier, cycle: BillingCycle) => {
+  const plan = PLANS.find(p => p.id === planId);
+  if (!plan) return null;
+
+  const chargeAmount = cycle === 'yearly' && plan.yearlyPriceBRL ? plan.yearlyPriceBRL : plan.monthlyPriceBRL;
+  const displayMonthlyEquivalent = cycle === 'yearly' && plan.yearlyPriceBRL ? plan.yearlyPriceBRL / 12 : plan.monthlyPriceBRL;
+  const stripePriceId = cycle === 'yearly' ? plan.stripe.yearly : plan.stripe.monthly;
+
+  return { chargeAmount, displayMonthlyEquivalent, stripePriceId };
+};
+
+export const getPlanLimits = (tier: string = 'trial') => {
+  const limits: Record<string, any> = {
+    trial: { maxCompanies: 1, maxSectorsTotal: 1, maxResponsesPerMonth: 3 },
+    consultant: { maxCompanies: 10, maxSectorsTotal: 50, maxResponsesPerMonth: 300 },
+    business: { maxCompanies: 50, maxSectorsTotal: 999, maxResponsesPerMonth: 1500 },
+    corporate: { maxCompanies: 999, maxSectorsTotal: 999, maxResponsesPerMonth: 5000 },
+    enterprise: { maxCompanies: 9999, maxSectorsTotal: 9999, maxResponsesPerMonth: 99999 }
+  };
+  return limits[tier] || limits.trial;
 };

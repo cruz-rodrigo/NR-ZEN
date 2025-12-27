@@ -9,7 +9,8 @@ import {
 import Button from '../components/Button.tsx';
 import { Logo } from '../components/Layout.tsx';
 import { APP_URL } from '../constants.ts';
-import { PLANS, formatCurrency, PlanConfig } from '../config/plans.ts';
+/* Fix: Import formatBRL instead of formatCurrency */
+import { PLANS, formatBRL, PlanConfig } from '../config/plans.ts';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -44,11 +45,13 @@ const LandingPage: React.FC = () => {
 
   const renderPriceCard = (plan: PlanConfig) => {
     const isYearly = billingCycle === 'yearly';
-    const hasYearlyOption = plan.priceYearly !== null;
+    /* Fix: Change priceYearly to yearlyPriceBRL */
+    const hasYearlyOption = plan.yearlyPriceBRL !== null;
     
-    const displayPrice = isYearly && plan.priceYearly 
-      ? plan.priceYearly / 12 
-      : plan.priceMonthly;
+    /* Fix: Change priceYearly to yearlyPriceBRL and priceMonthly to monthlyPriceBRL */
+    const displayPrice = isYearly && plan.yearlyPriceBRL 
+      ? plan.yearlyPriceBRL / 12 
+      : plan.monthlyPriceBRL;
 
     return (
       <div 
@@ -82,16 +85,19 @@ const LandingPage: React.FC = () => {
               <>
                 {isYearly && hasYearlyOption && (
                    <span className={`text-xs line-through opacity-50 block`}>
-                     {formatCurrency(plan.priceMonthly)}/mês
+                     {/* Fix: Change formatCurrency to formatBRL and priceMonthly to monthlyPriceBRL */}
+                     {formatBRL(plan.monthlyPriceBRL)}/mês
                    </span>
                 )}
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold">{formatCurrency(displayPrice)}</span>
+                  {/* Fix: Use formatBRL instead of formatCurrency */}
+                  <span className="text-3xl font-bold">{formatBRL(displayPrice)}</span>
                   <span className="text-sm opacity-60">/mês</span>
                 </div>
                 {isYearly && hasYearlyOption && (
                   <p className="text-[10px] text-emerald-400 font-bold mt-1">
-                    Cobrado {formatCurrency(plan.priceYearly!)}/ano
+                    {/* Fix: Use formatBRL instead of formatCurrency and yearlyPriceBRL instead of priceYearly */}
+                    Cobrado {formatBRL(plan.yearlyPriceBRL!)}/ano
                   </p>
                 )}
               </>
