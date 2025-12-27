@@ -37,9 +37,9 @@ const Login: React.FC = () => {
     try {
       await login(formData.email, formData.password);
       
-      // Se houver plano no contexto, segue para o checkout
+      // FLUXO CORRIGIDO: Redireciona para o checkout se houver plano no contexto
       if (planSlug) {
-        navigate(`/checkout/start?plan=${planSlug}&cycle=${cycle}`);
+        navigate(`/checkout/start?plan=${planSlug}&cycle=${cycle}`, { replace: true });
       } else {
         navigate('/app');
       }
@@ -71,7 +71,7 @@ const Login: React.FC = () => {
                <CreditCard size={20} />
              </div>
              <div>
-               <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Plano Selecionado</p>
+               <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Checkout Pendente</p>
                <p className="text-sm font-bold text-slate-800">{selectedPlan.name} • {cycle === 'yearly' ? 'Anual' : 'Mensal'}</p>
              </div>
           </div>
@@ -93,9 +93,8 @@ const Login: React.FC = () => {
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5">E-mail</label>
             <input 
-              type="email" 
-              required
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all"
+              type="email" required
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all"
               value={formData.email}
               onChange={e => setFormData({...formData, email: e.target.value.toLowerCase().trim()})}
               placeholder="seu@email.com"
@@ -104,12 +103,11 @@ const Login: React.FC = () => {
           <div>
             <div className="flex justify-between mb-1.5">
                <label className="block text-sm font-semibold text-slate-700">Senha</label>
-               <Link to="/forgot-password" className="text-xs text-blue-600 hover:underline">Esqueceu?</Link>
+               <Link to="/forgot-password" size="sm" className="text-xs text-blue-600 hover:underline">Esqueceu?</Link>
             </div>
             <input 
-              type="password" 
-              required
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all"
+              type="password" required
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all"
               value={formData.password}
               onChange={e => setFormData({...formData, password: e.target.value})}
               placeholder="••••••••"
@@ -117,43 +115,15 @@ const Login: React.FC = () => {
           </div>
 
           <Button fullWidth size="lg" type="submit" disabled={loading} className="mt-2 py-3.5 shadow-lg shadow-blue-600/20">
-            {loading ? 'Acessando...' : 'Entrar na Plataforma'}
+            {loading ? 'Validando Acesso...' : (planSlug ? 'Login e Continuar' : 'Entrar na Plataforma')}
           </Button>
         </form>
-
-        {((import.meta as any).env?.VITE_ENABLE_OFFLINE_DEMO === 'true') && (
-          <div className="mt-6">
-             <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200"></div>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-slate-400 font-medium">Ou teste sem senha</span>
-                </div>
-             </div>
-
-             <Button 
-               variant="secondary" 
-               fullWidth 
-               size="lg" 
-               onClick={handleDemoLogin}
-               className="mt-6 border-dashed"
-             >
-               <Zap size={16} className="mr-2 text-amber-500" />
-               Acessar Modo Demo (Offline)
-             </Button>
-          </div>
-        )}
 
         <div className="mt-8 pt-6 border-t border-slate-100 text-center text-sm text-slate-500 flex flex-col gap-2">
           <p>Ainda não tem cadastro?</p>
           <Link to={`/register${planSlug ? `?plan=${planSlug}&cycle=${cycle}` : ''}`} className="text-blue-600 font-bold hover:underline inline-flex items-center justify-center gap-1">
-            Criar conta (Trial) <ArrowRight size={14} />
+            Criar conta e Iniciar Plano <ArrowRight size={14} />
           </Link>
-        </div>
-        
-        <div className="mt-6 flex items-center justify-center gap-2 text-[10px] text-slate-400">
-          <Lock size={10} /> Conexão Segura SSL 256-bit
         </div>
       </Card>
     </div>
