@@ -93,6 +93,9 @@ export const PLANS: PlanConfig[] = [
   }
 ];
 
+/**
+ * Formata valor para Real Brasileiro com EXATAMENTE 2 casas decimais.
+ */
 export const formatBRL = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
