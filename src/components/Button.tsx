@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -14,22 +15,22 @@ const Button: React.FC<ButtonProps> = ({
   className = '',
   ...props 
 }) => {
-  const baseStyles = "inline-flex items-center justify-center font-semibold whitespace-nowrap transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg active:scale-[0.97] select-none";
+  const baseStyles = "inline-flex items-center justify-center font-heading font-black uppercase tracking-[0.15em] transition-all duration-300 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.96] select-none rounded-[22px]";
   
   const variants = {
-    primary: "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg hover:shadow-blue-600/30 border border-transparent focus:ring-blue-600",
-    secondary: "bg-white text-slate-700 border border-slate-300 hover:border-blue-600 hover:text-blue-600 hover:bg-blue-50 focus:ring-blue-200 shadow-sm",
-    white: "bg-white text-blue-600 hover:bg-slate-50 border border-transparent shadow-lg focus:ring-white/50",
-    dark: "bg-slate-800 text-white border border-slate-700 hover:bg-slate-700 focus:ring-slate-600 shadow-md",
-    ghost: "text-slate-600 hover:text-blue-600 hover:bg-slate-100 focus:ring-slate-200",
-    danger: "bg-red-600 text-white hover:bg-red-700 shadow-sm focus:ring-red-500",
-    glass: "bg-white/10 text-white border border-white/30 hover:bg-white/20 backdrop-blur-md shadow-lg focus:ring-white/50"
+    primary: "bg-blue-600 text-white shadow-[0_15px_35px_-5px_rgba(37,99,235,0.45)] hover:bg-blue-700 hover:shadow-[0_25px_50px_-10px_rgba(37,99,235,0.5)] border-none",
+    secondary: "bg-white text-slate-700 border-2 border-slate-100 hover:border-blue-600 hover:text-blue-600 shadow-sm",
+    white: "bg-white text-blue-600 hover:bg-slate-50 shadow-2xl border-none",
+    dark: "bg-slate-900 text-white hover:bg-slate-800 shadow-xl border-none",
+    ghost: "text-slate-500 hover:text-blue-600 hover:bg-blue-50 border-none",
+    danger: "bg-red-500 text-white hover:bg-red-600 shadow-lg border-none",
+    glass: "bg-white/10 text-white border-2 border-white/20 backdrop-blur-xl hover:bg-white/20"
   };
 
   const sizes = {
-    sm: "px-3 py-1.5 text-xs",
-    md: "px-5 py-2.5 text-sm",
-    lg: "px-8 py-3.5 text-base",
+    sm: "px-6 h-12 text-[10px]",
+    md: "px-10 h-16 text-[12px]",
+    lg: "px-16 h-20 text-[14px]",
   };
 
   return (

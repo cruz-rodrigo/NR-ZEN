@@ -1,65 +1,48 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  @apply bg-slate-50 text-slate-900;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Regras de Impressão */
-@media print {
-  @page {
-    size: A4;
-    margin: 0;
-  }
-
-  html, body {
-    width: 210mm;
-    min-height: 297mm;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: white !important;
-  }
-
-  .no-print, header:not(.print-header), footer:not(.print-footer), nav, button, .fixed, .hidden-print, ::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  .print-container {
-    width: 210mm !important;
-    min-height: 297mm !important;
-    margin: 0 !important;
-    padding: 15mm 15mm !important;
-    box-shadow: none !important;
-    border: none !important;
-    background: white !important;
-    position: relative !important;
-    overflow: visible !important;
-  }
-
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
   }
   
-  .print-break-inside-avoid {
-    break-inside: avoid;
-    page-break-inside: avoid;
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+    font-family: 'Inter', sans-serif;
   }
 
-  .print-break-before {
-    break-before: page;
-    page-break-before: always;
-    margin-top: 0;
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+  }
+}
+
+@layer utilities {
+  .font-heading {
+    font-family: 'Poppins', sans-serif;
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
   }
 
-  .shadow-2xl, .shadow-xl, .shadow-lg, .shadow-md, .shadow-sm {
-    box-shadow: none !important;
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
+}
+
+/* Custom Scrollbar for Premium feel */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
 }
