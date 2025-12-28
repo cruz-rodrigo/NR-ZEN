@@ -42,6 +42,14 @@ const App: React.FC = () => {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             
+            {/* Survey / Public Views */}
+            <Route path="/questionario" element={<Questionnaire />} />
+            <Route path="/questionario/:code" element={<Questionnaire />} />
+            <Route path="/relatorio" element={<Report />} />
+
+            {/* Orchestrator - Public (handles its own auth check) */}
+            <Route path="/checkout/start" element={<CheckoutOrchestrator />} />
+            
             {/* Authenticated Routes */}
             <Route path="/app" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
             <Route path="/app/companies" element={<PrivateRoute><Companies /></PrivateRoute>} />
@@ -51,15 +59,9 @@ const App: React.FC = () => {
             <Route path="/app/billing" element={<PrivateRoute><Billing /></PrivateRoute>} />
             <Route path="/app/onboarding" element={<PrivateRoute><Onboarding /></PrivateRoute>} />
             <Route path="/app/setor/:id" element={<PrivateRoute><SectorDetail /></PrivateRoute>} />
-            <Route path="/checkout/start" element={<PrivateRoute><CheckoutOrchestrator /></PrivateRoute>} />
             <Route path="/billing/success" element={<PrivateRoute><PaymentSuccess /></PrivateRoute>} />
             <Route path="/billing/cancel" element={<PrivateRoute><PaymentCancel /></PrivateRoute>} />
             
-            {/* Survey / Public Views */}
-            <Route path="/questionario" element={<Questionnaire />} />
-            <Route path="/questionario/:code" element={<Questionnaire />} />
-            <Route path="/relatorio" element={<Report />} />
-
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>

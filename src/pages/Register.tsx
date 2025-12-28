@@ -18,7 +18,7 @@ const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
-  // Intenção de compra vinda da URL ou sessionStorage
+  // Detecta se há intenção de compra
   const urlPlan = searchParams.get('plan');
   const urlCycle = searchParams.get('cycle') || 'monthly';
   const pending = getPendingCheckout();
@@ -31,19 +31,19 @@ const Register: React.FC = () => {
     setLoading(true);
 
     try {
-      // 1. Cria a conta
+      // 1. Cria a conta no backend
       await register(formData.name, formData.email, formData.password);
       
-      // 2. Login automático
+      // 2. Faz login para injetar o token no contexto da aplicação
       await login(formData.email, formData.password);
 
-      // 3. REGRA INFALÍVEL: Se ele escolheu um plano, devolve para o Orquestrador.
-      // Jamais mandamos para o /app aqui se houver um activePlan.
+      // 3. REGRA DEFINITIVA: Se ele escolheu um plano, volta para o Orquestrador.
+      // O Orquestrador agora verá que o usuário está logado e disparará o Stripe com segurança.
       if (activePlan) {
         setRedirecting(true);
         navigate(`/checkout/start?plan=${activePlan}&cycle=${activeCycle}`, { replace: true });
       } else {
-        // Fluxo normal para quem quer apenas o Trial
+        // Sem plano pendente? Vai para o dashboard normal
         navigate('/app', { replace: true });
       }
     } catch (err: any) {
@@ -58,8 +58,8 @@ const Register: React.FC = () => {
         <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6 animate-bounce shadow-inner">
           <CheckCircle2 size={32} />
         </div>
-        <h2 className="text-2xl font-bold text-slate-800 mb-2">Conta Criada com Sucesso!</h2>
-        <p className="text-slate-500 font-medium">Iniciando ambiente de pagamento seguro...</p>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">Conta Criada!</h2>
+        <p className="text-slate-500 font-medium">Iniciando gateway de pagamento seguro...</p>
         <div className="mt-8">
           <Loader2 className="animate-spin text-blue-600 mx-auto" size={32} />
         </div>
@@ -78,7 +78,7 @@ const Register: React.FC = () => {
           {activePlan ? 'Inicie sua Assinatura' : 'Crie sua conta'}
         </h1>
         <p className="text-slate-500 text-center mb-8">
-          {activePlan ? 'Crie seu acesso para seguir ao pagamento seguro.' : 'Comece a gerenciar riscos psicossociais hoje.'}
+          {activePlan ? 'Crie seu acesso técnico para seguir ao pagamento.' : 'Comece a gerenciar riscos psicossociais hoje.'}
         </p>
 
         {error && (
@@ -93,7 +93,7 @@ const Register: React.FC = () => {
             <input 
               type="text" 
               required
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all font-medium"
               value={formData.name}
               onChange={e => setFormData({...formData, name: e.target.value})}
               placeholder="Ex: Consultoria SST Premium"
@@ -104,14 +104,14 @@ const Register: React.FC = () => {
             <input 
               type="email" 
               required
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all font-medium"
               value={formData.email}
               onChange={e => setFormData({...formData, email: e.target.value.toLowerCase().trim()})}
               placeholder="seu@email.com"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Senha (Mínimo 6 caracteres)</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Senha de Acesso</label>
             <input 
               type="password" 
               required
@@ -127,8 +127,8 @@ const Register: React.FC = () => {
             {loading ? (
               <Loader2 className="animate-spin" size={20} />
             ) : activePlan ? (
-              <span className="flex items-center gap-2">Ir para o Pagamento <ArrowRight size={18} /></span>
-            ) : 'Criar minha conta Grátis'}
+              <span className="flex items-center gap-2">Próximo Passo: Pagamento <ArrowRight size={18} /></span>
+            ) : 'Criar Conta Grátis'}
           </Button>
         </form>
 

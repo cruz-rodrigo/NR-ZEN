@@ -6,15 +6,8 @@ import { Loader2, ShieldCheck, AlertCircle, Lock, ArrowRight } from 'lucide-reac
 import { Logo } from '../components/Layout.tsx';
 import Card from '../components/Card.tsx';
 import Button from '../components/Button.tsx';
-import { setPendingCheckout, clearPendingCheckout } from '../lib/pendingCheckout.ts';
+import { setPendingCheckout, clearPendingCheckout, getPendingCheckout } from '../lib/pendingCheckout.ts';
 
-/**
- * CheckoutOrchestrator
- * Componente mestre que garante o redirecionamento para o Stripe Checkout.
- * 1. Lê plan/cycle da URL ou sessionStorage.
- * 2. Se deslogado: Salva intenção e manda para /register.
- * 3. Se logado: Dispara criação de sessão no Stripe e redireciona.
- */
 const CheckoutOrchestrator: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -23,59 +16,60 @@ const CheckoutOrchestrator: React.FC = () => {
   
   const [error, setError] = useState<string | null>(null);
 
-  // Lê parâmetros da URL
+  // 1. Tentar ler plano da URL ou do sessionStorage
   const urlPlan = searchParams.get('plan');
   const urlCycle = searchParams.get('cycle') || 'monthly';
+  const pending = getPendingCheckout();
+  
+  const activePlan = urlPlan || pending?.plan;
+  const activeCycle = urlCycle || pending?.cycle || 'monthly';
 
   useEffect(() => {
     if (isLoading) return;
 
-    // Plano permitido?
-    const validPlans = ['consultant', 'business', 'corporate'];
-    const plan = urlPlan || '';
-    
-    if (!validPlans.includes(plan)) {
+    // Proteção: Se não tem plano nenhum, volta pra LP
+    if (!activePlan) {
       navigate('/#pricing', { replace: true });
       return;
     }
 
-    // Se NÃO estiver logado:
+    // Caso 1: Usuário DESLOGADO
     if (!isAuthenticated) {
-      // Salva no sessionStorage para quando ele voltar do Login/Register
-      setPendingCheckout({ plan, cycle: urlCycle });
-      // Manda para registro levando os params na URL também por redundância
-      navigate(`/register?plan=${plan}&cycle=${urlCycle}`, { replace: true });
+      // Salva a intenção para não perder o plano no fluxo de login
+      setPendingCheckout({ plan: activePlan, cycle: activeCycle });
+      // Manda para Login levando os parâmetros na URL para redundância
+      navigate(`/login?plan=${activePlan}&cycle=${activeCycle}`, { replace: true });
       return;
     }
 
-    // Se ESTÁ autenticado, dispara o Stripe
+    // Caso 2: Usuário LOGADO - Iniciar Checkout
     if (isAuthenticated && token && !requestFired.current) {
-      const executeStripeCheckout = async () => {
+      const executeCheckout = async () => {
         requestFired.current = true;
         try {
+          // Chamada para criar sessão do Stripe
           const response = await apiCall('/api/checkout/create-session', {
             method: 'POST',
-            body: JSON.stringify({ plan, billingCycle: urlCycle })
+            body: JSON.stringify({ plan: activePlan, billingCycle: activeCycle })
           });
 
           if (response?.url) {
-            // Limpa o estado pendente pois o checkout foi iniciado com sucesso
+            // Sucesso! Limpa a pendência e vai pro Stripe
             clearPendingCheckout();
-            // Redirecionamento EXTERNO (Stripe)
             window.location.href = response.url;
           } else {
-            throw new Error("Não recebemos um link válido de pagamento do Stripe.");
+            throw new Error("Resposta inválida do servidor de pagamentos.");
           }
         } catch (err: any) {
-          console.error("Payment Error:", err);
-          setError(err.message || "Erro ao conectar com o gateway de faturamento.");
+          console.error("Orchestrator Error:", err);
+          setError(err.message || "Erro ao conectar com o Stripe.");
           requestFired.current = false;
         }
       };
 
-      executeStripeCheckout();
+      executeCheckout();
     }
-  }, [isAuthenticated, isLoading, token, urlPlan, urlCycle, navigate, apiCall]);
+  }, [isAuthenticated, isLoading, token, activePlan, activeCycle, navigate, apiCall]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans text-center">
@@ -93,7 +87,7 @@ const CheckoutOrchestrator: React.FC = () => {
              <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-100 shadow-inner">
                 <AlertCircle size={32} />
              </div>
-             <h2 className="text-xl font-bold text-slate-800 mb-2 tracking-tight">Falha no Redirecionamento</h2>
+             <h2 className="text-xl font-bold text-slate-800 mb-2 tracking-tight">Falha no Checkout</h2>
              <p className="text-slate-500 text-sm mb-8 leading-relaxed">{error}</p>
              <div className="space-y-3">
                <Button onClick={() => window.location.reload()} fullWidth className="h-14">
@@ -115,7 +109,7 @@ const CheckoutOrchestrator: React.FC = () => {
             
             <h1 className="text-2xl font-black text-slate-900 mb-3 tracking-tight uppercase">Processando...</h1>
             <p className="text-slate-500 text-sm leading-relaxed mb-10">
-              Estamos preparando seu checkout seguro no Stripe para o plano selecionado. <br/> <strong>Não feche esta página.</strong>
+              Estamos preparando seu ambiente de pagamento seguro para o plano <strong>{activePlan.toUpperCase()}</strong>. <br/> <strong>Não feche esta página.</strong>
             </p>
             
             <div className="flex items-center justify-center gap-3 text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] bg-slate-50 py-4 rounded-[20px] border border-slate-100">
@@ -127,7 +121,7 @@ const CheckoutOrchestrator: React.FC = () => {
       </Card>
       
       <p className="mt-10 text-slate-400 text-[10px] uppercase tracking-[0.25em] font-black opacity-60">
-        Faturamento processado por Stripe & NR ZEN
+        Plataforma Segura • Stripe & NR ZEN
       </p>
     </div>
   );
