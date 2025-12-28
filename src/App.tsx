@@ -42,7 +42,7 @@ const App: React.FC = () => {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             
-            {/* Orchestrator - MUST BE PUBLIC to handle auth transition internally */}
+            {/* Orchestrator - SEMPRE PÚBLICO para evitar expulsão por lag de estado */}
             <Route path="/checkout/start" element={<CheckoutOrchestrator />} />
             
             {/* Authenticated Routes */}

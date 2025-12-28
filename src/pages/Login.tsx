@@ -5,7 +5,7 @@ import { Logo } from '../components/Layout';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
-import { AlertCircle, CheckCircle2, Lock, ArrowRight, Zap, CreditCard } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ArrowRight, CreditCard, Zap } from 'lucide-react';
 import { getPendingCheckout } from '../lib/pendingCheckout';
 
 const Login: React.FC = () => {
@@ -18,10 +18,11 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Identifica intenção de compra
+  // 1. Identifica intenção de compra
   const urlPlan = searchParams.get('plan');
   const urlCycle = searchParams.get('cycle') || 'monthly';
   const pending = getPendingCheckout();
+  
   const activePlan = urlPlan || pending?.plan;
   const activeCycle = urlCycle || pending?.cycle || 'monthly';
 
@@ -39,11 +40,12 @@ const Login: React.FC = () => {
     try {
       await login(formData.email, formData.password);
       
-      // BLOQUEIO TRIAL: Se tem plano pendente, redireciona EXCLUSIVAMENTE para o Orquestrador
+      // REDIRECIONAMENTO BLINDADO:
+      // Usamos window.location.href para forçar o reset do ciclo de vida do React.
       if (activePlan) {
-        navigate(`/checkout/start?plan=${activePlan}&cycle=${activeCycle}`, { replace: true });
+        window.location.href = `/#/checkout/start?plan=${activePlan}&cycle=${activeCycle}`;
       } else {
-        navigate('/app', { replace: true });
+        window.location.href = '/#/app';
       }
     } catch (err: any) {
       setError(err.message || 'E-mail ou senha incorretos.');
@@ -53,25 +55,25 @@ const Login: React.FC = () => {
 
   const handleDemoLogin = () => {
     loginDemo();
-    navigate('/app');
+    window.location.href = '/#/app';
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans text-slate-900">
       <div className="mb-8 hover:opacity-80 transition-opacity">
         <Link to="/"><Logo size="lg" /></Link>
       </div>
       
       <Card className="w-full max-w-md p-8 shadow-xl border-t-4 border-t-blue-600">
-        <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center uppercase tracking-tight">Acesse sua conta</h1>
-        <p className="text-slate-500 text-center mb-6 font-medium">Gestão de Riscos Psicossociais</p>
+        <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center uppercase tracking-tight">Acesso ao Sistema</h1>
+        <p className="text-slate-500 text-center mb-6 font-medium italic">Gestão de Riscos Psicossociais</p>
 
         {activePlan && (
           <div className="mb-6 bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center gap-4 animate-fade-in">
              <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg">
                <CreditCard size={20} />
              </div>
-             <div>
+             <div className="flex-1">
                <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none mb-1">Pagamento Pendente</p>
                <p className="text-sm font-bold text-slate-800">Assine o plano {activePlan.toUpperCase()} ao entrar</p>
              </div>
@@ -92,7 +94,7 @@ const Login: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">E-mail corporativo</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-bold">E-mail corporativo</label>
             <input 
               type="email" 
               required
@@ -118,7 +120,7 @@ const Login: React.FC = () => {
           </div>
 
           <Button fullWidth size="lg" type="submit" disabled={loading} className="mt-2 py-3.5 shadow-lg shadow-blue-600/20 font-black uppercase text-xs tracking-widest">
-            {loading ? 'Acessando...' : (activePlan ? 'Entrar e Assinar Plano' : 'Entrar na Plataforma')}
+            {loading ? 'Acessando...' : (activePlan ? 'Entrar e Pagar Assinatura' : 'Entrar na Plataforma')}
           </Button>
         </form>
 

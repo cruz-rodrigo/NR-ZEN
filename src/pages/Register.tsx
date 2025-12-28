@@ -6,7 +6,7 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
 import { AlertCircle, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
-import { getPendingCheckout } from '../lib/pendingCheckout';
+import { getPendingCheckout, setPendingCheckout } from '../lib/pendingCheckout';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
-  // Identifica intenção de compra (pela URL ou pelo Storage)
+  // 1. Identifica intenção de compra (pela URL ou pelo Storage)
   const urlPlan = searchParams.get('plan');
   const urlCycle = searchParams.get('cycle') || 'monthly';
   const pending = getPendingCheckout();
@@ -31,19 +31,25 @@ const Register: React.FC = () => {
     setLoading(true);
 
     try {
-      // 1. Cria a conta (trial por padrão no backend)
+      // Garante que o plano está salvo no disco antes de qualquer coisa
+      if (urlPlan) {
+        setPendingCheckout({ plan: urlPlan, cycle: urlCycle });
+      }
+
+      // 1. Cria a conta
       await register(formData.name, formData.email, formData.password);
       
-      // 2. Faz login automático para injetar o token no disco e contexto
+      // 2. Faz login para injetar o token no disco IMEDIATAMENTE
       await login(formData.email, formData.password);
 
-      // 3. BLOQUEIO TRIAL: Se existe intenção de compra, força o orquestrador.
-      // O Orquestrador agora é público e vai ler o token do disco instantaneamente.
+      // 3. REDIRECIONAMENTO BLINDADO:
+      // Se existe plano, usamos window.location.href para forçar o browser a 
+      // recarregar a rota do Orquestrador, garantindo que o token seja lido.
       if (activePlan) {
         setRedirecting(true);
-        navigate(`/checkout/start?plan=${activePlan}&cycle=${activeCycle}`, { replace: true });
+        window.location.href = `/#/checkout/start?plan=${activePlan}&cycle=${activeCycle}`;
       } else {
-        navigate('/app', { replace: true });
+        window.location.href = '/#/app';
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao criar conta.');
@@ -58,7 +64,9 @@ const Register: React.FC = () => {
           <CheckCircle2 size={32} />
         </div>
         <h2 className="text-2xl font-bold text-slate-800 mb-2 uppercase tracking-tight">Cadastro Concluído!</h2>
-        <p className="text-slate-500 font-medium">Iniciando ambiente de pagamento seguro...</p>
+        <p className="text-slate-500 font-medium italic leading-relaxed">
+          Autenticando acesso seguro... <br/> Iniciando ambiente de faturamento Stripe.
+        </p>
         <div className="mt-8">
           <Loader2 className="animate-spin text-blue-600 mx-auto" size={40} />
         </div>
@@ -67,7 +75,7 @@ const Register: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans text-slate-900">
       <div className="mb-8 hover:opacity-80 transition-opacity">
         <Link to="/"><Logo size="lg" /></Link>
       </div>
@@ -76,8 +84,8 @@ const Register: React.FC = () => {
         <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center uppercase tracking-tight">
           {activePlan ? 'Inicie sua Assinatura' : 'Crie sua conta'}
         </h1>
-        <p className="text-slate-500 text-center mb-8 font-medium">
-          {activePlan ? 'Crie seu acesso técnico para seguir ao pagamento.' : 'Comece a gerenciar riscos psicossociais hoje.'}
+        <p className="text-slate-500 text-center mb-8 font-medium italic">
+          {activePlan ? 'Crie seu acesso para prosseguir ao pagamento.' : 'Comece a gerenciar riscos psicossociais hoje.'}
         </p>
 
         {error && (
@@ -95,7 +103,7 @@ const Register: React.FC = () => {
               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all font-medium"
               value={formData.name}
               onChange={e => setFormData({...formData, name: e.target.value})}
-              placeholder="Ex: Consultoria SST Premium"
+              placeholder="Ex: Consultoria SST Master"
             />
           </div>
           <div>
@@ -126,7 +134,7 @@ const Register: React.FC = () => {
             {loading ? (
               <Loader2 className="animate-spin" size={20} />
             ) : activePlan ? (
-              <span className="flex items-center gap-2">Próximo Passo: Pagamento <ArrowRight size={18} /></span>
+              <span className="flex items-center gap-2">Ir para Pagamento Seguro <ArrowRight size={18} /></span>
             ) : 'Criar Minha Conta Grátis'}
           </Button>
         </form>
