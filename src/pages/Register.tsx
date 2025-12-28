@@ -5,8 +5,9 @@ import { Logo } from '../components/Layout';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
-import { AlertCircle, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, ArrowRight, Loader2, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { getCheckoutIntent, clearCheckoutIntent } from '../lib/checkoutIntent';
+import EmailConfirmationFields from '../components/auth/EmailConfirmationFields';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -18,43 +19,42 @@ const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
-  // Parâmetros de intenção de compra vindos da URL ou Storage
+  // Parâmetros de intenção (URL ou SessionStorage)
   const redirectPlan = searchParams.get('plan') || getCheckoutIntent()?.plan || undefined;
   const redirectCycle = searchParams.get('cycle') || getCheckoutIntent()?.cycle || 'monthly';
 
-  // Tradução do plano para o banner comercial
+  // Tradução amigável para o banner comercial (Evita mostrar slugs técnicos)
   const getFriendlyPlanName = (slug?: string) => {
-    if (slug === 'consultant') return 'CONSULTOR';
-    if (slug === 'business') return 'BUSINESS';
-    if (slug === 'corporate') return 'CORPORATE';
-    return slug?.toUpperCase() || '';
+    const map: Record<string, string> = {
+      'consultant': 'CONSULTOR',
+      'business': 'BUSINESS',
+      'corporate': 'CORPORATE'
+    };
+    return map[slug || ''] || slug?.toUpperCase() || 'ESCOLHIDO';
   };
 
-  // Validação em tempo real do Double-Check de E-mail
-  const emailsDoNotMatch = formData.confirmEmail.length > 0 && 
-    formData.email.toLowerCase().trim() !== formData.confirmEmail.toLowerCase().trim();
+  // Validação em Tempo Real
+  const emailsMatch = formData.email.trim().length > 0 && 
+    formData.email.trim().toLowerCase() === formData.confirmEmail.trim().toLowerCase();
+
+  const isFormValid = formData.name.length >= 3 && emailsMatch && formData.password.length >= 6;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isFormValid) return;
+    
     setError('');
-
-    if (emailsDoNotMatch) {
-      setError('Os e-mails digitados não são iguais.');
-      return;
-    }
-
     setLoading(true);
 
     try {
       if (redirectPlan) {
         setRedirecting(true);
-
         const response = await fetch('/api/auth?action=register-and-checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: formData.name,
-            email: formData.email,
+            email: formData.email.trim().toLowerCase(),
             password: formData.password,
             plan: redirectPlan,
             cycle: redirectCycle
@@ -62,7 +62,7 @@ const Register: React.FC = () => {
         });
 
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Erro ao criar conta ou checkout.');
+        if (!response.ok) throw new Error(data.error || 'Erro ao processar registro.');
 
         setSessionFromApi({ token: data.token, refreshToken: data.refreshToken, user: data.user });
         clearCheckoutIntent();
@@ -84,104 +84,91 @@ const Register: React.FC = () => {
   if (redirecting) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center font-sans">
-        <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6 animate-bounce shadow-inner">
-          <CheckCircle2 size={32} />
+        <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mb-8 animate-bounce shadow-xl shadow-blue-100">
+          <ShieldCheck size={40} />
         </div>
-        <h2 className="text-2xl font-bold text-slate-800 mb-2 uppercase tracking-tight">Sincronizando</h2>
-        <p className="text-slate-500 font-medium italic">Preparando seu ambiente seguro...</p>
-        <div className="mt-8"><Loader2 className="animate-spin text-blue-600" size={40} /></div>
+        <h2 className="text-2xl font-black text-slate-900 mb-2 uppercase tracking-tight">Sincronizando</h2>
+        <p className="text-slate-500 font-medium italic">Preparando seu ambiente seguro para faturamento...</p>
+        <div className="mt-10"><Loader2 className="animate-spin text-blue-600" size={48} /></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans text-slate-900">
-      <div className="mb-8 hover:opacity-80 transition-opacity">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans text-slate-900">
+      <div className="mb-10 hover:opacity-80 transition-opacity">
         <Link to="/"><Logo size="lg" /></Link>
       </div>
       
-      <Card className="w-full max-w-md p-8 shadow-xl border-t-4 border-t-blue-600">
-        <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center uppercase tracking-tight">
+      <Card className="w-full max-w-md p-10 shadow-2xl border-t-4 border-t-blue-600 relative overflow-hidden">
+        <h1 className="text-3xl font-heading font-black text-slate-900 mb-2 text-center uppercase tracking-tight">
           {redirectPlan ? 'Inicie sua Assinatura' : 'Criar Conta'}
         </h1>
-        <p className="text-slate-500 text-center mb-8 font-medium italic opacity-80 tracking-tight leading-tight">
-          {redirectPlan ? 'Sua conta será configurada e seguiremos para o pagamento.' : 'Comece a gerenciar riscos psicossociais hoje.'}
+        <p className="text-slate-500 text-center mb-10 font-medium italic opacity-80 leading-snug">
+          {redirectPlan 
+            ? 'Sua conta será configurada e seguiremos para o pagamento seguro via Stripe.' 
+            : 'Comece a gerenciar riscos psicossociais com tecnologia de ponta.'}
         </p>
 
         {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2 border border-red-100 animate-fade-in-down">
-            <AlertCircle size={16} /> {error}
+          <div className="bg-red-50 text-red-700 p-4 rounded-xl text-sm mb-8 flex items-center gap-3 border border-red-100 animate-fade-in-down font-bold">
+            <AlertCircle size={20} className="shrink-0" /> {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-bold">Nome da Consultoria / Profissional</label>
+            <label className="block text-sm font-bold text-slate-700 mb-1.5">Nome da Consultoria / Profissional</label>
             <input 
               type="text" required
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all font-medium"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all font-medium text-slate-700"
               value={formData.name}
               onChange={e => setFormData({...formData, name: e.target.value})}
               placeholder="Ex: Consultoria SST Master"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-bold">E-mail Corporativo</label>
-            <input 
-              type="email" required
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all font-medium"
-              value={formData.email}
-              onChange={e => setFormData({...formData, email: e.target.value.toLowerCase().trim()})}
-              placeholder="seu@email.com"
-            />
-            <p className="text-[10px] text-slate-400 font-medium leading-tight mt-1">
-              Use um e-mail válido: é por ele que você acessa e recebe comprovantes.
-            </p>
-          </div>
+          <EmailConfirmationFields 
+            email={formData.email}
+            confirmEmail={formData.confirmEmail}
+            onEmailChange={(v) => setFormData({...formData, email: v})}
+            onConfirmEmailChange={(v) => setFormData({...formData, confirmEmail: v})}
+          />
 
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-bold">Confirme seu E-mail</label>
-            <input 
-              type="email" required
-              onPaste={(e) => e.preventDefault()}
-              className={`w-full px-4 py-3 bg-white border rounded-lg focus:ring-2 outline-none transition-all font-medium ${emailsDoNotMatch ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 focus:ring-blue-600'}`}
-              value={formData.confirmEmail}
-              onChange={e => setFormData({...formData, confirmEmail: e.target.value.toLowerCase().trim()})}
-              placeholder="Repita seu e-mail"
-            />
-            {emailsDoNotMatch && <p className="text-red-500 text-[10px] mt-1 font-bold">Os e-mails não conferem.</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-bold">Senha de Acesso</label>
+            <label className="block text-sm font-bold text-slate-700 mb-1.5">Senha de Acesso</label>
             <input 
               type="password" required minLength={6}
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all text-slate-700"
               value={formData.password}
               onChange={e => setFormData({...formData, password: e.target.value})}
               placeholder="Mínimo 6 caracteres"
             />
           </div>
 
-          <Button fullWidth size="lg" type="submit" disabled={loading || emailsDoNotMatch} className="mt-4 shadow-lg shadow-blue-600/20 py-4 uppercase text-xs font-black tracking-widest">
-            {loading ? <Loader2 className="animate-spin" size={20} /> : (
-              <span className="flex items-center gap-2">
-                {redirectPlan ? 'Seguir para Pagamento' : 'Criar Minha Conta'} <ArrowRight size={18} />
+          <Button 
+            fullWidth size="lg" type="submit" 
+            disabled={loading || !isFormValid} 
+            className="mt-4 h-16 shadow-xl shadow-blue-600/20 py-4 uppercase text-xs font-black tracking-[0.2em]"
+          >
+            {loading ? <Loader2 className="animate-spin" size={24} /> : (
+              <span className="flex items-center gap-3">
+                {redirectPlan ? 'Seguir para Pagamento' : 'Criar Minha Conta'} <ArrowRight size={20} />
               </span>
             )}
           </Button>
         </form>
 
-        <div className="mt-8 text-center text-sm text-slate-500 font-medium pt-6 border-t border-slate-100">
-          Já possui conta? <Link to="/login" className="text-blue-600 font-bold hover:underline">Fazer Login</Link>
+        <div className="mt-10 text-center text-sm text-slate-500 font-medium pt-8 border-t border-slate-100">
+          Já possui uma conta? <Link to="/login" className="text-blue-600 font-black hover:underline ml-1">Fazer Login</Link>
         </div>
       </Card>
       
       {redirectPlan && (
-        <div className="mt-8 bg-blue-50 border border-blue-100 rounded-2xl p-6 max-w-md text-center shadow-sm">
-           <p className="text-[11px] text-blue-700 font-bold leading-relaxed uppercase tracking-widest">
-             Sua assinatura de <strong>{getFriendlyPlanName(redirectPlan)}</strong> será processada via Stripe com segurança bancária.
+        <div className="mt-8 bg-white border border-blue-100 rounded-3xl p-6 max-w-md text-center shadow-lg animate-fade-in border-b-4 border-b-blue-600">
+           <p className="text-[11px] text-blue-800 font-black leading-relaxed uppercase tracking-[0.15em]">
+             Você escolheu o plano <strong>{getFriendlyPlanName(redirectPlan)}</strong>. <br/>
+             <span className="opacity-60">Faturamento seguro processado por Stripe Inc.</span>
            </p>
         </div>
       )}
