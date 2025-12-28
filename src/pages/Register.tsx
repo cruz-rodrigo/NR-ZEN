@@ -22,6 +22,15 @@ const Register: React.FC = () => {
   const redirectPlan = searchParams.get('plan') || getCheckoutIntent()?.plan || undefined;
   const redirectCycle = searchParams.get('cycle') || getCheckoutIntent()?.cycle || 'monthly';
 
+  // Tradução do plano para o banner comercial
+  const getFriendlyPlanName = (slug?: string) => {
+    if (slug === 'consultant') return 'CONSULTOR';
+    if (slug === 'business') return 'BUSINESS';
+    if (slug === 'corporate') return 'CORPORATE';
+    return slug?.toUpperCase() || '';
+  };
+
+  // Validação em tempo real do Double-Check de E-mail
   const emailsDoNotMatch = formData.confirmEmail.length > 0 && 
     formData.email.toLowerCase().trim() !== formData.confirmEmail.toLowerCase().trim();
 
@@ -117,17 +126,17 @@ const Register: React.FC = () => {
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-bold">Seu melhor E-mail</label>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-bold">E-mail Corporativo</label>
             <input 
               type="email" required
               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all font-medium"
               value={formData.email}
-              onChange={e => setFormData({...formData, email: e.target.value})}
+              onChange={e => setFormData({...formData, email: e.target.value.toLowerCase().trim()})}
               placeholder="seu@email.com"
             />
-            <p className="text-[10px] text-slate-400 font-medium leading-tight">
-              Use um e-mail válido: é por ele que você acessa o sistema e recebe comprovantes.
+            <p className="text-[10px] text-slate-400 font-medium leading-tight mt-1">
+              Use um e-mail válido: é por ele que você acessa e recebe comprovantes.
             </p>
           </div>
 
@@ -138,7 +147,7 @@ const Register: React.FC = () => {
               onPaste={(e) => e.preventDefault()}
               className={`w-full px-4 py-3 bg-white border rounded-lg focus:ring-2 outline-none transition-all font-medium ${emailsDoNotMatch ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 focus:ring-blue-600'}`}
               value={formData.confirmEmail}
-              onChange={e => setFormData({...formData, confirmEmail: e.target.value})}
+              onChange={e => setFormData({...formData, confirmEmail: e.target.value.toLowerCase().trim()})}
               placeholder="Repita seu e-mail"
             />
             {emailsDoNotMatch && <p className="text-red-500 text-[10px] mt-1 font-bold">Os e-mails não conferem.</p>}
@@ -168,6 +177,14 @@ const Register: React.FC = () => {
           Já possui conta? <Link to="/login" className="text-blue-600 font-bold hover:underline">Fazer Login</Link>
         </div>
       </Card>
+      
+      {redirectPlan && (
+        <div className="mt-8 bg-blue-50 border border-blue-100 rounded-2xl p-6 max-w-md text-center shadow-sm">
+           <p className="text-[11px] text-blue-700 font-bold leading-relaxed uppercase tracking-widest">
+             Sua assinatura de <strong>{getFriendlyPlanName(redirectPlan)}</strong> será processada via Stripe com segurança bancária.
+           </p>
+        </div>
+      )}
     </div>
   );
 };
