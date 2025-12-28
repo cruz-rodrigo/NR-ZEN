@@ -6,17 +6,17 @@ import { Loader2, ShieldCheck, AlertCircle, Lock } from 'lucide-react';
 import { Logo } from '../components/Layout.tsx';
 import Card from '../components/Card.tsx';
 import Button from '../components/Button.tsx';
-import { setPendingCheckout, clearPendingCheckout, getPendingCheckout } from '../lib/pendingCheckout.ts';
+import { getPendingCheckout, clearPendingCheckout, setPendingCheckout } from '../lib/pendingCheckout.ts';
 
 const CheckoutOrchestrator: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { isAuthenticated, apiCall, isLoading, token } = useAuth();
+  const { isAuthenticated, apiCall, isLoading } = useAuth();
   const requestFired = useRef(false);
   
   const [error, setError] = useState<string | null>(null);
 
-  // 1. Tentar ler plano da URL ou do sessionStorage
+  // 1. Identificar o Plano (Prioridade: URL > LocalStorage)
   const urlPlan = searchParams.get('plan');
   const urlCycle = searchParams.get('cycle') || 'monthly';
   const pending = getPendingCheckout();
@@ -25,54 +25,65 @@ const CheckoutOrchestrator: React.FC = () => {
   const activeCycle = urlCycle || pending?.cycle || 'monthly';
 
   useEffect(() => {
-    // Aguarda o contexto de autenticação carregar as credenciais do localStorage
+    // Se temos dados na URL mas não no storage, sincroniza agora
+    if (urlPlan) {
+      setPendingCheckout({ plan: urlPlan, cycle: urlCycle });
+    }
+
     if (isLoading) return;
 
-    // Proteção: Se não tem plano nenhum nem na URL nem no storage, volta pra LP
+    // Proteção: Sem plano? Volta pra precificação da LP
     if (!activePlan) {
       navigate('/#pricing', { replace: true });
       return;
     }
 
-    // Caso 1: Usuário DESLOGADO
-    // Salvamos a intenção e mandamos para login. Quando ele voltar, o storage estará preenchido.
-    if (!isAuthenticated) {
-      setPendingCheckout({ plan: activePlan, cycle: activeCycle });
+    /**
+     * VERIFICAÇÃO DE DISCO (ANTI-RACE CONDITION)
+     * Verificamos o localStorage diretamente porque o AuthContext (isAuthenticated)
+     * pode demorar alguns ciclos de render para atualizar após o login.
+     */
+    const rawToken = localStorage.getItem('nrzen_token');
+    const isActuallyAuthenticated = isAuthenticated || !!rawToken;
+
+    if (!isActuallyAuthenticated) {
+      // Usuário realmente deslogado
       navigate(`/login?plan=${activePlan}&cycle=${activeCycle}`, { replace: true });
       return;
     }
 
-    // Caso 2: Usuário LOGADO - Iniciar Checkout via Stripe
-    if (isAuthenticated && token && !requestFired.current) {
+    // Se está autenticado, DISPARA O STRIPE
+    if (isActuallyAuthenticated && !requestFired.current) {
       const executeCheckout = async () => {
         requestFired.current = true;
         try {
+          // Chamada para criar sessão do Stripe
           const response = await apiCall('/api/checkout/create-session', {
             method: 'POST',
             body: JSON.stringify({ plan: activePlan, billingCycle: activeCycle })
           });
 
           if (response?.url) {
-            // Sucesso absoluto: Limpa o rastro e vai para o Stripe
+            // Sucesso! Limpa o storage ANTES de sair para o Stripe
             clearPendingCheckout();
             window.location.href = response.url;
           } else {
-            throw new Error("Resposta inválida do servidor de faturamento.");
+            throw new Error("O servidor de faturamento não retornou uma URL válida.");
           }
         } catch (err: any) {
-          console.error("Payment Orchestration Error:", err);
-          setError(err.message || "Erro ao conectar com o provedor de pagamentos.");
+          console.error("Critical Checkout Failure:", err);
+          setError(err.message || "Erro de conexão com o gateway de pagamento.");
           requestFired.current = false;
         }
       };
 
       executeCheckout();
     }
-  }, [isAuthenticated, isLoading, token, activePlan, activeCycle, navigate, apiCall]);
+  }, [isAuthenticated, isLoading, activePlan, activeCycle, navigate, apiCall, urlPlan, urlCycle]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans text-center">
-      <div className="mb-12 hover:opacity-80 transition-opacity">
+      <div className="mb-12">
         <Logo size="lg" />
       </div>
       
@@ -86,14 +97,14 @@ const CheckoutOrchestrator: React.FC = () => {
              <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-100 shadow-inner">
                 <AlertCircle size={32} />
              </div>
-             <h2 className="text-xl font-bold text-slate-800 mb-2 tracking-tight">Falha no Checkout</h2>
+             <h2 className="text-xl font-bold text-slate-800 mb-2 tracking-tight uppercase">Falha no Redirecionamento</h2>
              <p className="text-slate-500 text-sm mb-8 leading-relaxed">{error}</p>
              <div className="space-y-3">
                <Button onClick={() => window.location.reload()} fullWidth className="h-14">
                  Tentar Novamente
                </Button>
                <Button variant="secondary" onClick={() => navigate('/app/billing')} fullWidth className="h-14">
-                 Voltar para Planos
+                 Voltar aos Planos
                </Button>
              </div>
           </div>
@@ -106,21 +117,21 @@ const CheckoutOrchestrator: React.FC = () => {
                </div>
             </div>
             
-            <h1 className="text-2xl font-black text-slate-900 mb-3 tracking-tight uppercase">Processando...</h1>
+            <h1 className="text-2xl font-black text-slate-900 mb-3 tracking-tight uppercase">Autenticando...</h1>
             <p className="text-slate-500 text-sm leading-relaxed mb-10">
-              Estamos preparando seu ambiente de pagamento seguro para o plano <strong>{activePlan?.toUpperCase() || 'SELECIONADO'}</strong>. <br/> <strong>Não feche esta janela.</strong>
+              Estamos validando suas credenciais para iniciar o checkout seguro do plano <strong>{activePlan?.toUpperCase()}</strong>.
             </p>
             
             <div className="flex items-center justify-center gap-3 text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] bg-slate-50 py-4 rounded-[20px] border border-slate-100">
               <ShieldCheck size={16} className="text-emerald-500" />
-              Checkout Blindado SSL
+              Conexão Segura Stripe 256-bit
             </div>
           </div>
         )}
       </Card>
       
       <p className="mt-10 text-slate-400 text-[10px] uppercase tracking-[0.25em] font-black opacity-60">
-        Ambiente Seguro • Processado por Stripe & NR ZEN
+        Ambiente Oficial NR ZEN • Processamento SSL Ativo
       </p>
     </div>
   );

@@ -1,11 +1,11 @@
 
 /**
- * NR ZEN - Pending Checkout Manager
- * Gerencia a intenção de compra no sessionStorage para não perder o plano
- * escolhido durante o fluxo de Login/Cadastro.
+ * NR ZEN - Persistent Pending Checkout
+ * Usa localStorage para garantir que o plano escolhido não se perca 
+ * em nenhuma hipótese durante o fluxo de autenticação.
  */
 
-const STORAGE_KEY = 'nrzen_pending_checkout';
+const STORAGE_KEY = 'nrzen_pending_plan';
 
 export interface PendingCheckout {
   plan: string;
@@ -13,11 +13,11 @@ export interface PendingCheckout {
 }
 
 export const setPendingCheckout = (data: PendingCheckout) => {
-  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 };
 
 export const getPendingCheckout = (): PendingCheckout | null => {
-  const saved = sessionStorage.getItem(STORAGE_KEY);
+  const saved = localStorage.getItem(STORAGE_KEY);
   if (!saved) return null;
   try {
     return JSON.parse(saved);
@@ -27,5 +27,5 @@ export const getPendingCheckout = (): PendingCheckout | null => {
 };
 
 export const clearPendingCheckout = () => {
-  sessionStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(STORAGE_KEY);
 };

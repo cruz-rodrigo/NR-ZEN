@@ -18,7 +18,7 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Identifica intenção de compra da URL ou do storage persistente
+  // Sincroniza intenção de compra
   const urlPlan = searchParams.get('plan');
   const urlCycle = searchParams.get('cycle') || 'monthly';
   const pending = getPendingCheckout();
@@ -40,12 +40,10 @@ const Login: React.FC = () => {
     try {
       await login(formData.email, formData.password);
       
-      // REGRA DE OURO: Se o usuário veio de um plano, ele NUNCA vê o trial. 
-      // Ele é devolvido ao Orquestrador que disparará o Stripe.
+      // BLOQUEIO TRIAL: Se existe um plano pendente, ele NUNCA vai para o /app
       if (activePlan) {
         navigate(`/checkout/start?plan=${activePlan}&cycle=${activeCycle}`, { replace: true });
       } else {
-        // Apenas usuários que entram pelo login direto sem plano pendente caem no /app
         navigate('/app', { replace: true });
       }
     } catch (err: any) {
@@ -72,7 +70,7 @@ const Login: React.FC = () => {
              </div>
              <div>
                <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none mb-1">Pagamento Pendente</p>
-               <p className="text-sm font-bold text-slate-800">Finalize sua assinatura após entrar</p>
+               <p className="text-sm font-bold text-slate-800">Assine o plano {activePlan.toUpperCase()} ao entrar</p>
              </div>
           </div>
         )}
@@ -117,7 +115,7 @@ const Login: React.FC = () => {
           </div>
 
           <Button fullWidth size="lg" type="submit" disabled={loading} className="mt-2 py-3.5 shadow-lg shadow-blue-600/20 font-black uppercase text-xs tracking-widest">
-            {loading ? 'Acessando...' : (activePlan ? 'Entrar e Concluir Pagamento' : 'Entrar na Plataforma')}
+            {loading ? 'Acessando...' : (activePlan ? 'Entrar e Concluir Compra' : 'Entrar na Plataforma')}
           </Button>
         </form>
 
