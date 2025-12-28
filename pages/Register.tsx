@@ -5,7 +5,7 @@ import { Logo } from '../components/Layout';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
-import { AlertCircle, ArrowRight, Loader2, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { AlertCircle, ArrowRight, Loader2, ShieldCheck } from 'lucide-react';
 import { getCheckoutIntent, clearCheckoutIntent } from '../lib/checkoutIntent';
 import EmailConfirmationFields from '../components/auth/EmailConfirmationFields';
 
@@ -19,7 +19,7 @@ const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
-  // Intenção de compra
+  // Intenção de compra vinda da Landing Page
   const redirectPlan = searchParams.get('plan') || getCheckoutIntent()?.plan || undefined;
   const redirectCycle = searchParams.get('cycle') || getCheckoutIntent()?.cycle || 'monthly';
 
@@ -32,10 +32,11 @@ const Register: React.FC = () => {
     return map[slug || ''] || slug?.toUpperCase() || 'ASSINATURA';
   };
 
-  const emailsMatch = formData.email.trim().length > 0 && 
-    formData.email.trim().toLowerCase() === formData.confirmEmail.trim().toLowerCase();
+  // Validação rigorosa: nome, e-mails idênticos e senha mínima
+  const emailsMatch = formData.email.length > 0 && 
+    formData.email === formData.confirmEmail;
 
-  const isFormValid = formData.name.length >= 3 && emailsMatch && formData.password.length >= 6;
+  const isFormValid = formData.name.trim().length >= 3 && emailsMatch && formData.password.length >= 6;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +53,7 @@ const Register: React.FC = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: formData.name,
-            email: formData.email.trim().toLowerCase(),
+            email: formData.email, // Já vem em lowercase do componente
             password: formData.password,
             plan: redirectPlan,
             cycle: redirectCycle
@@ -113,6 +114,7 @@ const Register: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Campo Nome */}
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-1.5">Nome da Consultoria / Profissional</label>
             <input 
@@ -124,6 +126,7 @@ const Register: React.FC = () => {
             />
           </div>
 
+          {/* NOVO: Campos de E-mail com Confirmação e Lowercase Forçado */}
           <EmailConfirmationFields 
             email={formData.email}
             confirmEmail={formData.confirmEmail}
@@ -131,6 +134,7 @@ const Register: React.FC = () => {
             onConfirmEmailChange={(v) => setFormData({...formData, confirmEmail: v})}
           />
 
+          {/* Campo Senha */}
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-1.5">Senha de Acesso</label>
             <input 
