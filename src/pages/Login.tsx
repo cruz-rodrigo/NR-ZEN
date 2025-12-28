@@ -5,8 +5,8 @@ import { Logo } from '../components/Layout';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
-import { AlertCircle, CheckCircle2, ArrowRight, CreditCard, Zap } from 'lucide-react';
-import { getPendingCheckout } from '../lib/pendingCheckout';
+import { AlertCircle, CheckCircle2, ArrowRight, Zap } from 'lucide-react';
+import { getCheckoutIntent } from '../lib/checkoutIntent';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -17,14 +17,6 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
-
-  // 1. Identifica intenção de compra
-  const urlPlan = searchParams.get('plan');
-  const urlCycle = searchParams.get('cycle') || 'monthly';
-  const pending = getPendingCheckout();
-  
-  const activePlan = urlPlan || pending?.plan;
-  const activeCycle = urlCycle || pending?.cycle || 'monthly';
 
   useEffect(() => {
     if (searchParams.get('success')) {
@@ -40,12 +32,11 @@ const Login: React.FC = () => {
     try {
       await login(formData.email, formData.password);
       
-      // REDIRECIONAMENTO BLINDADO:
-      // Usamos window.location.href para forçar o reset do ciclo de vida do React.
-      if (activePlan) {
-        window.location.href = `/#/checkout/start?plan=${activePlan}&cycle=${activeCycle}`;
+      const intent = getCheckoutIntent();
+      if (intent) {
+        navigate('/checkout/start', { replace: true });
       } else {
-        window.location.href = '/#/app';
+        navigate('/app', { replace: true });
       }
     } catch (err: any) {
       setError(err.message || 'E-mail ou senha incorretos.');
@@ -55,7 +46,7 @@ const Login: React.FC = () => {
 
   const handleDemoLogin = () => {
     loginDemo();
-    window.location.href = '/#/app';
+    navigate('/app');
   };
 
   return (
@@ -67,18 +58,6 @@ const Login: React.FC = () => {
       <Card className="w-full max-w-md p-8 shadow-xl border-t-4 border-t-blue-600">
         <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center uppercase tracking-tight">Acesso ao Sistema</h1>
         <p className="text-slate-500 text-center mb-6 font-medium italic">Gestão de Riscos Psicossociais</p>
-
-        {activePlan && (
-          <div className="mb-6 bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center gap-4 animate-fade-in">
-             <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg">
-               <CreditCard size={20} />
-             </div>
-             <div className="flex-1">
-               <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none mb-1">Pagamento Pendente</p>
-               <p className="text-sm font-bold text-slate-800">Assine o plano {activePlan.toUpperCase()} ao entrar</p>
-             </div>
-          </div>
-        )}
 
         {successMsg && (
           <div className="bg-emerald-50 text-emerald-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2 border border-emerald-100 animate-fade-in">
@@ -120,12 +99,11 @@ const Login: React.FC = () => {
           </div>
 
           <Button fullWidth size="lg" type="submit" disabled={loading} className="mt-2 py-3.5 shadow-lg shadow-blue-600/20 font-black uppercase text-xs tracking-widest">
-            {loading ? 'Acessando...' : (activePlan ? 'Entrar e Pagar Assinatura' : 'Entrar na Plataforma')}
+            {loading ? 'Acessando...' : 'Entrar na Plataforma'}
           </Button>
         </form>
 
-        {!activePlan && (
-          <div className="mt-6">
+        <div className="mt-6">
             <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-slate-200"></div>
@@ -146,12 +124,11 @@ const Login: React.FC = () => {
               Acessar Modo Demo
             </Button>
           </div>
-        )}
 
         <div className="mt-8 pt-6 border-t border-slate-100 text-center text-sm text-slate-500 flex flex-col gap-2">
           <p className="font-medium">Ainda não tem cadastro?</p>
-          <Link to={`/register${activePlan ? `?plan=${activePlan}&cycle=${activeCycle}` : ''}`} className="text-blue-600 font-bold hover:underline inline-flex items-center justify-center gap-1">
-            Criar conta e Iniciar Plano <ArrowRight size={14} />
+          <Link to="/register" className="text-blue-600 font-bold hover:underline inline-flex items-center justify-center gap-1">
+            Criar conta gratuita <ArrowRight size={14} />
           </Link>
         </div>
       </Card>

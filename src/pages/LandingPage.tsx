@@ -2,12 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  CheckCircle2, ArrowRight, BarChart3, Users, 
-  Menu, X, Star, ShieldCheck, Zap, Gem, TrendingUp
+  CheckCircle2, ArrowRight, BarChart3, 
+  Menu, X, ShieldCheck, Zap, Gem, Star
 } from 'lucide-react';
 import Button from '../components/Button.tsx';
 import { Logo } from '../components/Layout.tsx';
 import { PLANS, formatBRL, PlanConfig, BillingCycle } from '../config/plans.ts';
+import { setCheckoutIntent, PlanSlug } from '../lib/checkoutIntent.ts';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -22,8 +23,13 @@ const LandingPage: React.FC = () => {
   }, []);
 
   const handleSubscribe = (planId: string) => {
-    // REDIRECIONAMENTO OBRIGATÓRIO: Inicia o funil pelo Orquestrador
-    navigate(`/checkout/start?plan=${planId}&cycle=${billingCycle}`);
+    // PERSISTE A INTENÇÃO ANTES DE NAVEGAR
+    setCheckoutIntent({ 
+      plan: planId as PlanSlug, 
+      cycle: billingCycle 
+    });
+    // Inicia pelo orquestrador
+    navigate(`/checkout/start`);
   };
 
   const scrollToSection = (id: string) => {
