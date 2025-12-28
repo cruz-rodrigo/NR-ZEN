@@ -6,11 +6,12 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
 import { AlertCircle, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
+import { getCheckoutIntent, clearCheckoutIntent } from '../src/lib/checkoutIntent';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { register, login, apiCall } = useAuth();
+  const { register, login, setSessionFromApi } = useAuth();
   
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
@@ -18,8 +19,8 @@ const Register: React.FC = () => {
   const [redirecting, setRedirecting] = useState(false);
 
   // Parâmetros de intenção de compra vindos da LP
-  const redirectPlan = searchParams.get('plan');
-  const redirectCycle = searchParams.get('cycle') || 'monthly';
+  const redirectPlan = searchParams.get('plan') || getCheckoutIntent()?.plan || undefined;
+  const redirectCycle = searchParams.get('cycle') || getCheckoutIntent()?.cycle || 'monthly';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,34 +28,34 @@ const Register: React.FC = () => {
     setLoading(true);
 
     try {
-      // 1. Cria a conta (trial por padrão no backend)
-      await register(formData.name, formData.email, formData.password);
-      
-      // 2. Faz login automático para obter o token
-      await login(formData.email, formData.password);
-
-      // 3. Se veio de um plano, redireciona para o checkout imediatamente
       if (redirectPlan) {
         setRedirecting(true);
-        try {
-          const response = await apiCall('/api/checkout/create-session', {
-            method: 'POST',
-            body: JSON.stringify({ plan: redirectPlan, billingCycle: redirectCycle })
-          });
-          
-          if (response?.url) {
-            window.location.href = response.url;
-            return; // Interrompe para o redirecionamento do browser
-          }
-        } catch (checkoutErr) {
-          console.error("Falha ao disparar checkout pós-registro:", checkoutErr);
-          // Se falhar o checkout, manda para o app (onde ele está em trial)
-          navigate('/app');
-        }
-      } else {
-        // Fluxo normal: Dashboard (Modo Trial)
-        navigate('/app');
+
+        const response = await fetch('/api/auth?action=register-and-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            plan: redirectPlan,
+            cycle: redirectCycle
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Erro ao criar checkout.');
+
+        setSessionFromApi({ token: data.token, refreshToken: data.refreshToken, user: data.user });
+        clearCheckoutIntent();
+        window.location.replace(data.url);
+        return;
       }
+
+      // Fluxo normal: cria conta e segue em modo trial
+      await register(formData.name, formData.email, formData.password);
+      await login(formData.email, formData.password);
+      navigate('/app');
     } catch (err: any) {
       setError(err.message || 'Erro ao criar conta.');
       setLoading(false);

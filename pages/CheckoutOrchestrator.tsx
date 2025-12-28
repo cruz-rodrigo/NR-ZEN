@@ -5,27 +5,39 @@ import { useAuth } from '../context/AuthContext.tsx';
 import { Loader2, ShieldCheck, ArrowRight } from 'lucide-react';
 import { Logo } from '../components/Layout.tsx';
 import Card from '../components/Card.tsx';
+import { getCheckoutIntent, setCheckoutIntent, clearCheckoutIntent, PlanSlug, BillingCycle } from '../src/lib/checkoutIntent';
 
 const CheckoutOrchestrator: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isAuthenticated, apiCall, isLoading } = useAuth();
   
-  const plan = searchParams.get('plan');
-  const cycle = searchParams.get('cycle') || 'monthly';
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isLoading) return;
 
-    if (!plan) {
-      navigate('/#pricing');
+    const allowedPlans: PlanSlug[] = ['consultant', 'business', 'corporate'];
+    const planParam = searchParams.get('plan');
+    const cycleParam = (searchParams.get('cycle') || 'monthly') as BillingCycle;
+    const storedIntent = getCheckoutIntent();
+
+    const intent = planParam && allowedPlans.includes(planParam as PlanSlug)
+      ? { plan: planParam as PlanSlug, cycle: cycleParam }
+      : storedIntent;
+
+    if (intent) {
+      setCheckoutIntent(intent);
+    }
+
+    if (!intent) {
+      navigate('/', { replace: true });
       return;
     }
 
     if (!isAuthenticated) {
       // Redireciona para o cadastro enviando a intenção de compra
-      navigate(`/register?plan=${plan}&cycle=${cycle}`);
+      navigate(`/register?plan=${intent.plan}&cycle=${intent.cycle}`);
       return;
     }
 
@@ -34,10 +46,11 @@ const CheckoutOrchestrator: React.FC = () => {
       try {
         const response = await apiCall('/api/checkout/create-session', {
           method: 'POST',
-          body: JSON.stringify({ plan, billingCycle: cycle })
+          body: JSON.stringify({ plan: intent.plan, billingCycle: intent.cycle })
         });
 
         if (response?.url) {
+          clearCheckoutIntent();
           window.location.href = response.url;
         } else {
           throw new Error("Não foi possível gerar a URL de pagamento.");
@@ -49,7 +62,7 @@ const CheckoutOrchestrator: React.FC = () => {
     };
 
     startCheckout();
-  }, [isAuthenticated, isLoading, plan, cycle, apiCall, navigate]);
+  }, [isAuthenticated, isLoading, apiCall, navigate, searchParams]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans">

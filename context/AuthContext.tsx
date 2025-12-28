@@ -10,6 +10,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   loginDemo: () => void;
   register: (name: string, email: string, password: string) => Promise<void>;
+  setSessionFromApi: (payload: { token: string; refreshToken?: string | null; user: UserSession }) => void;
   logout: () => void;
   apiCall: (endpoint: string, options?: RequestInit) => Promise<any>;
   refreshUser: () => Promise<void>;
@@ -68,6 +69,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('nrzen_user', JSON.stringify(mockUser));
   };
 
+  const setSessionFromApi = ({ token: apiToken, refreshToken: apiRefresh, user: apiUser }: { token: string; refreshToken?: string | null; user: UserSession }) => {
+    setToken(apiToken);
+    setUser(apiUser);
+    setRefreshToken(apiRefresh || null);
+
+    localStorage.setItem('nrzen_token', apiToken);
+    localStorage.setItem('nrzen_user', JSON.stringify(apiUser));
+    if (apiRefresh) {
+      localStorage.setItem('nrzen_refresh_token', apiRefresh);
+    }
+  };
+
   const login = async (email: string, password: string) => {
     const res = await fetch('/api/auth?action=login', {
       method: 'POST',
@@ -78,12 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'E-mail ou senha incorretos.');
 
-    setToken(data.token);
-    setRefreshToken(data.refreshToken);
-    setUser(data.user);
-    localStorage.setItem('nrzen_token', data.token);
-    if (data.refreshToken) localStorage.setItem('nrzen_refresh_token', data.refreshToken);
-    localStorage.setItem('nrzen_user', JSON.stringify(data.user));
+    setSessionFromApi({ token: data.token, refreshToken: data.refreshToken, user: data.user });
   };
 
   const register = async (name: string, email: string, password: string) => {
@@ -125,9 +133,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, token, isAuthenticated: !!token, isLoading, 
-      login, loginDemo, register, logout, apiCall, refreshUser 
+    <AuthContext.Provider value={{
+      user, token, isAuthenticated: !!token, isLoading,
+      login, loginDemo, register, logout, apiCall, refreshUser, setSessionFromApi
     }}>
       {children}
     </AuthContext.Provider>
