@@ -42,12 +42,7 @@ const App: React.FC = () => {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             
-            {/* Survey / Public Views */}
-            <Route path="/questionario" element={<Questionnaire />} />
-            <Route path="/questionario/:code" element={<Questionnaire />} />
-            <Route path="/relatorio" element={<Report />} />
-
-            {/* Orchestrator - Public (handles its own auth check) */}
+            {/* Orchestrator - MUST BE PUBLIC to handle pre-auth logic */}
             <Route path="/checkout/start" element={<CheckoutOrchestrator />} />
             
             {/* Authenticated Routes */}
@@ -62,6 +57,11 @@ const App: React.FC = () => {
             <Route path="/billing/success" element={<PrivateRoute><PaymentSuccess /></PrivateRoute>} />
             <Route path="/billing/cancel" element={<PrivateRoute><PaymentCancel /></PrivateRoute>} />
             
+            {/* Survey / Public Views */}
+            <Route path="/questionario" element={<Questionnaire />} />
+            <Route path="/questionario/:code" element={<Questionnaire />} />
+            <Route path="/relatorio" element={<Report />} />
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>

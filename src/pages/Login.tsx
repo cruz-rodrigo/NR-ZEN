@@ -18,10 +18,11 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Identifica intenção de compra
+  // Identifica intenção de compra da URL ou do storage persistente
   const urlPlan = searchParams.get('plan');
   const urlCycle = searchParams.get('cycle') || 'monthly';
   const pending = getPendingCheckout();
+  
   const activePlan = urlPlan || pending?.plan;
   const activeCycle = urlCycle || pending?.cycle || 'monthly';
 
@@ -39,10 +40,12 @@ const Login: React.FC = () => {
     try {
       await login(formData.email, formData.password);
       
-      // REGRA DEFINITIVA: Se tem plano, vai pro Orquestrador. PONTO.
+      // REGRA DE OURO: Se o usuário veio de um plano, ele NUNCA vê o trial. 
+      // Ele é devolvido ao Orquestrador que disparará o Stripe.
       if (activePlan) {
         navigate(`/checkout/start?plan=${activePlan}&cycle=${activeCycle}`, { replace: true });
       } else {
+        // Apenas usuários que entram pelo login direto sem plano pendente caem no /app
         navigate('/app', { replace: true });
       }
     } catch (err: any) {
@@ -68,8 +71,8 @@ const Login: React.FC = () => {
                <CreditCard size={20} />
              </div>
              <div>
-               <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none mb-1">Finalizar Compra</p>
-               <p className="text-sm font-bold text-slate-800">Checkout Seguro Pendente</p>
+               <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none mb-1">Pagamento Pendente</p>
+               <p className="text-sm font-bold text-slate-800">Finalize sua assinatura após entrar</p>
              </div>
           </div>
         )}
@@ -88,7 +91,7 @@ const Login: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">E-mail</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">E-mail corporativo</label>
             <input 
               type="email" 
               required
@@ -114,7 +117,7 @@ const Login: React.FC = () => {
           </div>
 
           <Button fullWidth size="lg" type="submit" disabled={loading} className="mt-2 py-3.5 shadow-lg shadow-blue-600/20 font-black uppercase text-xs tracking-widest">
-            {loading ? 'Acessando...' : (activePlan ? 'Entrar e Pagar Assinatura' : 'Entrar na Plataforma')}
+            {loading ? 'Acessando...' : (activePlan ? 'Entrar e Concluir Pagamento' : 'Entrar na Plataforma')}
           </Button>
         </form>
 

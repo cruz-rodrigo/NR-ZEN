@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.tsx';
-import { Loader2, ShieldCheck, AlertCircle, Lock, ArrowRight } from 'lucide-react';
+import { Loader2, ShieldCheck, AlertCircle, Lock } from 'lucide-react';
 import { Logo } from '../components/Layout.tsx';
 import Card from '../components/Card.tsx';
 import Button from '../components/Button.tsx';
@@ -25,44 +25,43 @@ const CheckoutOrchestrator: React.FC = () => {
   const activeCycle = urlCycle || pending?.cycle || 'monthly';
 
   useEffect(() => {
+    // Aguarda o contexto de autenticação carregar as credenciais do localStorage
     if (isLoading) return;
 
-    // Proteção: Se não tem plano nenhum, volta pra LP
+    // Proteção: Se não tem plano nenhum nem na URL nem no storage, volta pra LP
     if (!activePlan) {
       navigate('/#pricing', { replace: true });
       return;
     }
 
     // Caso 1: Usuário DESLOGADO
+    // Salvamos a intenção e mandamos para login. Quando ele voltar, o storage estará preenchido.
     if (!isAuthenticated) {
-      // Salva a intenção para não perder o plano no fluxo de login
       setPendingCheckout({ plan: activePlan, cycle: activeCycle });
-      // Manda para Login levando os parâmetros na URL para redundância
       navigate(`/login?plan=${activePlan}&cycle=${activeCycle}`, { replace: true });
       return;
     }
 
-    // Caso 2: Usuário LOGADO - Iniciar Checkout
+    // Caso 2: Usuário LOGADO - Iniciar Checkout via Stripe
     if (isAuthenticated && token && !requestFired.current) {
       const executeCheckout = async () => {
         requestFired.current = true;
         try {
-          // Chamada para criar sessão do Stripe
           const response = await apiCall('/api/checkout/create-session', {
             method: 'POST',
             body: JSON.stringify({ plan: activePlan, billingCycle: activeCycle })
           });
 
           if (response?.url) {
-            // Sucesso! Limpa a pendência e vai pro Stripe
+            // Sucesso absoluto: Limpa o rastro e vai para o Stripe
             clearPendingCheckout();
             window.location.href = response.url;
           } else {
-            throw new Error("Resposta inválida do servidor de pagamentos.");
+            throw new Error("Resposta inválida do servidor de faturamento.");
           }
         } catch (err: any) {
-          console.error("Orchestrator Error:", err);
-          setError(err.message || "Erro ao conectar com o Stripe.");
+          console.error("Payment Orchestration Error:", err);
+          setError(err.message || "Erro ao conectar com o provedor de pagamentos.");
           requestFired.current = false;
         }
       };
@@ -109,7 +108,7 @@ const CheckoutOrchestrator: React.FC = () => {
             
             <h1 className="text-2xl font-black text-slate-900 mb-3 tracking-tight uppercase">Processando...</h1>
             <p className="text-slate-500 text-sm leading-relaxed mb-10">
-              Estamos preparando seu ambiente de pagamento seguro para o plano <strong>{activePlan.toUpperCase()}</strong>. <br/> <strong>Não feche esta página.</strong>
+              Estamos preparando seu ambiente de pagamento seguro para o plano <strong>{activePlan?.toUpperCase() || 'SELECIONADO'}</strong>. <br/> <strong>Não feche esta janela.</strong>
             </p>
             
             <div className="flex items-center justify-center gap-3 text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] bg-slate-50 py-4 rounded-[20px] border border-slate-100">
@@ -121,7 +120,7 @@ const CheckoutOrchestrator: React.FC = () => {
       </Card>
       
       <p className="mt-10 text-slate-400 text-[10px] uppercase tracking-[0.25em] font-black opacity-60">
-        Plataforma Segura • Stripe & NR ZEN
+        Ambiente Seguro • Processado por Stripe & NR ZEN
       </p>
     </div>
   );
