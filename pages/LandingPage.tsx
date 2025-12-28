@@ -8,6 +8,7 @@ import {
 import Button from '../components/Button.tsx';
 import { Logo } from '../components/Layout.tsx';
 import { PLANS, formatBRL, PlanConfig, BillingCycle } from '../src/config/plans.ts';
+import { setCheckoutIntent, PlanSlug } from '../src/lib/checkoutIntent.ts';
 
 const ContactModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
@@ -154,12 +155,18 @@ const LandingPage: React.FC = () => {
             {plan.description}
           </p>
 
-          <Button 
-            fullWidth 
-            variant={plan.popular ? 'white' : 'glass'} 
-            onClick={() => plan.isCustom || plan.id === 'enterprise' 
-              ? window.open("https://wa.me/5511980834641?text=Olá! Gostaria de saber mais sobre o plano Enterprise.", '_blank') 
-              : navigate(`/checkout/start?plan=${plan.id}&cycle=${billingCycle}`)}
+          <Button
+            fullWidth
+            variant={plan.popular ? 'white' : 'glass'}
+            onClick={() => {
+              if (plan.isCustom || plan.id === 'enterprise') {
+                window.open("https://wa.me/5511980834641?text=Olá! Gostaria de saber mais sobre o plano Enterprise.", '_blank');
+                return;
+              }
+
+              setCheckoutIntent({ plan: plan.id as PlanSlug, cycle: billingCycle });
+              navigate(`/checkout/start?plan=${plan.id}&cycle=${billingCycle}`);
+            }}
             className={`h-12 text-[10px] font-black uppercase tracking-[0.1em] ${plan.popular ? 'text-blue-600' : ''}`}
           >
             {plan.isCustom ? 'Falar com Consultor' : 'Assinar Agora'}

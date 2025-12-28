@@ -5,10 +5,11 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
 import { AlertCircle, CheckCircle2, Lock, ArrowRight, Zap } from 'lucide-react';
+import { getCheckoutIntent, clearCheckoutIntent } from '../src/lib/checkoutIntent';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, loginDemo } = useAuth();
+  const { login, loginDemo, setSessionFromApi } = useAuth();
   const [searchParams] = useSearchParams();
   
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -28,6 +29,29 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
+      const intent = getCheckoutIntent();
+
+      if (intent) {
+        const response = await fetch('/api/auth?action=login-and-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+            plan: intent.plan,
+            cycle: intent.cycle
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Erro ao iniciar checkout.');
+
+        setSessionFromApi({ token: data.token, refreshToken: data.refreshToken, user: data.user });
+        clearCheckoutIntent();
+        window.location.replace(data.url);
+        return;
+      }
+
       await login(formData.email, formData.password);
       navigate('/app');
     } catch (err: any) {
