@@ -34,7 +34,7 @@ const App: React.FC = () => {
     <AuthProvider>
       <MockProvider>
         <Router>
-          {/* O GATE VENCE A RACE CONDITION NO NÍVEL DO ROUTER */}
+          {/* O GATE FICA FORA DO ROUTES PARA VENCER A RACE CONDITION GLOBAL */}
           <CheckoutPriorityGate />
           
           <Routes>
@@ -46,7 +46,7 @@ const App: React.FC = () => {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             
-            {/* Checkout - Aberto para que o orquestrador lide com a lógica de auth interna */}
+            {/* Rota de Checkout - Pública para que o Orquestrador gerencie a lógica de Auth internamente */}
             <Route path="/checkout/start" element={<CheckoutOrchestrator />} />
             
             {/* Authenticated Routes */}

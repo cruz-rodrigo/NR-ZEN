@@ -16,15 +16,15 @@ import Report from './pages/Report.tsx';
 import Onboarding from './pages/Onboarding.tsx';
 import Questionnaire from './pages/Questionnaire.tsx';
 import CheckoutOrchestrator from './pages/CheckoutOrchestrator.tsx';
+import CheckoutPriorityGate from './components/CheckoutPriorityGate.tsx';
 import { PaymentSuccess, PaymentCancel } from './pages/PaymentResult.tsx';
 import ForgotPassword from './pages/ForgotPassword.tsx';
 import ResetPassword from './pages/ResetPassword.tsx';
-import { AuthProvider, useAuth } from './context/AuthContext.tsx';
+import { AuthProvider } from './context/AuthContext.tsx';
 import { MockProvider } from './context/MockContext.tsx';
-import CheckoutPriorityGate from './src/components/CheckoutPriorityGate.tsx';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = (window as any).useAuth(); // Use context hook if imported properly
   if (isLoading) return <div className="h-screen w-full flex items-center justify-center bg-slate-50"><div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent"></div></div>;
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 };
@@ -35,8 +35,8 @@ const App: React.FC = () => {
       <MockProvider>
         <Router>
           <CheckoutPriorityGate />
+          
           <Routes>
-            {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -45,8 +45,7 @@ const App: React.FC = () => {
             <Route path="/reset-password" element={<ResetPassword />} />
             
             <Route path="/checkout/start" element={<CheckoutOrchestrator />} />
-
-            {/* Authenticated Routes */}
+            
             <Route path="/app" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
             <Route path="/app/companies" element={<PrivateRoute><Companies /></PrivateRoute>} />
             <Route path="/app/surveys" element={<PrivateRoute><Surveys /></PrivateRoute>} />
@@ -58,7 +57,6 @@ const App: React.FC = () => {
             <Route path="/billing/success" element={<PrivateRoute><PaymentSuccess /></PrivateRoute>} />
             <Route path="/billing/cancel" element={<PrivateRoute><PaymentCancel /></PrivateRoute>} />
             
-            {/* Survey / Public Views */}
             <Route path="/questionario" element={<Questionnaire />} />
             <Route path="/questionario/:code" element={<Questionnaire />} />
             <Route path="/relatorio" element={<Report />} />

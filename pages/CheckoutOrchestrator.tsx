@@ -1,18 +1,18 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.tsx';
-import { Loader2, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Loader2, ShieldCheck, AlertCircle, Lock } from 'lucide-react';
 import { Logo } from '../components/Layout.tsx';
 import Card from '../components/Card.tsx';
-import { getCheckoutIntent, setCheckoutIntent, clearCheckoutIntent, PlanSlug, BillingCycle } from '../src/lib/checkoutIntent';
+import Button from '../components/Button.tsx';
+import { getCheckoutIntent, setCheckoutIntent, clearCheckoutIntent, PlanSlug, BillingCycle } from '../lib/checkoutIntent';
 
 const CheckoutOrchestrator: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isAuthenticated, apiCall, isLoading } = useAuth();
-  
   const [error, setError] = useState<string | null>(null);
+  const checkoutStarted = useRef(false);
 
   useEffect(() => {
     if (isLoading) return;
@@ -22,6 +22,7 @@ const CheckoutOrchestrator: React.FC = () => {
     const cycleParam = (searchParams.get('cycle') || 'monthly') as BillingCycle;
     const storedIntent = getCheckoutIntent();
 
+    // Prioriza parâmetros da URL, senão usa o que está no storage
     const intent = planParam && allowedPlans.includes(planParam as PlanSlug)
       ? { plan: planParam as PlanSlug, cycle: cycleParam }
       : storedIntent;
@@ -30,84 +31,84 @@ const CheckoutOrchestrator: React.FC = () => {
       setCheckoutIntent(intent);
     }
 
+    // 1. Sem intenção? Volta para home (precificação)
     if (!intent) {
+      console.warn("[Orchestrator] No intent found. Redirecting to home.");
       navigate('/', { replace: true });
       return;
     }
 
+    // 2. Não logado? Vai registrar mantendo a intenção no storage
     if (!isAuthenticated) {
-      // Redireciona para o cadastro enviando a intenção de compra
-      navigate(`/register?plan=${intent.plan}&cycle=${intent.cycle}`);
+      navigate(`/register?plan=${intent.plan}&cycle=${intent.cycle}`, { replace: true });
       return;
     }
 
-    // Se já estiver logado, dispara a criação da sessão de checkout
-    const startCheckout = async () => {
-      try {
-        const response = await apiCall('/api/checkout/create-session', {
-          method: 'POST',
-          body: JSON.stringify({ plan: intent.plan, billingCycle: intent.cycle })
-        });
+    // 3. Logado + Intenção? Dispara criação da sessão de checkout
+    if (!checkoutStarted.current) {
+      const initStripe = async () => {
+        checkoutStarted.current = true;
+        try {
+          const response = await apiCall('/api/checkout/create-session', {
+            method: 'POST',
+            body: JSON.stringify({ 
+              plan: intent.plan, 
+              billingCycle: intent.cycle 
+            })
+          });
 
-        if (response?.url) {
-          clearCheckoutIntent();
-          window.location.href = response.url;
-        } else {
-          throw new Error("Não foi possível gerar a URL de pagamento.");
+          if (response?.url) {
+            // Limpa a intenção apenas no momento do redirecionamento bem sucedido
+            clearCheckoutIntent();
+            window.location.href = response.url;
+          } else {
+            throw new Error("Falha ao gerar sessão de pagamento.");
+          }
+        } catch (err: any) {
+          console.error("[Checkout] Stripe Error:", err);
+          setError(err.message || "Erro ao conectar com o serviço de faturamento.");
+          checkoutStarted.current = false;
         }
-      } catch (err: any) {
-        console.error("Checkout Error:", err);
-        setError(err.message || "Erro inesperado ao iniciar o pagamento.");
-      }
-    };
+      };
 
-    startCheckout();
-  }, [isAuthenticated, isLoading, apiCall, navigate, searchParams]);
+      initStripe();
+    }
+  }, [isAuthenticated, isLoading, navigate, apiCall, searchParams]);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center font-sans">
       <div className="mb-12"><Logo size="lg" /></div>
-      
-      <Card className="max-w-md w-full p-10 text-center shadow-2xl border-t-4 border-blue-600">
+      <Card className="max-w-md w-full p-10 shadow-2xl border-t-4 border-blue-600 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><Lock size={120} /></div>
+
         {error ? (
-          <div className="animate-fade-in">
-             <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <ArrowRight className="rotate-180" />
+          <div className="animate-fade-in relative z-10">
+             <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-100">
+                <AlertCircle size={32} />
              </div>
-             <h2 className="text-xl font-bold text-slate-800 mb-2">Ops! Algo deu errado.</h2>
+             <h2 className="text-xl font-bold text-slate-800 mb-2 uppercase tracking-tight">Falha no Checkout</h2>
              <p className="text-slate-500 text-sm mb-8">{error}</p>
-             <button 
-               onClick={() => navigate('/app/billing')}
-               className="text-blue-600 font-bold hover:underline"
-             >
-               Voltar para assinaturas
-             </button>
+             <div className="space-y-3">
+               <Button onClick={() => window.location.reload()} fullWidth className="h-14 font-black">Tentar Novamente</Button>
+               <Button variant="secondary" onClick={() => navigate('/app/billing')} fullWidth className="h-14 font-black">Ver Planos Manuais</Button>
+             </div>
           </div>
         ) : (
-          <div className="animate-fade-in">
-            <div className="relative w-20 h-20 mx-auto mb-8">
-               <div className="absolute inset-0 bg-blue-100 rounded-full animate-ping opacity-25"></div>
-               <div className="relative w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center shadow-inner">
-                  <Loader2 size={40} className="animate-spin" />
+          <div className="animate-fade-in relative z-10">
+            <div className="relative w-24 h-24 mx-auto mb-8">
+               <div className="absolute inset-0 bg-blue-100 rounded-full animate-ping opacity-20"></div>
+               <div className="relative w-24 h-24 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center shadow-inner border border-blue-100">
+                  <Loader2 size={48} className="animate-spin" />
                </div>
             </div>
-            
-            <h1 className="text-2xl font-bold text-slate-900 mb-3 tracking-tight">Preparando Checkout</h1>
-            <p className="text-slate-500 text-sm leading-relaxed mb-8">
-              Estamos configurando seu ambiente seguro de pagamento no Stripe. Você será redirecionado em instantes.
-            </p>
-            
-            <div className="flex items-center justify-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest bg-slate-50 py-3 rounded-xl border border-slate-100">
-              <ShieldCheck size={14} className="text-emerald-500" />
-              Ambiente 100% Seguro
+            <h1 className="text-2xl font-black text-slate-900 mb-3 tracking-tight uppercase">Autenticando...</h1>
+            <p className="text-slate-500 text-sm leading-relaxed mb-10 font-medium italic">Preparando ambiente seguro para faturamento Stripe.</p>
+            <div className="flex items-center justify-center gap-3 text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] bg-slate-50 py-4 rounded-[20px] border border-slate-100">
+              <ShieldCheck size={16} className="text-emerald-500" /> Processamento Criptografado
             </div>
           </div>
         )}
       </Card>
-      
-      <p className="mt-8 text-slate-400 text-[10px] uppercase tracking-widest font-medium">
-        Powered by Stripe & NR ZEN
-      </p>
     </div>
   );
 };

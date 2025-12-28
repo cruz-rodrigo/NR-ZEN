@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { UserSession } from '../types';
+import { UserSession } from '../types.ts';
 
 interface AuthContextType {
   user: UserSession | null;
@@ -44,8 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshUser = async () => {
     if (!token || token === 'demo-token-jwt') return;
     try {
-      // Endpoint que retorna o perfil atualizado do banco
-      const data = await apiCall('/api/auth/me'); 
+      const data = await apiCall('/api/auth?action=me'); 
       if (data && data.user) {
         setUser(data.user);
         localStorage.setItem('nrzen_user', JSON.stringify(data.user));
@@ -73,7 +72,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(apiToken);
     setUser(apiUser);
     setRefreshToken(apiRefresh || null);
-
     localStorage.setItem('nrzen_token', apiToken);
     localStorage.setItem('nrzen_user', JSON.stringify(apiUser));
     if (apiRefresh) {
@@ -87,10 +85,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
-
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'E-mail ou senha incorretos.');
-
     setSessionFromApi({ token: data.token, refreshToken: data.refreshToken, user: data.user });
   };
 
@@ -100,7 +96,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password }),
     });
-
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Erro ao registrar usuário.');
   };
@@ -115,26 +110,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const apiCall = async (endpoint: string, options: RequestInit = {}) => {
     if (!token) throw new Error("Usuário não autenticado");
     if (token === 'demo-token-jwt') return null;
-
     const headers = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
       ...options.headers,
     };
-
     const res = await fetch(endpoint, { ...options, headers });
     if (res.status === 204) return null;
-    
     const contentType = res.headers.get("content-type");
     const data = contentType && contentType.includes("application/json") ? await res.json() : null;
-    
     if (!res.ok) throw new Error(data?.error || 'Erro na requisição');
     return data;
   };
 
   return (
-    <AuthContext.Provider value={{
-      user, token, isAuthenticated: !!token, isLoading,
+    <AuthContext.Provider value={{ 
+      user, token, isAuthenticated: !!token, isLoading, 
       login, loginDemo, register, logout, apiCall, refreshUser, setSessionFromApi
     }}>
       {children}
@@ -147,3 +138,5 @@ export const useAuth = () => {
   if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
+
+(window as any).useAuth = useAuth;

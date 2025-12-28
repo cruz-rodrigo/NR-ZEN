@@ -6,7 +6,6 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
 import { AlertCircle, CheckCircle2, ArrowRight, Zap } from 'lucide-react';
-import { getCheckoutIntent } from '../lib/checkoutIntent';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -32,12 +31,9 @@ const Login: React.FC = () => {
     try {
       await login(formData.email, formData.password);
       
-      const intent = getCheckoutIntent();
-      if (intent) {
-        navigate('/checkout/start', { replace: true });
-      } else {
-        navigate('/app', { replace: true });
-      }
+      // LOGICA SIMPLIFICADA:
+      // O PriorityGate interceptará esta navegação se houver intenção de compra.
+      navigate('/app', { replace: true });
     } catch (err: any) {
       setError(err.message || 'E-mail ou senha incorretos.');
       setLoading(false);

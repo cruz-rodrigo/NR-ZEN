@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -7,8 +6,8 @@ import {
 } from 'lucide-react';
 import Button from '../components/Button.tsx';
 import { Logo } from '../components/Layout.tsx';
-import { PLANS, formatBRL, PlanConfig, BillingCycle } from '../src/config/plans.ts';
-import { setCheckoutIntent, PlanSlug } from '../src/lib/checkoutIntent.ts';
+import { PLANS, formatBRL, PlanConfig, BillingCycle } from '../config/plans.ts';
+import { setCheckoutIntent, PlanSlug } from '../lib/checkoutIntent.ts';
 
 const ContactModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
@@ -86,6 +85,16 @@ const LandingPage: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const handleSubscribe = (planId: string) => {
+    // 1. Salva a intenção de compra de forma persistente
+    setCheckoutIntent({ 
+      plan: planId as PlanSlug, 
+      cycle: billingCycle 
+    });
+    // 2. Inicia o fluxo pelo orquestrador central
+    navigate('/checkout/start');
+  };
+
   const scrollToSection = (id: string) => {
     setMobileMenuOpen(false);
     const element = document.getElementById(id);
@@ -155,18 +164,12 @@ const LandingPage: React.FC = () => {
             {plan.description}
           </p>
 
-          <Button
-            fullWidth
-            variant={plan.popular ? 'white' : 'glass'}
-            onClick={() => {
-              if (plan.isCustom || plan.id === 'enterprise') {
-                window.open("https://wa.me/5511980834641?text=Olá! Gostaria de saber mais sobre o plano Enterprise.", '_blank');
-                return;
-              }
-
-              setCheckoutIntent({ plan: plan.id as PlanSlug, cycle: billingCycle });
-              navigate(`/checkout/start?plan=${plan.id}&cycle=${billingCycle}`);
-            }}
+          <Button 
+            fullWidth 
+            variant={plan.popular ? 'white' : 'glass'} 
+            onClick={() => plan.isCustom || plan.id === 'enterprise' 
+              ? window.open("https://wa.me/5511980834641?text=Olá! Gostaria de saber mais sobre o plano Enterprise.", '_blank') 
+              : handleSubscribe(plan.id)}
             className={`h-12 text-[10px] font-black uppercase tracking-[0.1em] ${plan.popular ? 'text-blue-600' : ''}`}
           >
             {plan.isCustom ? 'Falar com Consultor' : 'Assinar Agora'}

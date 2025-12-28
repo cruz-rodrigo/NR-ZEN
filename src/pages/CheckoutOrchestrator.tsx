@@ -19,20 +19,20 @@ const CheckoutOrchestrator: React.FC = () => {
 
     const intent = getCheckoutIntent();
 
-    // 1. Sem intenção? Volta para preços.
+    // 1. Sem intenção? Volta para home (precificação)
     if (!intent) {
-      console.warn("[Orchestrator] No intent found. Redirecting to home.");
+      console.warn("[Orchestrator] No intent found. Redirecting to LP.");
       navigate('/', { replace: true });
       return;
     }
 
-    // 2. Não logado? Vai registrar/logar mantendo a intenção no storage.
+    // 2. Não logado? Vai registrar mantendo a intenção no storage
     if (!isAuthenticated) {
       navigate(`/register?plan=${intent.plan}`, { replace: true });
       return;
     }
 
-    // 3. Logado + Intenção? Dispara Stripe.
+    // 3. Logado + Intenção? Dispara Stripe
     if (!checkoutStarted.current) {
       const initStripe = async () => {
         checkoutStarted.current = true;
@@ -46,7 +46,7 @@ const CheckoutOrchestrator: React.FC = () => {
           });
 
           if (response?.url) {
-            // Limpa a intenção APENAS após garantir o sucesso do redirect para o Stripe
+            // Limpa a intenção apenas no momento do redirecionamento bem sucedido
             clearCheckoutIntent();
             window.location.href = response.url;
           } else {
@@ -54,7 +54,7 @@ const CheckoutOrchestrator: React.FC = () => {
           }
         } catch (err: any) {
           console.error("[Checkout] Stripe Error:", err);
-          setError(err.message || "Erro de comunicação com o Stripe.");
+          setError(err.message || "Erro ao conectar com o serviço de faturamento.");
           checkoutStarted.current = false;
         }
       };
@@ -66,7 +66,6 @@ const CheckoutOrchestrator: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center font-sans">
       <div className="mb-12"><Logo size="lg" /></div>
-      
       <Card className="max-w-md w-full p-10 shadow-2xl border-t-4 border-blue-600 relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><Lock size={120} /></div>
 
@@ -78,8 +77,8 @@ const CheckoutOrchestrator: React.FC = () => {
              <h2 className="text-xl font-bold text-slate-800 mb-2 uppercase tracking-tight">Falha no Checkout</h2>
              <p className="text-slate-500 text-sm mb-8">{error}</p>
              <div className="space-y-3">
-               <Button onClick={() => window.location.reload()} fullWidth className="h-14">Tentar Novamente</Button>
-               <Button variant="secondary" onClick={() => navigate('/app/billing')} fullWidth className="h-14">Planos Manuais</Button>
+               <Button onClick={() => window.location.reload()} fullWidth className="h-14 font-black">Tentar Novamente</Button>
+               <Button variant="secondary" onClick={() => navigate('/app/billing')} fullWidth className="h-14 font-black">Ver Planos Manuais</Button>
              </div>
           </div>
         ) : (
@@ -90,15 +89,10 @@ const CheckoutOrchestrator: React.FC = () => {
                   <Loader2 size={48} className="animate-spin" />
                </div>
             </div>
-            
             <h1 className="text-2xl font-black text-slate-900 mb-3 tracking-tight uppercase">Autenticando...</h1>
-            <p className="text-slate-500 text-sm leading-relaxed mb-10 font-medium italic">
-              Preparando ambiente seguro para faturamento Stripe.
-            </p>
-            
+            <p className="text-slate-500 text-sm leading-relaxed mb-10 font-medium italic">Preparando ambiente seguro para faturamento Stripe.</p>
             <div className="flex items-center justify-center gap-3 text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] bg-slate-50 py-4 rounded-[20px] border border-slate-100">
-              <ShieldCheck size={16} className="text-emerald-500" />
-              Conexão Segura SSL 256-bit
+              <ShieldCheck size={16} className="text-emerald-500" /> Processamento Criptografado
             </div>
           </div>
         )}
