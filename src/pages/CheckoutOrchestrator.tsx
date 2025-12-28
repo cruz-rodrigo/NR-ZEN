@@ -15,7 +15,7 @@ const CheckoutOrchestrator: React.FC = () => {
   const requestFired = useRef(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 1. Prioridade absoluta para detectar o plano
+  // 1. Detectar o Plano (Nativo do disco é mais rápido que estado)
   const urlPlan = searchParams.get('plan');
   const urlCycle = searchParams.get('cycle') || 'monthly';
   const pending = getPendingCheckout();
@@ -24,7 +24,7 @@ const CheckoutOrchestrator: React.FC = () => {
   const activeCycle = urlCycle || pending?.cycle || 'monthly';
 
   useEffect(() => {
-    // Sincroniza o desejo de compra no storage para não perder em reloads
+    // Sincroniza a intenção no storage IMEDIATAMENTE
     if (urlPlan) {
       setPendingCheckout({ plan: urlPlan, cycle: urlCycle });
     }
@@ -38,43 +38,43 @@ const CheckoutOrchestrator: React.FC = () => {
     }
 
     /**
-     * BYPASS DE ESTADO REATIVO
-     * Verificamos o localStorage diretamente. Se o token está lá, o usuário logou agora.
-     * Não esperamos o 'isAuthenticated' do React atualizar.
+     * VERIFICAÇÃO ATÔMICA
+     * Verificamos o token diretamente no disco para ignorar o lag do React.
      */
     const token = localStorage.getItem('nrzen_token');
-    
-    if (!token && !isAuthenticated) {
-      // Usuário realmente deslogado
+    const isLogged = !!token || isAuthenticated;
+
+    if (!isLogged) {
+      console.log("Orchestrator: User not logged. Sending to register.");
       navigate(`/register?plan=${activePlan}&cycle=${activeCycle}`, { replace: true });
       return;
     }
 
-    // Dispara o Stripe se tivermos token (via Contexto ou via Disco)
-    if ((token || isAuthenticated) && !requestFired.current) {
-      const executeStripeSession = async () => {
+    // Dispara a chamada do Stripe se houver autorização
+    if (isLogged && !requestFired.current) {
+      const startStripeSession = async () => {
         requestFired.current = true;
         try {
-          // Chamada direta para o backend com o plano detectado
+          // Chamada API
           const response = await apiCall('/api/checkout/create-session', {
             method: 'POST',
             body: JSON.stringify({ plan: activePlan, billingCycle: activeCycle })
           });
 
           if (response?.url) {
-            clearPendingCheckout(); // Limpa intenção apenas no sucesso
-            window.location.href = response.url; // Redirecionamento nativo
+            clearPendingCheckout(); // Sucesso: limpa a intenção
+            window.location.href = response.url; // Redirecionamento nativo Stripe
           } else {
-            throw new Error("Resposta inválida do servidor de pagamentos.");
+            throw new Error("Falha ao comunicar com o servidor de pagamentos.");
           }
         } catch (err: any) {
-          console.error("Falha Crítica no Checkout:", err);
-          setError(err.message || "Não foi possível conectar ao Stripe.");
+          console.error("Orchestrator Error:", err);
+          setError(err.message || "Erro ao conectar com o provedor de pagamentos.");
           requestFired.current = false; 
         }
       };
 
-      executeStripeSession();
+      startStripeSession();
     }
   }, [isAuthenticated, isLoading, activePlan, activeCycle, navigate, apiCall, urlPlan, urlCycle]);
 
@@ -90,11 +90,11 @@ const CheckoutOrchestrator: React.FC = () => {
              <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-100">
                 <AlertCircle size={32} />
              </div>
-             <h2 className="text-xl font-bold text-slate-800 mb-2 uppercase tracking-tight">Falha no Redirecionamento</h2>
+             <h2 className="text-xl font-bold text-slate-800 mb-2 uppercase tracking-tight">Falha Crítica</h2>
              <p className="text-slate-500 text-sm mb-8 leading-relaxed">{error}</p>
              <div className="space-y-3">
-               <Button onClick={() => window.location.reload()} fullWidth className="h-14 font-black">Tentar Novamente</Button>
-               <Button variant="secondary" onClick={() => navigate('/app/billing')} fullWidth className="h-14 font-black">Ver Meus Planos</Button>
+               <Button onClick={() => window.location.reload()} fullWidth className="h-14 font-black">Recarregar Página</Button>
+               <Button variant="secondary" onClick={() => navigate('/app/billing')} fullWidth className="h-14 font-black">Escolher Plano Manualmente</Button>
              </div>
           </div>
         ) : (
@@ -106,21 +106,21 @@ const CheckoutOrchestrator: React.FC = () => {
                </div>
             </div>
             
-            <h1 className="text-2xl font-black text-slate-900 mb-3 tracking-tight uppercase">Autenticando...</h1>
+            <h1 className="text-2xl font-black text-slate-900 mb-3 tracking-tight uppercase">Segurança Ativa...</h1>
             <p className="text-slate-500 text-sm leading-relaxed mb-10 font-medium italic">
-              Preparando ambiente seguro para o plano <strong className="text-blue-600">{activePlan?.toUpperCase()}</strong>.
+              Autenticando sua sessão para o plano <strong className="text-blue-600">{activePlan?.toUpperCase()}</strong>.
             </p>
             
             <div className="flex items-center justify-center gap-3 text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] bg-slate-50 py-4 rounded-[20px] border border-slate-100">
               <ShieldCheck size={16} className="text-emerald-500" />
-              Conexão Segura Stripe 256-bit
+              Processamento Stripe Ativo
             </div>
           </div>
         )}
       </Card>
       
       <p className="mt-10 text-slate-400 text-[10px] uppercase tracking-[0.25em] font-black opacity-60">
-        Ambiente Oficial NR ZEN • Processamento SSL Ativo
+        Ambiente Oficial NR ZEN • Verificado por Stripe Inc.
       </p>
     </div>
   );
