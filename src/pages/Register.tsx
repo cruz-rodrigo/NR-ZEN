@@ -1,45 +1,74 @@
 
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Logo } from '../components/Layout';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
 import { AlertCircle, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
-import { getCheckoutIntent } from '../lib/checkoutIntent';
+import { getCheckoutIntent, clearCheckoutIntent } from '../lib/checkoutIntent';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
-  const { register, login } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { register, login, setSessionFromApi } = useAuth();
   
-  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', confirmEmail: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
+  // Parâmetros de intenção de compra vindos da URL ou Storage
+  const redirectPlan = searchParams.get('plan') || getCheckoutIntent()?.plan || undefined;
+  const redirectCycle = searchParams.get('cycle') || getCheckoutIntent()?.cycle || 'monthly';
+
+  const emailsDoNotMatch = formData.confirmEmail.length > 0 && 
+    formData.email.toLowerCase().trim() !== formData.confirmEmail.toLowerCase().trim();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (emailsDoNotMatch) {
+      setError('Os e-mails digitados não são iguais.');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // 1. Cria a conta
-      await register(formData.name, formData.email, formData.password);
-      
-      // 2. Faz login automático para obter o token JWT
-      await login(formData.email, formData.password);
+      if (redirectPlan) {
+        setRedirecting(true);
 
-      setRedirecting(true);
-      
-      // 3. FLUXO SIMPLIFICADO:
-      // O CheckoutPriorityGate montado no App.tsx detectará o novo estado de 
-      // autenticação e a presença de intenção de compra. Ele interceptará 
-      // qualquer navegação indesejada para o dashboard automaticamente.
-      navigate('/app', { replace: true });
+        const response = await fetch('/api/auth?action=register-and-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            plan: redirectPlan,
+            cycle: redirectCycle
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Erro ao criar conta ou checkout.');
+
+        setSessionFromApi({ token: data.token, refreshToken: data.refreshToken, user: data.user });
+        clearCheckoutIntent();
+        window.location.replace(data.url);
+        return;
+      }
+
+      await register(formData.name, formData.email, formData.password);
+      await login(formData.email, formData.password);
+      navigate('/app');
 
     } catch (err: any) {
       setError(err.message || 'Erro ao criar conta.');
       setLoading(false);
+      setRedirecting(false);
     }
   };
 
@@ -63,16 +92,20 @@ const Register: React.FC = () => {
       </div>
       
       <Card className="w-full max-w-md p-8 shadow-xl border-t-4 border-t-blue-600">
-        <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center uppercase tracking-tight">Criar Conta</h1>
-        <p className="text-slate-500 text-center mb-8 font-medium italic">Inicie sua gestão de riscos psicossociais hoje.</p>
+        <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center uppercase tracking-tight">
+          {redirectPlan ? 'Inicie sua Assinatura' : 'Criar Conta'}
+        </h1>
+        <p className="text-slate-500 text-center mb-8 font-medium italic opacity-80 tracking-tight leading-tight">
+          {redirectPlan ? 'Sua conta será configurada e seguiremos para o pagamento.' : 'Comece a gerenciar riscos psicossociais hoje.'}
+        </p>
 
         {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2 border border-red-100 animate-fade-in">
+          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2 border border-red-100 animate-fade-in-down">
             <AlertCircle size={16} /> {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-bold">Nome da Consultoria / Profissional</label>
             <input 
@@ -83,16 +116,34 @@ const Register: React.FC = () => {
               placeholder="Ex: Consultoria SST Master"
             />
           </div>
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-bold">E-mail Corporativo</label>
+
+          <div className="space-y-1">
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-bold">Seu melhor E-mail</label>
             <input 
               type="email" required
               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all font-medium"
               value={formData.email}
-              onChange={e => setFormData({...formData, email: e.target.value.toLowerCase().trim()})}
+              onChange={e => setFormData({...formData, email: e.target.value})}
               placeholder="seu@email.com"
             />
+            <p className="text-[10px] text-slate-400 font-medium leading-tight">
+              Use um e-mail válido: é por ele que você acessa o sistema e recebe comprovantes.
+            </p>
           </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-bold">Confirme seu E-mail</label>
+            <input 
+              type="email" required
+              onPaste={(e) => e.preventDefault()}
+              className={`w-full px-4 py-3 bg-white border rounded-lg focus:ring-2 outline-none transition-all font-medium ${emailsDoNotMatch ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 focus:ring-blue-600'}`}
+              value={formData.confirmEmail}
+              onChange={e => setFormData({...formData, confirmEmail: e.target.value})}
+              placeholder="Repita seu e-mail"
+            />
+            {emailsDoNotMatch && <p className="text-red-500 text-[10px] mt-1 font-bold">Os e-mails não conferem.</p>}
+          </div>
+
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-bold">Senha de Acesso</label>
             <input 
@@ -100,12 +151,16 @@ const Register: React.FC = () => {
               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all"
               value={formData.password}
               onChange={e => setFormData({...formData, password: e.target.value})}
-              placeholder="••••••••"
+              placeholder="Mínimo 6 caracteres"
             />
           </div>
 
-          <Button fullWidth size="lg" type="submit" disabled={loading} className="mt-4 shadow-lg shadow-blue-600/20 py-4 uppercase text-xs font-black tracking-widest">
-            {loading ? <Loader2 className="animate-spin" size={20} /> : <span className="flex items-center gap-2">Criar Minha Conta <ArrowRight size={18} /></span>}
+          <Button fullWidth size="lg" type="submit" disabled={loading || emailsDoNotMatch} className="mt-4 shadow-lg shadow-blue-600/20 py-4 uppercase text-xs font-black tracking-widest">
+            {loading ? <Loader2 className="animate-spin" size={20} /> : (
+              <span className="flex items-center gap-2">
+                {redirectPlan ? 'Seguir para Pagamento' : 'Criar Minha Conta'} <ArrowRight size={18} />
+              </span>
+            )}
           </Button>
         </form>
 

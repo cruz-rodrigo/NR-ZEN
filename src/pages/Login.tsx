@@ -5,11 +5,12 @@ import { Logo } from '../components/Layout';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
-import { AlertCircle, CheckCircle2, ArrowRight, Zap } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
+import { getCheckoutIntent, clearCheckoutIntent } from '../lib/checkoutIntent';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, loginDemo } = useAuth();
+  const { login, setSessionFromApi } = useAuth();
   const [searchParams] = useSearchParams();
   
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -29,20 +30,42 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
+      const intent = getCheckoutIntent();
+
+      if (intent) {
+        // Fluxo Transacional: Login e Início de Checkout em um só passo
+        const response = await fetch('/api/auth?action=login-and-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+            plan: intent.plan,
+            cycle: intent.cycle
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'E-mail ou senha incorretos.');
+
+        // Estabelece sessão local sem navegar para /app
+        setSessionFromApi({ token: data.token, refreshToken: data.refreshToken, user: data.user });
+        
+        // Limpa intenção apenas no sucesso absoluto
+        clearCheckoutIntent();
+        
+        // Manda direto para o Stripe
+        window.location.replace(data.url);
+        return;
+      }
+
       await login(formData.email, formData.password);
-      
-      // LOGICA SIMPLIFICADA:
-      // O PriorityGate interceptará esta navegação se houver intenção de compra.
-      navigate('/app', { replace: true });
+      navigate('/app');
     } catch (err: any) {
-      setError(err.message || 'E-mail ou senha incorretos.');
+      setError(err.message || 'Erro inesperado ao conectar.');
+    } finally {
       setLoading(false);
     }
-  };
-
-  const handleDemoLogin = () => {
-    loginDemo();
-    navigate('/app');
   };
 
   return (
@@ -52,24 +75,24 @@ const Login: React.FC = () => {
       </div>
       
       <Card className="w-full max-w-md p-8 shadow-xl border-t-4 border-t-blue-600">
-        <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center uppercase tracking-tight">Acesso ao Sistema</h1>
-        <p className="text-slate-500 text-center mb-6 font-medium italic">Gestão de Riscos Psicossociais</p>
+        <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center uppercase tracking-tight">Acesse sua conta</h1>
+        <p className="text-slate-500 text-center mb-6 font-medium italic opacity-80 tracking-tight leading-tight">Gestão de Riscos Psicossociais</p>
 
         {successMsg && (
-          <div className="bg-emerald-50 text-emerald-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2 border border-emerald-100 animate-fade-in">
+          <div className="bg-emerald-50 text-emerald-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2 border border-emerald-100 animate-fade-in-down">
             <CheckCircle2 size={16} /> {successMsg}
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2 border border-red-100 animate-fade-in">
+          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-6 flex items-center gap-2 border border-red-100 animate-fade-in-down">
             <AlertCircle size={16} /> {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-bold">E-mail corporativo</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-bold">E-mail</label>
             <input 
               type="email" 
               required
@@ -99,32 +122,10 @@ const Login: React.FC = () => {
           </Button>
         </form>
 
-        <div className="mt-6">
-            <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200"></div>
-                </div>
-                <div className="relative flex justify-center text-[10px] uppercase">
-                  <span className="bg-white px-2 text-slate-400 font-black tracking-widest">Ou</span>
-                </div>
-            </div>
-
-            <Button 
-              variant="secondary" 
-              fullWidth 
-              size="lg" 
-              onClick={handleDemoLogin}
-              className="mt-6 border-dashed font-black uppercase text-[10px] tracking-widest"
-            >
-              <Zap size={14} className="mr-2 text-amber-500 fill-amber-500" />
-              Acessar Modo Demo
-            </Button>
-          </div>
-
         <div className="mt-8 pt-6 border-t border-slate-100 text-center text-sm text-slate-500 flex flex-col gap-2">
           <p className="font-medium">Ainda não tem cadastro?</p>
           <Link to="/register" className="text-blue-600 font-bold hover:underline inline-flex items-center justify-center gap-1">
-            Criar conta gratuita <ArrowRight size={14} />
+            Criar conta grátis <ArrowRight size={14} />
           </Link>
         </div>
       </Card>

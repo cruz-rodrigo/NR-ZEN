@@ -28,6 +28,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ user });
     }
 
+    if (action === 'update-email') {
+      if (req.method !== 'PUT') return res.status(405).json({ error: 'Method not allowed' });
+      
+      const authHeader = req.headers.authorization;
+      if (!authHeader?.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
+      const token = authHeader.substring(7);
+      const decoded = verifyJwt(token);
+
+      const { newEmail, password } = req.body;
+      const targetEmail = newEmail.toLowerCase().trim();
+
+      // 1. Validar senha atual
+      const { data: user, error: fetchErr } = await supabase.from('users').select('*').eq('id', decoded.sub).single();
+      if (fetchErr || !user) return res.status(404).json({ error: 'Usuário não encontrado.' });
+
+      const isPasswordValid = await comparePassword(password, user.password_hash);
+      if (!isPasswordValid) return res.status(403).json({ error: 'Senha atual incorreta.' });
+
+      // 2. Verificar se o novo e-mail já existe
+      const { data: existing } = await supabase.from('users').select('id').eq('email', targetEmail).maybeSingle();
+      if (existing && existing.id !== decoded.sub) return res.status(400).json({ error: 'Este novo e-mail já está em uso por outra conta.' });
+
+      // 3. Atualizar
+      const { error: updateErr } = await supabase.from('users').update({ email: targetEmail }).eq('id', decoded.sub);
+      if (updateErr) return res.status(500).json({ error: 'Erro ao atualizar e-mail no banco.' });
+
+      // 4. (Opcional) Sincronizar com Stripe se houver Customer ID
+      if (user.stripe_customer_id) {
+        try { await stripe.customers.update(user.stripe_customer_id, { email: targetEmail }); } catch (e) { console.warn('Stripe update email failed', e); }
+      }
+
+      return res.status(200).json({ success: true });
+    }
+
     if (action === 'login') {
       if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
       const { email: rawEmail, password } = req.body;
