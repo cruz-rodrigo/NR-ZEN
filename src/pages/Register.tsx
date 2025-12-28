@@ -35,13 +35,12 @@ const Register: React.FC = () => {
       // 1. Cria a conta
       await register(formData.name, formData.email, formData.password);
       
-      // 2. Login para garantir o token
+      // 2. Login para injetar token no disco e contexto
       await login(formData.email, formData.password);
 
-      // 3. BLOQUEIO TRIAL: Se existe intenção de compra, força o retorno ao Orquestrador
+      // 3. BLOQUEIO TRIAL: Se tem intenção de compra, força o orquestrador público
       if (activePlan) {
         setRedirecting(true);
-        // Usamos replace: true para não permitir que o botão "voltar" quebre o fluxo
         navigate(`/checkout/start?plan=${activePlan}&cycle=${activeCycle}`, { replace: true });
       } else {
         navigate('/app', { replace: true });
@@ -59,7 +58,7 @@ const Register: React.FC = () => {
           <CheckCircle2 size={32} />
         </div>
         <h2 className="text-2xl font-bold text-slate-800 mb-2 uppercase tracking-tight">Cadastro Concluído!</h2>
-        <p className="text-slate-500 font-medium">Redirecionando para o pagamento seguro do plano <strong>{activePlan?.toUpperCase()}</strong>...</p>
+        <p className="text-slate-500 font-medium">Iniciando ambiente de pagamento seguro...</p>
         <div className="mt-8">
           <Loader2 className="animate-spin text-blue-600 mx-auto" size={40} />
         </div>
@@ -69,15 +68,15 @@ const Register: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans text-slate-900">
-      <div className="mb-8">
+      <div className="mb-8 hover:opacity-80 transition-opacity">
         <Link to="/"><Logo size="lg" /></Link>
       </div>
       
       <Card className="w-full max-w-md p-8 shadow-xl border-t-4 border-t-blue-600">
-        <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center">
+        <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center uppercase tracking-tight">
           {activePlan ? 'Inicie sua Assinatura' : 'Crie sua conta'}
         </h1>
-        <p className="text-slate-500 text-center mb-8">
+        <p className="text-slate-500 text-center mb-8 font-medium italic">
           {activePlan ? 'Crie seu acesso técnico para seguir ao pagamento.' : 'Comece a gerenciar riscos psicossociais hoje.'}
         </p>
 
@@ -127,7 +126,7 @@ const Register: React.FC = () => {
             {loading ? (
               <Loader2 className="animate-spin" size={20} />
             ) : activePlan ? (
-              <span className="flex items-center gap-2">Prosseguir para Pagamento <ArrowRight size={18} /></span>
+              <span className="flex items-center gap-2">Próximo Passo: Pagamento <ArrowRight size={18} /></span>
             ) : 'Criar Minha Conta Grátis'}
           </Button>
         </form>

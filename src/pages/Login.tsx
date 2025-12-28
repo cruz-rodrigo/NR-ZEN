@@ -40,7 +40,8 @@ const Login: React.FC = () => {
     try {
       await login(formData.email, formData.password);
       
-      // BLOQUEIO TRIAL: Se existe um plano pendente, ele NUNCA vai para o /app
+      // BLOQUEIO TOTAL DE FUGA: Se tem plano, volta pro Orquestrador. 
+      // Ele agora é público e não vai sofrer com o lag do isAuthenticated.
       if (activePlan) {
         navigate(`/checkout/start?plan=${activePlan}&cycle=${activeCycle}`, { replace: true });
       } else {
@@ -48,7 +49,6 @@ const Login: React.FC = () => {
       }
     } catch (err: any) {
       setError(err.message || 'E-mail ou senha incorretos.');
-    } finally {
       setLoading(false);
     }
   };
@@ -60,8 +60,8 @@ const Login: React.FC = () => {
       </div>
       
       <Card className="w-full max-w-md p-8 shadow-xl border-t-4 border-t-blue-600">
-        <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center">Acesse sua conta</h1>
-        <p className="text-slate-500 text-center mb-6">Plataforma de Riscos Psicossociais</p>
+        <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center uppercase tracking-tight">Acesse sua conta</h1>
+        <p className="text-slate-500 text-center mb-6 font-medium">Plataforma de Riscos Psicossociais</p>
 
         {activePlan && (
           <div className="mb-6 bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center gap-4 animate-fade-in">
@@ -70,7 +70,7 @@ const Login: React.FC = () => {
              </div>
              <div>
                <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none mb-1">Pagamento Pendente</p>
-               <p className="text-sm font-bold text-slate-800">Assine o plano {activePlan.toUpperCase()} ao entrar</p>
+               <p className="text-sm font-bold text-slate-800">Conclua sua compra ao entrar</p>
              </div>
           </div>
         )}
@@ -93,7 +93,7 @@ const Login: React.FC = () => {
             <input 
               type="email" 
               required
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all font-medium"
               value={formData.email}
               onChange={e => setFormData({...formData, email: e.target.value.toLowerCase().trim()})}
               placeholder="seu@email.com"
@@ -115,12 +115,12 @@ const Login: React.FC = () => {
           </div>
 
           <Button fullWidth size="lg" type="submit" disabled={loading} className="mt-2 py-3.5 shadow-lg shadow-blue-600/20 font-black uppercase text-xs tracking-widest">
-            {loading ? 'Acessando...' : (activePlan ? 'Entrar e Concluir Compra' : 'Entrar na Plataforma')}
+            {loading ? 'Validando...' : (activePlan ? 'Entrar e Pagar Assinatura' : 'Entrar na Plataforma')}
           </Button>
         </form>
 
         <div className="mt-8 pt-6 border-t border-slate-100 text-center text-sm text-slate-500 flex flex-col gap-2">
-          <p>Ainda não tem cadastro?</p>
+          <p className="font-medium">Ainda não tem cadastro?</p>
           <Link to={`/register${activePlan ? `?plan=${activePlan}&cycle=${activeCycle}` : ''}`} className="text-blue-600 font-bold hover:underline inline-flex items-center justify-center gap-1">
             Criar conta e Iniciar Plano <ArrowRight size={14} />
           </Link>
