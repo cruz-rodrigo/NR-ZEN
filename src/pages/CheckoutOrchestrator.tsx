@@ -24,30 +24,34 @@ const CheckoutOrchestrator: React.FC = () => {
   const activeCycle = urlCycle || pending?.cycle || 'monthly';
 
   useEffect(() => {
-    // Sincroniza intenção de compra no disco imediatamente
+    // Sincroniza a intenção no storage para não perder se o usuário atualizar a página
     if (urlPlan) {
       setPendingCheckout({ plan: urlPlan, cycle: urlCycle });
     }
 
     if (isLoading) return;
 
-    // Proteção 1: Se não tem plano, volta para a home
+    // Se não há plano detectado em lugar nenhum, volta para a precificação na home
     if (!activePlan) {
       navigate('/#pricing', { replace: true });
       return;
     }
 
-    // Proteção 2: Verificação Atômica de Disco (Anti-Lag do React State)
+    /**
+     * VERIFICAÇÃO ATÔMICA DE DISCO (Anti-Race Condition)
+     * Ignoramos o estado reativo isAuthenticated por um momento.
+     * Se existe um token no localStorage, o usuário ACABOU de logar/registrar.
+     */
     const rawToken = localStorage.getItem('nrzen_token');
     const isActuallyAuthenticated = isAuthenticated || !!rawToken;
 
     if (!isActuallyAuthenticated) {
-      // Usuário deslogado? Vai para login mas mantendo o plano no disco
+      // Usuário realmente deslogado -> Manda para login mantendo a intenção na URL e no Disco
       navigate(`/login?plan=${activePlan}&cycle=${activeCycle}`, { replace: true });
       return;
     }
 
-    // Proteção 3: Se logado e com plano, dispara Stripe (apenas uma vez)
+    // Se está autenticado (pelo estado ou pelo disco), dispara o Stripe
     if (isActuallyAuthenticated && !requestFired.current) {
       const executeCheckout = async () => {
         requestFired.current = true;
@@ -58,16 +62,16 @@ const CheckoutOrchestrator: React.FC = () => {
           });
 
           if (response?.url) {
-            // Limpa a pendência ANTES de sair para evitar loops ao voltar
+            // Limpamos o estado pendente ANTES de sair para evitar loops ao voltar
             clearPendingCheckout();
             window.location.href = response.url;
           } else {
-            throw new Error("Resposta inválida do provedor de pagamento.");
+            throw new Error("Resposta inválida do servidor de pagamentos.");
           }
         } catch (err: any) {
-          console.error("Critical Checkout Logic Error:", err);
-          setError(err.message || "Erro ao conectar com Stripe.");
-          requestFired.current = false; // Permite tentar novamente se falhar a rede
+          console.error("Critical Checkout Failure:", err);
+          setError(err.message || "Erro de conexão com Stripe.");
+          requestFired.current = false; // Permite nova tentativa se for erro de rede
         }
       };
 
@@ -77,7 +81,7 @@ const CheckoutOrchestrator: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans text-center">
-      <div className="mb-12 hover:opacity-80 transition-opacity">
+      <div className="mb-12">
         <Logo size="lg" />
       </div>
       
@@ -98,7 +102,7 @@ const CheckoutOrchestrator: React.FC = () => {
                  Tentar Novamente
                </Button>
                <Button variant="secondary" onClick={() => navigate('/app/billing')} fullWidth className="h-14 font-black">
-                 Voltar aos Planos
+                 Ver Outros Planos
                </Button>
              </div>
           </div>
@@ -111,21 +115,21 @@ const CheckoutOrchestrator: React.FC = () => {
                </div>
             </div>
             
-            <h1 className="text-2xl font-black text-slate-900 mb-3 tracking-tight uppercase">Processando...</h1>
+            <h1 className="text-2xl font-black text-slate-900 mb-3 tracking-tight uppercase">Autenticando...</h1>
             <p className="text-slate-500 text-sm leading-relaxed mb-10 font-medium">
-              Estamos preparando seu ambiente seguro para o plano <strong>{activePlan?.toUpperCase()}</strong>. <br/> Não feche esta janela.
+              Preparando ambiente seguro para o plano <strong>{activePlan?.toUpperCase()}</strong>. <br/> Você será redirecionado ao Stripe.
             </p>
             
             <div className="flex items-center justify-center gap-3 text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] bg-slate-50 py-4 rounded-[20px] border border-slate-100">
               <ShieldCheck size={16} className="text-emerald-500" />
-              Conexão Segura Stripe 256-bit
+              Conexão Criptografada SSL
             </div>
           </div>
         )}
       </Card>
       
       <p className="mt-10 text-slate-400 text-[10px] uppercase tracking-[0.25em] font-black opacity-60">
-        Ambiente Oficial NR ZEN • Processamento SSL Ativo
+        Ambiente Oficial NR ZEN • Processamento via Stripe Inc.
       </p>
     </div>
   );

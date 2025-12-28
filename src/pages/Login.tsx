@@ -5,12 +5,12 @@ import { Logo } from '../components/Layout';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
-import { AlertCircle, CheckCircle2, ArrowRight, CreditCard } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Lock, ArrowRight, Zap, CreditCard } from 'lucide-react';
 import { getPendingCheckout } from '../lib/pendingCheckout';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, loginDemo } = useAuth();
   const [searchParams] = useSearchParams();
   
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -18,11 +18,10 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Sincroniza intenção de compra
+  // Identifica intenção de compra
   const urlPlan = searchParams.get('plan');
   const urlCycle = searchParams.get('cycle') || 'monthly';
   const pending = getPendingCheckout();
-  
   const activePlan = urlPlan || pending?.plan;
   const activeCycle = urlCycle || pending?.cycle || 'monthly';
 
@@ -40,8 +39,7 @@ const Login: React.FC = () => {
     try {
       await login(formData.email, formData.password);
       
-      // BLOQUEIO TOTAL DE FUGA: Se tem plano, volta pro Orquestrador. 
-      // Ele agora é público e não vai sofrer com o lag do isAuthenticated.
+      // BLOQUEIO TRIAL: Se tem plano pendente, redireciona EXCLUSIVAMENTE para o Orquestrador
       if (activePlan) {
         navigate(`/checkout/start?plan=${activePlan}&cycle=${activeCycle}`, { replace: true });
       } else {
@@ -53,15 +51,20 @@ const Login: React.FC = () => {
     }
   };
 
+  const handleDemoLogin = () => {
+    loginDemo();
+    navigate('/app');
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans text-slate-900">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans">
       <div className="mb-8 hover:opacity-80 transition-opacity">
         <Link to="/"><Logo size="lg" /></Link>
       </div>
       
       <Card className="w-full max-w-md p-8 shadow-xl border-t-4 border-t-blue-600">
         <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center uppercase tracking-tight">Acesse sua conta</h1>
-        <p className="text-slate-500 text-center mb-6 font-medium">Plataforma de Riscos Psicossociais</p>
+        <p className="text-slate-500 text-center mb-6 font-medium">Gestão de Riscos Psicossociais</p>
 
         {activePlan && (
           <div className="mb-6 bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center gap-4 animate-fade-in">
@@ -70,7 +73,7 @@ const Login: React.FC = () => {
              </div>
              <div>
                <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none mb-1">Pagamento Pendente</p>
-               <p className="text-sm font-bold text-slate-800">Conclua sua compra ao entrar</p>
+               <p className="text-sm font-bold text-slate-800">Assine o plano {activePlan.toUpperCase()} ao entrar</p>
              </div>
           </div>
         )}
@@ -101,7 +104,7 @@ const Login: React.FC = () => {
           </div>
           <div>
             <div className="flex justify-between mb-1.5">
-               <label className="block text-sm font-semibold text-slate-700">Senha</label>
+               <label className="block text-sm font-semibold text-slate-700 font-bold">Senha</label>
                <Link to="/forgot-password" title="Esqueceu a senha?" className="text-xs text-blue-600 hover:underline font-bold">Esqueceu?</Link>
             </div>
             <input 
@@ -115,9 +118,33 @@ const Login: React.FC = () => {
           </div>
 
           <Button fullWidth size="lg" type="submit" disabled={loading} className="mt-2 py-3.5 shadow-lg shadow-blue-600/20 font-black uppercase text-xs tracking-widest">
-            {loading ? 'Validando...' : (activePlan ? 'Entrar e Pagar Assinatura' : 'Entrar na Plataforma')}
+            {loading ? 'Acessando...' : (activePlan ? 'Entrar e Assinar Plano' : 'Entrar na Plataforma')}
           </Button>
         </form>
+
+        {!activePlan && (
+          <div className="mt-6">
+            <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200"></div>
+                </div>
+                <div className="relative flex justify-center text-[10px] uppercase">
+                  <span className="bg-white px-2 text-slate-400 font-black tracking-widest">Ou</span>
+                </div>
+            </div>
+
+            <Button 
+              variant="secondary" 
+              fullWidth 
+              size="lg" 
+              onClick={handleDemoLogin}
+              className="mt-6 border-dashed font-black uppercase text-[10px] tracking-widest"
+            >
+              <Zap size={14} className="mr-2 text-amber-500 fill-amber-500" />
+              Acessar Modo Demo
+            </Button>
+          </div>
+        )}
 
         <div className="mt-8 pt-6 border-t border-slate-100 text-center text-sm text-slate-500 flex flex-col gap-2">
           <p className="font-medium">Ainda não tem cadastro?</p>

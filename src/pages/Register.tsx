@@ -18,11 +18,10 @@ const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
-  // Sincroniza intenção de compra
+  // Identifica intenção de compra (pela URL ou pelo Storage)
   const urlPlan = searchParams.get('plan');
   const urlCycle = searchParams.get('cycle') || 'monthly';
   const pending = getPendingCheckout();
-  
   const activePlan = urlPlan || pending?.plan;
   const activeCycle = urlCycle || pending?.cycle || 'monthly';
 
@@ -32,13 +31,14 @@ const Register: React.FC = () => {
     setLoading(true);
 
     try {
-      // 1. Cria a conta
+      // 1. Cria a conta (trial por padrão no backend)
       await register(formData.name, formData.email, formData.password);
       
-      // 2. Login para injetar token no disco e contexto
+      // 2. Faz login automático para injetar o token no disco e contexto
       await login(formData.email, formData.password);
 
-      // 3. BLOQUEIO TRIAL: Se tem intenção de compra, força o orquestrador público
+      // 3. BLOQUEIO TRIAL: Se existe intenção de compra, força o orquestrador.
+      // O Orquestrador agora é público e vai ler o token do disco instantaneamente.
       if (activePlan) {
         setRedirecting(true);
         navigate(`/checkout/start?plan=${activePlan}&cycle=${activeCycle}`, { replace: true });
@@ -67,7 +67,7 @@ const Register: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans text-slate-900">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans">
       <div className="mb-8 hover:opacity-80 transition-opacity">
         <Link to="/"><Logo size="lg" /></Link>
       </div>
@@ -76,7 +76,7 @@ const Register: React.FC = () => {
         <h1 className="text-2xl font-heading font-bold text-slate-900 mb-2 text-center uppercase tracking-tight">
           {activePlan ? 'Inicie sua Assinatura' : 'Crie sua conta'}
         </h1>
-        <p className="text-slate-500 text-center mb-8 font-medium italic">
+        <p className="text-slate-500 text-center mb-8 font-medium">
           {activePlan ? 'Crie seu acesso técnico para seguir ao pagamento.' : 'Comece a gerenciar riscos psicossociais hoje.'}
         </p>
 
@@ -88,7 +88,7 @@ const Register: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Nome da Consultoria / Profissional</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-bold">Nome da Consultoria / Profissional</label>
             <input 
               type="text" 
               required
@@ -99,7 +99,7 @@ const Register: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">E-mail Corporativo</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-bold">E-mail Corporativo</label>
             <input 
               type="email" 
               required
@@ -110,7 +110,7 @@ const Register: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Senha de Acesso</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-bold">Senha de Acesso</label>
             <input 
               type="password" 
               required
